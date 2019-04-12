@@ -1,4 +1,4 @@
-# vuecli3
+# vuecli3  pc端项目基础架构
 
 ## Project setup
 ```
