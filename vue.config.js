@@ -5,11 +5,11 @@ module.exports = {
     // lintOnSave: false,
     devServer: {
         proxy: {
-            '/apis': {
-                target: '/test/',
+            '/oauth/token': {
+                target: 'http://fatc:fatc@wxkf.5ifapiao.com',
                 changeOrigin: true,
                 pathRewrite: {
-                    '^/apis': '/apis', // 需要rewrite重写的,
+                    '^/oauth/token': '/oauth/token', // 需要rewrite重写的,
                 },
             },
         },

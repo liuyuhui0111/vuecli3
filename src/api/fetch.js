@@ -7,36 +7,12 @@ import axios from '@/axios';
 // '/api-gateway/customer','/api-gateway/extra','/api-gateway/aosp-oam/aosp-oam','/api-gateway/product','/api-gateway/aosp-msg/aosp-msg'];
 const environment = process.env.NODE_ENV;
 
-const get = (url, config) => new Promise((resolve, reject) => {
-    axios
-        .get(handleUrl(url), config)
-        .then(
-            (res) => {
-                resolve(res);
-            },
-            (err) => {
-                reject('网络连接失败，请稍后重试');
-            },
-        )
-        .catch((err) => {
-            reject('网络连接失败，请稍后重试');
-        });
-});
-const post = (url, params, config) => new Promise((resolve, reject) => {
-    axios
-        .post(handleUrl(url), params, config)
-        .then(
-            (res) => {
-                resolve(res);
-            },
-            (err) => {
-                reject('网络连接失败，请稍后重试');
-            },
-        )
-        .catch((err) => {
-            reject('网络连接失败，请稍后重试');
-        });
-});
+const get = (url, params, config) => {
+    return axios.get(url, { params }, config);
+};
+const post = (url, params, config) => {
+    return axios.post(url, params, config);
+}
 
 
 const del = (url, config) => new Promise((resolve, reject) => {

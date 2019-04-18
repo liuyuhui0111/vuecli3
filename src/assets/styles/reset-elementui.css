@@ -1,0 +1,109 @@
+/*重置element-ui样式 注意命名空间*/
+/*全局作用域命名空间规则common- 加上文件路径名称 */
+/*重置头部*/
+.common-web-layout .el-header{
+		height: 60px;
+    cursor: default;
+    box-shadow: 0 1px 0 0 #D4D4D4;
+}
+
+/*重置底部*/
+.common-web-layout .el-footer{
+	height: 176px;
+  background: #F7F7F7;
+  line-height: 22px;
+  font-size: 16px;
+  color: #444444;
+  letter-spacing: 0;
+}
+
+/*重置弹出框箭头*/
+.el-popper .popper__arrow::after,
+.el-popper .popper__arrow{
+	border-width: 10px;
+}
+.el-popper[x-placement^=bottom] .popper__arrow::after{
+	margin-left: -10px;
+}
+.el-popper[x-placement^=bottom] .popper__arrow{
+	top: -10px;
+}
+
+.common-layout-nav{
+  left: 50%;
+  margin-left: -498px;
+}
+.common-layout-nav.el-popper[x-placement^=bottom] .popper__arrow{
+  left: 39%;
+}
+
+/*分页样式*/
+.el-pager li.btn-quicknext, .el-pager li.btn-quickprev,
+.el-pagination{
+  text-align: center;
+  font-size: 16px;
+  color: #FB683C;
+}
+.el-pager li.active+li{
+  border-left:1px solid #D4D4D4;
+}
+
+.el-pager li.active{
+  color: #444;
+  border-color: #fff;
+}
+.el-pagination button:hover,
+body .el-pager li:hover{
+  color: #444;
+  /*border-color: #fff;*/
+}
+
+.el-pager li{
+  min-width: 38px;
+  height: 34px;
+  line-height: 34px;
+  box-sizing:border-box;
+  border: 1px solid #D4D4D4;
+  margin-right:10px; 
+}
+.el-pager li:nth-child(1){
+  margin-left: 10px;
+}
+
+.el-pagination .btn-next, .el-pagination .btn-prev{
+  padding: 0 10px;
+  border: 1px solid #D4D4D4;
+  height: 34px;
+  line-height: 34px;
+  color: #FB683C;
+  position: relative;
+}
+
+.el-pagination .btn-prev{
+  padding-left: 20px;
+}
+.el-pagination .btn-next{
+  padding-right: 20px;
+}
+.el-pagination .btn-next:after,
+.el-pagination .btn-prev:after{
+  position: absolute;
+  display: block;
+  height: 100%;
+  width: 20px;
+  text-align: center;
+  line-height: 29px;
+  top: 0;
+}
+.el-pagination .btn-prev:after{
+  content: "〈";
+  left: 0;
+}
+.el-pagination .btn-next:after{
+  content: "〉";
+  right: 0;
+}
+
+.el-pagination button:disabled{
+  color: #C0C4CC;
+}
