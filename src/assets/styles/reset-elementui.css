@@ -16,6 +16,55 @@
   color: #444444;
   letter-spacing: 0;
 }
+/*重置关闭按钮icon*/
+.el-icon-close{
+  display: block;
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  cursor: pointer;
+}
+
+/*重置表单*/
+.el-cascader{
+  width: 100%;
+}
+/*.el-form-item{
+  margin-bottom: 0;
+}*/
+
+.el-form-item__content{
+  width: 100%;
+  line-height: 30px;
+}
+.el-form-item__label{
+  line-height: 32px;
+  font-size: 14px;
+  color: #444;
+}
+.el-input__inner{
+  height: 32px;
+  line-height: 32px;
+  color: #444;
+}
+.el-cascader .el-input.is-focus .el-input__inner,
+.el-radio__input.is-checked .el-radio__inner,
+.el-radio__inner:hover,
+.el-input.is-active .el-input__inner, .el-input__inner:focus{
+  border-color: #FB683C;
+}
+.el-radio__input.is-checked .el-radio__inner{
+  background: #FB683C;
+}
+.el-cascader-menu__item.is-active,
+.el-radio__input.is-checked+.el-radio__label{
+  color: #FB683C;
+}
+.el-input{
+  /*margin-bottom: 20px;*/
+}
 
 /*重置弹出框箭头*/
 .el-popper .popper__arrow::after,
@@ -27,6 +76,15 @@
 }
 .el-popper[x-placement^=bottom] .popper__arrow{
 	top: -10px;
+}
+.el-popper[x-placement^=top] .popper__arrow::after{
+    bottom: 1px;
+    margin-left: -10px;
+    border-top-color: #FFF;
+    border-bottom-width: 0;
+}
+.el-popper[x-placement^=top] .popper__arrow{
+  bottom: -10px;
 }
 
 .common-layout-nav{
@@ -106,4 +164,72 @@ body .el-pager li:hover{
 
 .el-pagination button:disabled{
   color: #C0C4CC;
+}
+
+/*重置表单相关*/
+.common-h5-signup .el-textarea__inner,
+.common-h5-signup .el-form-item,
+.common-h5-signup .el-form-item__content,
+.common-h5-signup .el-textarea,
+.common-h5-signup .el-form,
+.common-open-class-detail .mes-box .el-form,
+.common-open-class-detail .mes-box .el-form-item,
+.common-open-class-detail .mes-box .el-form-item__content,
+.common-open-class-detail .mes-box .el-textarea__inner,
+.common-open-class-detail .mes-box .el-textarea{
+  height: 100%;
+}
+.common-h5-signup .el-textarea__inner,
+.common-open-class-detail .mes-box .el-textarea__inner{
+  background: #F7F7F7;
+}
+.el-form--label-left .el-form-item__label,
+.common-open-class-detail .el-form-item__label{
+  color: #444;
+  font-size: 14px;
+  position: relative;
+}
+.el-form-item.is-required:not(.is-no-asterisk)>.el-form-item__label:before{
+  position: absolute;
+  right: 3px;
+}
+.common-web-order .el-form-item.is-required:not(.is-no-asterisk)>.el-form-item__label:before
+{
+  display: none;
+}
+.common-web-order .el-form-item.is-required:not(.is-no-asterisk)>.el-form-item__label:after{
+  content: "*";
+  color: #F56C6C;
+  margin-left: 3px;
+}
+.common-open-class-detail .el-input__inner{
+  width: 240px;
+  height: 32px;
+  line-height: 32px;
+  border: 1px solid #D4D4D4;
+border-radius: 4px;
+}
+
+/*重置H5表单*/
+.common-h5-signup .el-input__inner{
+    border: none;
+    color: #444;
+}
+
+/*重置个人中心表格*/
+.el-table thead td, .el-table thead th.is-leaf{
+  background: #FFECE7;
+  font-size: 14px;
+color: #444444;
+letter-spacing: 0;
+}
+.el-table tbody tr{
+  /*cursor: pointer;*/
+}
+/*重置进度条颜色*/
+.el-progress-bar__inner{
+  background-color: #FB683C;
+}
+.el-progress-bar__outer{
+  background-color: #c0c0c0;
 }

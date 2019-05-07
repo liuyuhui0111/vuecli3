@@ -4,24 +4,49 @@
       <!-- 线下课程模块 -->
       <div v-if="type === 'offline'" class="offline">
         <div class="item"
-          :class="{pointer:classData.href}"
-          @click="clickClass(classData)"
+          :class="{pointer:classData.id}"
+          @click="classClick(classData)"
         >
-            <img :src="classData.imgurl"
+            <img :src="classData.pic"
             :alt="classData.title">
             <p class="title ellipsis"
             :style="titleStyle"
             :title="classData.title">{{classData.title}}</p>
         </div>
           <p class="teacher ellipsis">主讲师：
-          <span :class="{pointer:classData.teacherHref}"
-          @click="routerGo(classData.teacherHref)">{{classData.teacherName}}</span>
-          {{classData.teacherAddress}}</p>
-          <p class="time">上课时间：{{classData.time}}</p>
-          <div v-if="classData.money && classData.peopleNum" class="free-box">
-            <span class="freeType1">￥{{classData.money}}</span>
+          <span :class="{pointer:classData.teacherId}"
+          @click="teacherClick(classData)">{{classData.teacherName}}</span>
+          {{classData.address}}</p>
+          <p class="time">上课时间：{{getClassTime}}</p>
+          <div v-if="type != 'offline-index'" class="free-box">
+            <span class="freeType1">￥{{classData.price}}</span>
             <span class="person">
-              {{classData.peopleNum}}人正在学习
+              {{classData.signUpManNum}}人正在学习
+            </span>
+          </div>
+      </div>
+
+       <!-- 首页线下课程模块 -->
+      <div v-if="type === 'offline-index'" class="offline">
+        <div class="item"
+          :class="{pointer:classData.id}"
+          @click="classClick(classData)"
+        >
+            <img :src="classData.courseOfflineEntity.pic"
+            :alt="classData.title">
+            <p class="title ellipsis"
+            :style="titleStyle"
+            :title="classData.title">{{classData.title}}</p>
+        </div>
+          <p class="teacher ellipsis">主讲师：
+          <span :class="{pointer:classData.teacherId}"
+          @click="teacherClick(classData)">{{classData.teacherName}}</span>
+          {{classData.address}}</p>
+          <p class="time">上课时间：{{getClassTime}}</p>
+          <div v-if="type != 'offline-index'" class="free-box">
+            <span class="freeType1">￥{{classData.price}}</span>
+            <span class="person">
+              {{classData.signUpManNum}}人正在学习
             </span>
           </div>
       </div>
@@ -29,48 +54,63 @@
       <!-- 在线课程模块 -->
       <div v-if="type === 'online'" class="online">
         <div class="item"
-          :class="{pointer:classData.href}"
-          @click="routerGo(classData.href)"
+          :class="{pointer:classData.id}"
+          @click="classClick(classData)"
         >
-            <img :src="classData.imgurl"
+            <img :src="classData.bannerUrl?classData.bannerUrl:defaultUrl"
             :alt="classData.title">
             <p class="title ellipsis2" :title="classData.title">{{classData.title}}</p>
         </div>
           <div class="free-box">
             <span :class="[
-            {free:classData.freeType == '0'},
-            {freeType1:classData.freeType == '1'},
-            ]">{{classData.freeTxt}}</span>
+            {free:classData.price == 0},
+            {freeType1:classData.price != 0},
+            ]">{{classData.price == 0 ? '免费' : classData.price}}</span>
             <span class="person">
-              {{classData.peopleNum}}人正在学习
+              {{classData.learnNum}}人正在学习
             </span>
           </div>
       </div>
 
        <!-- 搜索结果课程模块 -->
-      <div v-if="type === 'search'" class="search-box">
+      <div v-if="type === 'search'
+      || type === 'search-online'
+      || type === 'search-offline'" class="search-box">
         <!--  -->
-        <div class="item">
-          <img :src="classData.imgurl"
+        <div v-if="type === 'search-offline'" class="item">
+          <img :src="classData.bannerUrl || classData.pic"
+            :alt="classData.title">
+            <div class="intro">
+               <p class="title ellipsis2"
+               :title="classData.title">{{classData.title}}</p>
+               <p class="time">上课时间：{{getClassTime}}</p>
+               <p class="class-intro ellipsis2">
+                上课地点 {{classData.address}}
+               </p>
+               <p class="type"><span class="freeType1">￥{{classData.price}}</span></p>
+            </div>
+        </div>
+        <div v-if="type === 'search-online'" class="item">
+          <img :src="classData.bannerUrl || classData.pic"
             :alt="classData.title">
             <div class="intro">
                <p class="title ellipsis2"
                :title="classData.title">{{classData.title}}</p>
                <p class="time">
-                  {{classData.time}}小时 |
-                  {{classData.peopleNum}}人已学 |
-                  {{classData.freeTxt}}
+                  {{getTime}}分钟 |
+                  {{classData.learnNum}}人已学 |
+                  {{classData.price == 0 ? '免费' : classData.price}}
                </p>
                <p class="class-intro ellipsis2">
-                 {{classData.intro}}
+                 {{classData.introduce}}
                </p>
-               <p class="type">来自分类:{{classData.type}}</p>
+               <p class="type">来自分类:{{classData.type == '1' ? '视频课' : '专题课'}}</p>
             </div>
         </div>
         <!-- 右侧老师头像 名称 -->
         <div class="teacher-box">
           <img class="photo"
-          :src="classData.teacherSrc"
+          :src="classData.teacherAvatar||classData.headPic"
           :alt="classData.teacherName">
           <span class="name">{{classData.teacherName}}</span>
         </div>
@@ -80,14 +120,14 @@
       <div v-if="type === 'search1'" class="search-box">
         <!--  -->
         <div class="item">
-          <img :src="classData.imgurl"
+          <img :src="classData.bannerUrl?classData.bannerUrl:defaultUrl"
             :alt="classData.title">
             <div class="intro">
                <p class="title ellipsis2"
                :title="classData.title">{{classData.title}}</p>
                <p class="time">
                   {{classData.classNum}}门课程 |
-                  {{classData.time}}小时
+                  {{getTime}}小时
                </p>
                <p class="class-intro ellipsis2">
                  {{classData.intro}}
@@ -98,7 +138,7 @@
         <!-- 右侧老师头像 名称 -->
         <div class="teacher-box">
           <p>{{classData.freeTxt}}</p>
-          <span class="money">￥{{classData.money}}</span>
+          <span class="money">￥{{classData.price}}</span>
         </div>
       </div>
 
@@ -106,11 +146,15 @@
     </div>
 </template>
 <script>
+import { formatDate } from '@/assets/utils/timefn';
+
 export default {
     name: 'card',
     data() {
         return {
             name: '课程组件',
+            time: '',
+            defaultUrl: `${window.location.origin}/banner.png`,
         };
     },
     props: {
@@ -126,22 +170,35 @@ export default {
             type: Object,
             default: () => null,
         },
-    },
 
+    },
     mounted() {
         this.init();
     },
+    computed: {
+        getClassTime() {
+            if (!(this.classData.startTime && this.classData.endTime)) {
+                return '';
+            }
+            return `${formatDate(this.classData.startTime)}-${formatDate(this.classData.endTime)}`;
+        },
+        getTime() {
+            let list = this.classData.courseVideoEntity;
+            let num = 0;
+            list.forEach((item) => {
+                num += parseInt(item.videoMinute, 10);
+            });
+            return num;
+        },
+    },
     methods: {
         init() {
-
         },
-        routerGo(href) {
-            if (href) {
-                window.location.href = href;
-            }
+        teacherClick(item) {
+            this.$emit('teacherClick', item);
         },
-        clickClass(item) {
-            this.$emit('classClick', item);
+        classClick(item) {
+            this.$emit('classClick', item, this.type);
         },
     },
 };
@@ -225,7 +282,7 @@ export default {
   .search-box .item{
     display: flex;
     align-items: flex-start;
-    justify-content: space-between;
+    justify-content: space-start;
     cursor: pointer;
   }
   .search-box .item img{

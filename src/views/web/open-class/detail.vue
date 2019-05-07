@@ -1,10 +1,10 @@
 <template>
-  <div class="open-class common-container-width">
-    <div class="contain-box">
+  <div class="open-class common-container-width common-open-class-detail">
+    <div v-if="detailData" class="contain-box">
       <div class="contain">
         <!-- 详情图片 分享 收藏 在线报名 免费学 -->
         <div class="img-box">
-          <img :src="detailData.imgurl" alt="detailData.title">
+          <img :src="detailData.pic" alt="detailData.title">
           <div class="btns">
           <!-- 分享弹窗 -->
              <el-popover
@@ -16,7 +16,7 @@
               <div class="share-box">
                 <div @click="copyFn" class="copy">
                   <textarea id="copy" v-model="copyurl"></textarea>
-                 <p><span class="icon-copy"></span>复制链接</p> 
+                 <p><span class="icon-copy"></span>复制链接</p>
                 </div>
                 <div class="wx-box">
                   <span class="qrcode-logo"></span>
@@ -24,30 +24,118 @@
                     <span class="icon-wx"></span>
                     微信扫一扫
                   </p>
-                  <div id="qrcode"></div>
+                  <div class="qrcode">
+                    <Qrcode docId="qrcode"
+                    :width="qrcodeWidth"
+                    :url="copyurl"
+                    :logourl="logourl"
+                    ></Qrcode>
+                  </div>
                 </div>
               </div>
             </el-popover>
 
-              <span class="icon-collect"></span>
+            <span class="icon-collect"
+            @click="collectFn"
+            :class="{active:detailData.isColl}"></span>
 
 
-            <span class="btn-online">在线报名</span>
-            <span class="btn-free">免费学</span>
+            <span @click="isShowFormDialog=true" class="btn-online">在线报名</span>
+            <span v-show="isShowFreeBtn" @click="goFree('/interests')" class="btn-free">免费学</span>
           </div>
         </div>
 
 
-            <!-- 专题 课程tab -->
+            <!-- 课程锚点列表 -->
         <div class="tab-box">
-            <span v-for="(item,index) in tablist"
-            @click="changeTab(index)"
+            <a v-for="(item,index) in tablist"
+            @click="changeTab(index,item)"
             :class="{active:index == tabindex}"
             :key="index">
-                {{item.text}} ( {{item.value}} )
-            </span>
+                {{item.text}}
+            </a>
         </div>
 
+        <!-- 课程详情 -->
+        <div class="tab-contain">
+          <div class="item"
+          v-for="(item,index) in tablist"
+          :key="index">
+            <div :id="item.id" class="title">
+              <baseTitle :title="item.text"></baseTitle>
+            </div>
+            <!-- 课程信息 -->
+            <template v-if="item.text === '课程信息'">
+              <div class="class-mes">
+              <p>课程天数：{{getDay}} 天</p>
+              <p>课程价格：{{detailData.price}} 元</p>
+              <p>培训对象：{{detailData.trainObject}}</p>
+              <p>培训时间：{{getTime}}</p>
+              <p>培训地点：{{detailData.address}}</p>
+              <p>咨询电话：{{detailData.hotline}}</p>
+              </div>
+            </template>
+            <!-- 其他 -->
+            <p v-if="item.key" class="intro"
+            v-html="transferStringFn(detailData[item.key])"></p>
+
+
+            <!-- 预约报名 -->
+            <template v-if="item.text === '预约报名'">
+
+            <div class="intro form">
+              <div class="form-box">
+                  <el-form
+                ref="onlineFormSign"
+                :rules="rules"
+                :label-position="labelPosition"
+                label-width="60px"
+                :model="onlineForm">
+                  <el-form-item label="称呼" prop="name">
+                    <el-input v-model="onlineForm.name"></el-input>
+                  </el-form-item>
+                  <el-form-item label="电话" prop="tel">
+                    <el-input v-model="onlineForm.tel"></el-input>
+                  </el-form-item>
+                  <el-form-item label="公司" prop="comp">
+                    <el-input v-model="onlineForm.comp"></el-input>
+                  </el-form-item>
+                   <el-form-item label="职位" prop="work">
+                    <el-input v-model="onlineForm.work"></el-input>
+                  </el-form-item>
+                  </el-form>
+                </div>
+               <div class="mes-box">
+                <p>您要咨询的内容</p>
+                <el-form
+                ref="textareaForm"
+                :rules="rules"
+                :label-position="labelPosition"
+                label-width="0px"
+                :model="onlineForm">
+                <el-form-item prop="message">
+                  <el-input type="textarea"
+                  rules="[{
+                            min: 2,
+                            max: 300,
+                            message: '长度在 2 到 300 个字符',
+                            trigger: 'blur',
+                            required:true,
+                        }]"
+                  placeholder="请输入您的问题"
+                   v-model="onlineForm.message"></el-input>
+                </el-form-item>
+              </el-form>
+              </div>
+
+            </div>
+
+            <span @click="submitForm('onlineFormSign')" class="btn-sub">提交信息</span>
+            </template>
+
+          </div>
+
+        </div>
 
       </div>
     <!-- 右侧热门搜索 -->
@@ -55,79 +143,197 @@
 
         <!-- 热门搜索 -->
         <div class="hot-search">
-          <p class="title">热门搜索</p>
+          <p class="title">在线训练营</p>
           <ul class="hot-search-list">
             <li v-for="(item,index) in hotSearchList"
+            @click="routerGo(item)"
             :key="index">
-              <span class="rank">{{item.rank}}</span>
-              <p>{{item.text}}</p>
+              <span class="rank"></span>
+              <p>{{item.courseOfflineEntity.title}}</p>
             </li>
           </ul>
         </div>
       </div>
 
-    </div>
 
+        <!-- 在线报名弹窗 -->
+        <div class="dialog-online" v-show="isShowFormDialog">
+          <span @click="isShowFormDialog=false" class="el-icon-close"></span>
+          <h3>在线报名</h3>
+
+            <div class="intro form">
+              <div class="form-box">
+                  <el-form
+                  ref="formDialog"
+                  :rules="rules"
+                  :label-position="labelPosition"
+                  label-width="60px"
+                  :model="onlineForm">
+                  <el-form-item label="称呼" prop="name">
+                    <el-input v-model="onlineForm.name"></el-input>
+                  </el-form-item>
+                  <el-form-item label="电话" prop="tel">
+                    <el-input v-model="onlineForm.tel"></el-input>
+                  </el-form-item>
+                  <el-form-item label="公司" prop="comp">
+                    <el-input v-model="onlineForm.comp"></el-input>
+                  </el-form-item>
+                   <el-form-item label="职位" prop="work">
+                    <el-input v-model="onlineForm.work"></el-input>
+                  </el-form-item>
+                  </el-form>
+                  <div class="mes-box">
+                    <p>您要咨询的内容</p>
+                    <el-form label-width="0px">
+                      <el-form-item prop="message">
+                        <el-input type="textarea"
+                        rules="[{
+                                  min: 2,
+                                  max: 300,
+                                  message: '长度在 2 到 300 个字符',
+                                  trigger: 'blur',
+                                  required:true,
+                              }]"
+                        placeholder="请输入您的问题"
+                         v-model="onlineForm.message"></el-input>
+                      </el-form-item>
+                    </el-form>
+                  </div>
+                </div>
+                <div class="class-box">
+                  <div class="img-box">
+                    <img :src="detailData.pic" :alt="detailData.title">
+                    <p class="ellipsis2">{{detailData.title}}</p>
+                  </div>
+                  <p class="address">上课地点：{{detailData.address}}</p>
+                  <p class="time">上课时间：{{getTime}}</p>
+                </div>
+
+            </div>
+             <span @click="submitForm('formDialog')" class="btn-sub">提交信息</span>
+      </div>
+    </div>
+    <!-- 遮罩层 -->
+    <div class="mask" v-show="isShowFormDialog"></div>
 
   </div>
 </template>
 <script>
-import QRCode from '@/assets/utils/qrcode'
+import Qrcode from '@/views/web/components/qrcode/qrcode.vue';
+import { setScrollTop, transferString } from '@/assets/utils/util';
+import { validByPhone } from '@/assets/utils/validator';
+import baseTitle from '@/views/web/components/base/base-title.vue';
+import {
+    findOfflineCourseById,
+    showCourseOffline,
+    offlineCourseSignUp,
+    saveMyCollection,
+} from '@/api/apis';
+import { formatDate } from '@/assets/utils/timefn';
+
 export default {
     name: 'detail',
     data() {
         return {
             name: '详情页',
-            id: '',
-            copyurl: 'http://www.baidu.com',
+            qrcodeWidth: 116,
+            logourl: `${window.location.origin}/logo.png`,
+            copyurl: '',
+            isShowFormDialog: false,
             showShare: false,
             tabindex: 0, // 当前选中tab index
             tablist: [ // tab列表
-                { text: '课程', value: 0 },
-                { text: '专题', value: 0 },
+                { text: '课程信息', id: '1', key: '' },
+                { text: '课程介绍', id: '2', key: 'introduce' },
+                { text: '课程大纲', id: '3', key: 'outline' },
+                { text: '课程计划', id: '4', key: 'plan' },
+                { text: '预约报名', id: 'online', key: '' },
             ],
-            hotSearchList: [ // 热门搜索
-                {
-                    text: '热门文章标题',
-                    rank: 1,
-                },
-                {
-                    text: '热门文章标题热门文章标题热门文章标题热门文章标题热门文章标题',
-                    rank: 3,
-                },
-                {
-                    text: '热门文章标题',
-                    rank: 4,
-                },
-                {
-                    text: '热门文章标题',
-                    rank: 7,
-                },
-                {
-                    text: '热门文章标题',
-                    rank: 2,
-                },
-                {
-                    text: '热门文章标题',
-                    rank: 5,
-                },
-                {
-                    text: '热门文章标题',
-                    rank: 6,
-                },
-            ],
-            detailData: {
-                id: 1,
-                teacherHref: 'http://www.sina.com', // 老师链接
-                teacherName: '刘德华', // 老师名称
-                time: '2019.01.09-2019.01.09', // 上课时间
-                imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                teacherAddress: '香港', // 老师地址
-                title: '财务如何为企业创造价值', // 标题
-                money: 1000,
-                peopleNum: 209,
+            labelPosition: 'right',
+            onlineForm: { // 在线报名表单
+                name: '',
+                tel: '',
+                comp: '',
+                work: '',
+                message: '',
             },
-            qrcode:null,
+            rules: {
+                name: [
+                    {
+                        required: true,
+                        message: '请输入称呼',
+                        trigger: 'blur',
+                    },
+                    {
+                        min: 2,
+                        max: 30,
+                        message: '长度在 1 到 30 个字符',
+                        trigger: 'blur',
+                    },
+                ],
+                tel: [
+                    {
+                        required: true,
+                        message: '请输入电话号码',
+                        trigger: 'blur',
+                    },
+                    {
+                        min: 11,
+                        max: 11,
+                        message: '长度在11个字符',
+                        trigger: 'blur',
+                    },
+                    {
+                        validator: (rule, value, callback) => {
+                            if (!validByPhone(value)) {
+                                callback(new Error());
+                            } else {
+                                callback();
+                            }
+                        },
+                        message: '手机号格式不对',
+                    },
+                ],
+                comp: [
+                    {
+                        required: true,
+                        message: '请输入公司名称',
+                        trigger: 'blur',
+                    },
+                    {
+                        min: 2,
+                        max: 100,
+                        message: '长度在 2 到 100 个字符',
+                        trigger: 'blur',
+                    },
+                ],
+                work: [
+                    {
+                        min: 2,
+                        max: 30,
+                        message: '长度在 2 到 30 个字符',
+                        trigger: 'blur',
+                    },
+                ],
+                message: [
+                    {
+                        min: 2,
+                        max: 300,
+                        message: '长度在 2 到 300 个字符',
+                        trigger: 'blur',
+                    },
+                ],
+            },
+            hotSearchList: [], // 在线训练营
+            detailData: null,
+            courseId: 1,
+            saveMyCollectionParam: { // 收藏参数
+                courseId: '', // 课程id
+                onOffType: '1', // 线上线下0 : 线下课； 1 线上课
+            },
+            isCanSendApi: true,
+            isShowFreeBtn: false,
+            type: 2, // 1线上视频课 2线下课 3线上专题课
         };
     },
     mounted() {
@@ -135,34 +341,173 @@ export default {
     },
     watch: {
         $route() {
-            this.id = this.$route.query.id;
+            this.init();
+        },
+    },
+    computed: {
+        getDay() {
+            return this.detailData.endTime - this.detailData.startTime;
+        },
+        getTime() {
+            return `${formatDate(this.detailData.startTime)}~${formatDate(this.detailData.endTime)}`;
         },
     },
     methods: {
         init() {
-            this.id = this.$route.query.id;
-            // 初始化二维码
-            this.initQrcode();
-        },
-        initQrcode() {
-          let url = this.copyurl
-          this.qrcode = new QRCode(document.getElementById("qrcode"), {
-            text: url,
-            width: 116,
-            height: 116,
-            colorDark : "#000000",
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.H
-          });
-        },
-        changeTab(index) {
-            this.tabindex = index;
-            if (index === 0) {
-                this.cardType = 'search';
-                this.list = this.newlist;
+            this.detailData = null;
+            this.courseId = parseInt(this.$route.query.id, 10);
+            // 是否登录 初始化显示免费学btn
+            if (!this.token) {
+                this.isShowFreeBtn = true;
             } else {
-                this.cardType = 'search1';
-                this.list = this.newlist1;
+                this.isShowFreeBtn = !!this.commonUserData.userName;
+            }
+            // 初始化二维码
+            this.copyurl = `${window.location.origin}/h5/index?id=${this.courseId}`;
+            // 获取详情内容
+            this.findOfflineCourseByIdFn();
+            // 获取在线训练营
+            this.showCourseOfflineFn();
+        },
+        transferStringFn(str) {
+            return transferString(str) || '';
+        },
+        goFree(path) {
+            // 免费学
+            if (!this.token) {
+                this.$message({
+                    message: '您还没有登录，请先登录',
+                    type: 'warning',
+                });
+                return;
+            }
+            this.$router.push({
+                path,
+                query: {
+                    id: this.courseId,
+                    type: this.type,
+                },
+            });
+        },
+        routerGo(item) {
+            this.$router.push({ path: '/detail', query: { id: item.id } });
+        },
+        collectFn() {
+            // 点击收藏
+            this.saveMyCollectionParam.courseId = this.courseId;
+            if (this.isCanSendApi) {
+                this.isCanSendApi = false;
+            } else {
+                return;
+            }
+            this.saveMyCollectionFn();
+        },
+        saveMyCollectionFn() {
+            // 收藏 如果未登录  提示去登陆
+            if (!this.token) {
+                this.$message({
+                    message: '您还没有登录，请先登录',
+                    type: 'warning',
+                });
+                return;
+            }
+
+            saveMyCollection(this.saveMyCollectionParam).then((res) => {
+                this.isCanSendApi = true;
+                if (res.data.code === '0000') {
+                    this.detailData.isColl = !this.detailData.isColl;
+                }
+            }).catch((err) => {
+                this.isCanSendApi = true;
+                console.log(err);
+                let message = '收藏失败，请稍后再试';
+                if (this.detailData.isColl) {
+                    message = '取消收藏失败，请稍后再试';
+                }
+                this.$message({
+                    message,
+                    type: 'warning',
+                });
+            });
+        },
+        offlineCourseSignUpFn() {
+            // 线上课在线报名提交表单
+
+            let params = {
+                company: this.onlineForm.comp,
+                offlineCourseId: this.courseId,
+                name: this.onlineForm.name,
+                phone: this.onlineForm.tel,
+                job: this.onlineForm.work,
+                content: this.onlineForm.message,
+            };
+            offlineCourseSignUp(params).then((res) => {
+                if (res.data.code === '0000') {
+                    // this.detailData = res.data.data
+                    if (res.data.id) {
+                        // 跳转报名成功页
+                        this.$router.push({
+                            path: '/success',
+                            query: {
+                                sid: res.data.id,
+                                id: this.courseId,
+                                type: this.type,
+                            },
+                        });
+                    }
+                }
+            }).catch((err) => {
+                console.log(err);
+                this.$message({
+                    message: '公开课详情获取失败，请稍后再试',
+                    type: 'warning',
+                });
+            });
+        },
+        showCourseOfflineFn() {
+            // 获取在线训练营
+            showCourseOffline().then((res) => {
+                console.log(res);
+                if (res.data.code === '0000') {
+                    // this.detailData = res.data.data
+                    this.hotSearchList = res.data.list;
+                }
+            }).catch((err) => {
+                console.log(err);
+                this.$message({
+                    message: '公开课详情获取失败，请稍后再试',
+                    type: 'warning',
+                });
+            });
+        },
+        findOfflineCourseByIdFn() {
+            // 获取公开课详情
+            if (this.courseId) {
+                findOfflineCourseById({ id: this.courseId }).then((res) => {
+                    if (res.data.code === '0000' && res.data.data) {
+                        res.data.data.isColl = res.data.isFavorite && res.data.isFavorite.code === '8888';
+                        this.detailData = res.data.data;
+                    }
+                }).catch((err) => {
+                    console.log(err);
+                    this.$message({
+                        message: '公开课详情获取失败，请稍后再试',
+                        type: 'warning',
+                    });
+                });
+            }
+        },
+        changeTab(index, item) {
+            this.tabindex = index;
+            this.scrollToDom(item);
+        },
+
+        scrollToDom(item) {
+            // 滚动条滚动到指定元素位置
+            const obj = document.getElementById(item.id);
+            if (obj) {
+                const top = obj.offsetTop;
+                setScrollTop(top);
             }
         },
 
@@ -172,20 +517,96 @@ export default {
                 const input = document.getElementById('copy');
                 input.select(); // 选中文本
                 document.execCommand('copy'); // 执行浏览器复制命令
-                this.$alert('复制成功');
+                this.$message({
+                    message: '复制成功',
+                    type: 'success',
+                });
             } catch (e) {
                 console.log(e);
-                this.$alert(`该浏览器不支持复制，请手动选择复制：${this.copyurl}`);
+                this.$message.error(`该浏览器不支持复制，请手动选择复制：${this.copyurl}`);
             }
+        },
+
+        submitForm(formName) {
+            // 表单提交
+            console.log(this.token);
+            if (!this.token) {
+                this.$message({
+                    message: '您还没有登录，请先登录',
+                    type: 'warning',
+                });
+                return;
+            }
+            let curForm = this.$refs[formName].validate
+                ? this.$refs[formName]
+                : this.$refs[formName][0];
+            curForm.validate((valid) => {
+                if (!valid) {
+                    console.log('提交失败');
+                } else {
+                    this.offlineCourseSignUpFn();
+                }
+            });
         },
 
 
     },
     components: {
+        baseTitle,
+        Qrcode,
     },
 };
 </script>
 <style scoped>
+/*在线学习弹框*/
+
+.dialog-online{
+  background: #FFFFFF;
+  border: 1px solid #979797;
+  border-radius: 8px;
+  width: 738px;
+  min-height: 537px;
+  position: absolute;
+  left: 50%;
+  top: 20%;
+  transform:translate(-50%,0);
+  z-index: 100;
+  padding: 10px;
+  box-sizing:border-box;
+}
+.dialog-online h3{
+  text-align: center;
+  margin: 20px auto 30px auto;
+  font-size: 16px;
+  color: #444444;
+  letter-spacing: -0.39px;
+  text-align: center;
+}
+
+.class-box{
+  width: 382px;
+  font-size: 14px;
+  color: #FB683C;
+}
+.class-box .img-box{
+  overflow: hidden;
+
+}
+.class-box .img-box img{
+  float: left;
+  width: 178px;
+  margin-right: 20px;
+}
+.class-box .ellipsis2{
+  height: 40px;
+  line-height: 20px;
+  font-size: 14px;
+  color: #444444;
+}
+.address{
+  margin-bottom: 10px;
+}
+/*复制链接*/
 #copy{
   display: block;
   width: 0;
@@ -199,6 +620,7 @@ export default {
     position: relative;
     display: block;
     width: 100%;
+    min-height: 200px;
     max-height: 320px;
     overflow: hidden;
     margin-bottom: 20px;
@@ -237,7 +659,16 @@ export default {
     top: 10px;
   }
   .icon-collect{
-    background-image: url('./imgs/icon-collect.png');
+    top: 12px;
+    left: -2px;
+    background-size:20px auto;
+    background-image: url('./imgs/icon-coll-off.png');
+  }
+  .icon-collect.active{
+    top: 12px;
+    left: -2px;
+    background-size:20px auto;
+    background-image: url('./imgs/icon-coll-on.png');
   }
   .btn-free,
   .btn-online{
@@ -281,7 +712,7 @@ export default {
     background-image: url('./imgs/icon-wx.png')
   }
 
-  #qrcode{
+  .qrcode{
     width: 116px;
     height: 116px;
     margin: 0 auto;
@@ -298,15 +729,16 @@ export default {
     margin-bottom: 20px;
     text-align: left;
   }
-  .tab-box span{
+  .tab-box a{
     display: inline-block;
     font-size: 16px;
     color: #444444;
     letter-spacing: 0;
     margin-left: 40px;
     cursor: pointer;
+    text-decoration: none;
   }
-  .tab-box span.active{
+  .tab-box a.active{
     color: #FB683C;
   }
   .contain-box{
@@ -314,7 +746,57 @@ export default {
     align-items: flex-start;
     justify-content: space-between;
   }
-  /*右侧热门搜索*/
+  .contain-box .item{
+    padding-bottom: 30px;
+  }
+  .contain-box .item .title{
+    width: 100%;
+  }
+
+
+  .contain-box h4{
+    font-size: 14px;
+    color: #FB683C;
+    margin-bottom: 10px;
+  }
+
+  .class-mes{
+    font-size: 14px;
+  }
+  .class-mes p{
+    margin-bottom: 10px;
+  }
+  /*提交表单*/
+  .form{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .form .form-box{
+    width: 300px;
+  }
+  .form .mes-box{
+    width: 360px;
+    height: 192px;
+    padding-top: 30px;
+    position: relative;
+    box-sizing:border-box;
+  }
+  .dialog-online .mes-box{
+    width: 280px;
+    left: 20px;
+  }
+  .form .mes-box p{
+    position: absolute;
+    top: 0;
+    left: 0;
+    text-align: left;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+
+  /*右侧标题列表*/
   .aside{
     width: 255px;
     margin-left: 30px;
@@ -352,31 +834,24 @@ export default {
   .hot-search-list li {
     display: block;
     position: relative;
-    padding-left: 30px;
-    margin-bottom: 20px;
+    padding-left: 10px;
+    margin-bottom: 10px;
     line-height: 20px;
     cursor: pointer;
   }
   .hot-search-list li .rank{
     display: block;
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: 4px;
+    height: 4px;
     text-align: center;
-    line-height: 20px;
+    line-height: 0;
     color: #Fff;
-    background: #8EB9F5;
+    background: #444;
     left: 0;
-    top: 0;
-  }
-  .hot-search-list li:nth-child(1) .rank{
-    background: #F54545;
-  }
-  .hot-search-list li:nth-child(2) .rank{
-    background: #FF8547;
-  }
-  .hot-search-list li:nth-child(3) .rank{
-    background: #FFAC38;
+    top: 8px;
+    font-size: 0;
+    border-radius: 100%;
   }
 
 

@@ -1,15 +1,16 @@
 <template>
   <div class="open-class common-container-width">
-    <div v-if="list.length<1" class="empty">
+    <div v-if="list.length<1 && isShowPage" class="empty">
       暂时还没有公开课哦~去看看<span
       class="pointer"
       @click="routerGo('/online-class')">线上课程</span>吧
     </div>
     <ul class="list-box" v-if="list.length>0">
         <li v-for="(item,index) in list"
-         v-show="item != null && index<pageSize"
+        :class="{liEmpty:item==null}"
         :key="index">
           <Card
+          v-if="item != null"
           @classClick="classClick"
           :type="cardType"
           :titleStyle="titleStyle"
@@ -18,6 +19,8 @@
     </ul>
 
     <el-pagination
+      v-if="total>list.length"
+      @current-change="handleCurrentChange"
       layout="prev, pager, next"
       :pager-count="pagerCount"
       prev-text="上一页"
@@ -29,6 +32,10 @@
 </template>
 <script>
 import Card from '@/views/web/components/card/card.vue';
+import { initList } from '@/assets/utils/util';
+import {
+    offlineCourseList,
+} from '@/api/apis';
 
 export default {
     name: 'open-class',
@@ -40,132 +47,12 @@ export default {
                 color: '#444',
                 fontSize: '16px',
             },
-            pageSize: 8, // 一页最多展示的条数
+            pageSize: 12, // 一页最多展示的条数
             pagerCount: 11, // 11页以上显示...
-            total: 50,
-
-            list: [
-                {
-                    id: 1,
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    time: '2019.01.09-2019.01.09', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    money: 1000,
-                    peopleNum: 209,
-                },
-                {
-                    id: 2,
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    time: '2019.01.09-2019.01.09', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    money: 1000,
-                    peopleNum: 209,
-                },
-                {
-                    id: 3,
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    time: '2019.01.09-2019.01.09', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    money: 1000,
-                    peopleNum: 209,
-                },
-                {
-                    id: 4,
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    time: '2019.01.09-2019.01.09', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    money: 1000,
-                    peopleNum: 209,
-                },
-                {
-                    id: 5,
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    time: '2019.01.09-2019.01.09', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    money: 1000,
-                    peopleNum: 209,
-                },
-                {
-                    id: 6,
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    time: '2019.01.09-2019.01.09', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    money: 1000,
-                    peopleNum: 209,
-                },
-                {
-                    id: 7,
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    time: '2019.01.09-2019.01.09', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    money: 1000,
-                    peopleNum: 209,
-                },
-                {
-                    id: 8,
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    time: '2019.01.09-2019.01.09', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    money: 1000,
-                    peopleNum: 209,
-                },
-                {
-                    id: 9,
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    time: '2019.01.09-2019.01.09', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    money: 1000,
-                    peopleNum: 209,
-                },
-                {
-                    id: 10,
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    time: '2019.01.09-2019.01.09', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    money: 1000,
-                    peopleNum: 209,
-                },
-            ],
+            total: 0,
+            isShowPage: false,
+            pageNum: 1,
+            list: [],
         };
     },
     mounted() {
@@ -173,18 +60,36 @@ export default {
     },
     methods: {
         init() {
-            this.initList();
+            // 获取公开课列表
+            this.offlineCourseListFn('init');
         },
-        initList() {
-            const num = this.list.length % 4; // 计算需要补位的数量
-            if (num !== 0 && this.list.length < this.pageSize) {
-            // 如果能被4整除且当前页条数小于当页最大条数，开始补位
-                for (let i = 0; i < num; i += 1) {
-                    this.list.push(null);
-                }
+        handleCurrentChange(val) {
+            this.pageNum = val;
+            this.offlineCourseListFn();
+        },
+
+        offlineCourseListFn(type) {
+            if (type === 'init') {
+                this.pageNum = 1;
             }
-            console.log(this.list);
+            let { pageNum } = this;
+            let { pageSize } = this;
+            // 获取公开课列表
+            offlineCourseList({ pageNum, pageSize }).then((res) => {
+                if (res.data.list.length > 0) {
+                    this.list = res.data.list;
+                    this.list = initList(this.list, 4);
+                }
+                this.total = res.data.total;
+                this.isShowPage = true;
+            }).catch((err) => {
+                console.log(err);
+            });
         },
+        routerGo(path) {
+            this.$router.push({ path });
+        },
+
         classClick(item) {
             this.$router.push({ path: '/detail', query: { id: item.id } });
         },
@@ -195,6 +100,11 @@ export default {
 };
 </script>
 <style scoped>
+  .liEmpty{
+    display: block;
+    height: 1px;
+    width: 218px;
+  }
   .empty{
     padding: 300px 0;
     text-align: center;
@@ -211,9 +121,11 @@ export default {
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
+    overflow: hidden;
   }
   .list-box li{
     display: block;
     margin-bottom: 30px;
+    flex-grow:0;
   }
 </style>

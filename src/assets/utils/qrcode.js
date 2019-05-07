@@ -286,7 +286,16 @@ var QRCode;
 			     img.src = _this._htOption.logourl;
 			     //浏览器加载图片完毕后再绘制图片
 			     img.onload = function(){
-			         ctx.drawImage(img, _this._elCanvas.width*0.35, _this._elCanvas.height*0.35,_this._elCanvas.width*0.3,_this._elCanvas.height*0.3);       	
+				     	try{
+				         	ctx.drawImage(img, _this._elCanvas.width*0.35, _this._elCanvas.height*0.35,_this._elCanvas.width*0.3,_this._elCanvas.height*0.3);       	
+									_this._elImage.src = _this._elCanvas.toDataURL("image/png");
+									_this._elImage.style.display = "block";
+									_this._elCanvas.style.display = "none";
+							}catch(e){
+								//出错可能是同源策略限制图片 默认展示canvas
+								_this._elImage.style.display = "none";
+								_this._elCanvas.style.display = "block";
+							}
 						};		
 						img.onerror = function(){
 

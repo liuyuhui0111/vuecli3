@@ -6,7 +6,9 @@
         <swiper-slide
         v-for="(item,index) in list"
         :key="index">
-            <img @click="swiperClick(item)" :src="item.imgurl" alt="">
+            <img class="banner-img"
+            @click="swiperClick(item)"
+            :src="item.pic?item.pic:defaultUrl" :alt="item.title">
         </swiper-slide>
         <!-- Optional controls -->
         <div class="swiper-pagination"  slot="pagination"></div>
@@ -21,9 +23,11 @@
 import { swiper, swiperSlide } from 'vue-awesome-swiper';
 
 export default {
+    name: 'banner',
     data() {
         return {
             name: 'banner',
+            defaultUrl: `${window.location.origin}/banner.png`,
             swiperOption: {
                 autoplay: {
                     delay: 3000,
@@ -63,9 +67,9 @@ export default {
             this.isShowSwiper = true;
         },
         swiperClick(swiperItem) {
-            if (swiperItem.href) {
+            if (swiperItem.url) {
                 // 如果存在href 跳转
-                window.location.href = swiperItem.href;
+                window.location.href = swiperItem.url;
             }
         },
     },
@@ -81,5 +85,10 @@ export default {
     }
     .swiper-button-next{
         background: url('./imgs/icon-next.png') no-repeat center center;
+    }
+    .banner-img{
+        width: 100%;
+        min-height: 304px;
+        max-height: 315px;
     }
 </style>

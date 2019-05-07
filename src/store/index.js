@@ -2,8 +2,9 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import user from './modules/user';
+import center from './modules/center';
 import getters from './getters'
-import {getCookie, setCookie, delCookie} from '@/assets/utils/util'
+import {getTokenFn, setTokenFn} from '@/assets/utils/util'
 
 Vue.use(Vuex);
 
@@ -11,7 +12,7 @@ export default new Vuex.Store({
 	state: {
 		isShowLoading: false,		//全局loading
 		keepAliveComponetScrolls: {},		//keepAlive 组件记录滚动条 path:scrolly
-		token:getCookie('token') ? getCookie('token') : '',		//token
+		token:getTokenFn() ? getTokenFn() : '',		//token
 	},
 	getters: {},
 	actions: {},
@@ -19,15 +20,13 @@ export default new Vuex.Store({
 		setShowLoading(state, { isShowLoading }) {
 	    state.isShowLoading = isShowLoading;
 	  },
+	  loginout(state,loginout){
+
+	  },
 	  setToken(state,token) {
 	  	// 设置token  同步到cookie 有效期默认7天
 	  	//如果token不存在 默认清空token
-
-	  	if(token){
-	  		setCookie('token',token,7)
-	  	}else{
-	  		delCookie('token')
-	  	}
+	  	setTokenFn(token);
 	    state.token = token;
 	  },
     setKeepAliveComponetScrolls(state, { path , scroll }) {
@@ -39,6 +38,7 @@ export default new Vuex.Store({
 	},
     modules: {
         user,
+        center
     },
     getters
 });

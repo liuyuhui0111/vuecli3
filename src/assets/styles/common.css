@@ -64,10 +64,12 @@ list-style-type:none;
 caption, th {
 text-align:left;
 }
-q:before, q:after, blockquote:before, blockquote:after {
-content:””;
-}
 
+
+/*取消ios点击效果*/
+*{
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
 
 /*清楚浮动*/
 .clear:after {content:"."; display:block; height:0; visibility:hidden; clear:both; }
@@ -77,12 +79,15 @@ content:””;
 body{
 	font-family: 'PingFangSC-Medium','Avenir', Helvetica, Arial, sans-serif;
 }
+input,textarea{
+  color: #444;
+  font-size: 14px;
+}
 /*公共主体内容宽度*/
 .common-container-width{
 	min-width: 960px;
 	max-width: 995px;
 	margin: 0 auto;
-	overflow: auto;
 }
 
 /*单行文字溢出*/
@@ -103,4 +108,40 @@ body{
 /*手形鼠标*/
 .pointer{
   cursor: pointer;
+}
+/*公共按钮样式*/
+.btn-sub{
+  display: block;
+  width: 108px;
+  height: 29px;
+  line-height: 29px;
+  text-align: center;
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: -0.29px;
+  background: #FB683C;
+  border-radius: 100px;
+  margin: 20px auto;
+  cursor: pointer;
+}
+/*向下三角*/
+.icon-triangle{
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #868686;
+  position: relative;
+  top: -3px;
+}
+/*公共遮罩层*/
+.mask{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 99;
 }

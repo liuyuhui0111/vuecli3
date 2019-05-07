@@ -8,10 +8,10 @@
         :key="index">
             <div class="teacher-box pointer">
                 <div class="photo">
-                    <img :src="item.src" :alt="item.name">
+                    <img :src="item.headPic" :alt="item.name">
                 </div>
                 <p class="name">{{item.name}}</p>
-                <p class="intro" v-html="item.intro"></p>
+                <p class="intro" v-html="item.individualResume"></p>
             </div>
         </swiper-slide>
         <!-- Optional controls -->
@@ -107,5 +107,6 @@ export default {
         text-align: left;
         line-height: 20px;
         margin-top: 10px;
+        word-break: break-all;
     }
 </style>

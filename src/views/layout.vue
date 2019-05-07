@@ -34,6 +34,7 @@
                   <div slot="reference" class="slot-online">
                     <div v-for="(item,index) in navlist"
                     class="item"
+                    @click="changeNav(item,index)"
                     v-show="item.name == '在线学习'"
                     :class="{active:index==navIndex}"
                     :key="index">
@@ -42,27 +43,32 @@
 
                   <!-- 类目展开框 -->
                   <div class="online-box">
-                    <div class="online-nav-left">
+                    <div class="online-nav-left" v-if="onlineNavList.length>0">
                       <div class="item"
                       :class="{active:index == onlineNavIndex}"
                       @click="onlineNavIndex = index"
                       v-for="(item,index) in onlineNavList"
                       :key="index">
-                        {{item.text}}
+                        {{item.name}}
                       </div >
                     </div>
 
                     <div class="online-nav-right">
-                      <ul class="online-nav-right-list">
+                      <ul v-if="onlineNavList[onlineNavIndex]
+                      && onlineNavList[onlineNavIndex].children"
+                      class="online-nav-right-list">
                         <li
-                        v-for="(item,index) in onlineNavList[onlineNavIndex].children"
+                        v-for="(item,index) in
+                        onlineNavList[onlineNavIndex].children"
                         :key="index">
-                          <span class="title">
-                            {{item.title}}
+                          <span @click="onlineNavClick(item,index)"
+                          class="title">
+                            {{item.name}}
                           </span>
-                          <span v-for="(list,listindex) in item.list"
+                          <span v-for="(list,listindex) in item.children"
+                          @click="onlineNavClick(list,listindex)"
                           :key="listindex">
-                            {{list.text}}
+                            {{list.name}}
                           </span>
                         </li>
                       </ul>
@@ -98,35 +104,42 @@
 
                 <!-- 联动结果框 -->
                 <div class="search-result-box">
-                  <div v-if="searchResult.list.length<1" class="empty">
-                    暂无数据，换个关键词试试吧
-                  </div>
-                  <div v-else class="result-list-box">
+
+                  <div class="result-list-box">
                     <div class="tab">
-                      <span @click="searchTabIndex=0"
-                      :class="{active:searchTabIndex=='0'}">
-                      课程({{searchResult.classNums}})</span>
-                      <span  @click="searchTabIndex=1"
-                      :class="{active:searchTabIndex=='1'}">
-                      专题({{searchResult.specialNums}})</span>
+                      <span @click="changeSearchTab(0,'online')"
+                      :class="{active:searchTabIndex==0}">
+                      线上课({{getSearchListData.online.total}})</span>
+                      <span @click="changeSearchTab(1,'offline')"
+                      :class="{active:searchTabIndex==1}">
+                      公开课({{getSearchListData.offline.total}})</span>
                     </div>
-                    <ul class="result-list">
+                    <div v-if="getSearchListData[searchResultType].total<1" class="empty">
+                      <span v-show="!isShowSearchLoading">
+                        暂无数据，换个关键词试试吧
+                      </span>
+                      <span class="el-icon-loading"
+                      v-show="isShowSearchLoading"></span>
+                    </div>
+                    <ul v-if="getSearchListData[searchResultType].total>0" class="result-list">
                       <li class="pointer"
-                      @click="routerGo(item.href)"
-                      v-for="(item,index) in searchResult.list"
+                      @click="goDetail(item)"
+                      v-for="(item,index) in getSearchListData[searchResultType].list.slice(0,3)"
                       :key="index">
-                        <img :src="item.imgurl" :alt="item.title">
+                        <img :src="item.bannerUrl?item.bannerUrl:item.pic" :alt="item.title">
                         <div class="title-box">
                           <p class="title ellipsis2">{{item.title}}</p>
                           <p class="time-box">
-                            <span>{{item.time}}</span>
-                            <span>{{item.peopleNum}}在学</span>
+                            <span>{{getSearchTime(item)}}</span>
+                            <span>{{getSearchLearn(item)}}</span>
                           </p>
                         </div>
                       </li >
                     </ul>
 
-                    <p @click="goSearchPage" class="more">查看更多</p>
+                    <p v-if="getSearchListData[searchResultType].total>=3"
+                    @click="goSearchPage"
+                    class="more">查看更多</p>
                   </div>
                 </div>
 
@@ -138,22 +151,25 @@
                 <span class="nologin" @click="login">登录</span>
               </div>
               <!-- 用户信息 登录成功 -->
-              <div v-if="token" class="user-box">
+              <div v-if="token && commonUserData && commonUserData.userName" class="user-box">
                 <el-popover
                   placement="bottom"
+                  trigger="hover"
                   width="190"
                   v-model="showUserBox">
                   <div class="name-btn" slot="reference">
-                    <span class="name">Hi,{{user.name}}</span>
+                    <span @click="routerGo('/center/preson')"
+                    class="name pointer">Hi,{{commonUserData.userName}}</span>
                     <span class="icon-triangle"></span>
                   </div>
                   <!-- 用户详情 start -->
                   <div class="user-container">
-                    <span class="name">Hi,{{user.name}}</span>
-                    <span class="level">{{user.level}}</span>
+                    <span class="name">Hi,{{commonUserData.userName}}</span>
+                    <span class="level">{{commonUserData.leaguerLevelName}}</span>
                     <ul class="user-nav">
                       <li
                       v-for="(item,index) in userNav"
+                      @click="routerGo(item.href)"
                       :key="index">
                         {{item.text}}
                       </li >
@@ -163,7 +179,7 @@
                  <!-- 用户详情 end -->
                 </el-popover>
                 <!-- 用户等级 -->
-                <span class="level">{{user.level}}</span>
+                <span class="level">{{commonUserData.leaguerLevelName}}</span>
               </div>
 
 
@@ -181,10 +197,10 @@
             <p class="step">step1：能力评测</p>
             <span class="icon-triangle"></span>
             <p class="step">step2：评估报告</p>
-            <span class="btn-ev">测评</span>
+            <span @click="showEva()" class="btn-ev">测评</span>
           </div>
           <div v-else class="isevad">
-            <span @click="isShowEvaluation=false" class="icon-close"></span>
+            <span @click="isShowEvaluation=false" class="el-icon-close"></span>
             <p class="title">您的成绩</p>
             <div class="loading">
                 <div class="left">
@@ -199,7 +215,7 @@
                 </div>
             </div>
 
-            <span class="btn-ev">查看报告</span>
+            <span @click="showEva()" class="btn-ev">查看报告</span>
           </div>
         </div>
 
@@ -217,8 +233,9 @@
 
 
       <!-- 页面主体 -->
+      <div class="main">
       <el-main><slot>main</slot></el-main>
-
+      </div>
 
       <!-- 页面底部 -->
       <el-footer height="176px">
@@ -255,7 +272,12 @@
 </template>
 <script>
 import { getScrollTop, setScrollTop, getUrlParam } from '@/assets/utils/util';
-
+import {
+    getSearchList,
+    getCategoryList,
+    queryPersonalMap,
+    getReviewUrl,
+} from '@/api/apis';
 
 const qrcode = require('./imgs/qrcode.png');
 
@@ -271,7 +293,7 @@ export default {
             navIndex: 0, // 默认顶部导航选中index
             offset: 100,
             isShowEvaluation: false, // 是否显示测评
-            isEvad: true, // 是否已经评测过
+            isEvad: false, // 是否已经评测过
             evadStore: { // 评测得分
                 total: 100, // 总分
                 num: 49, // 当前得分
@@ -286,111 +308,50 @@ export default {
 
             showOnlineBox: false, // 在线学习类目显示
             onlineNavIndex: 0, // 当前选中的在线课程分类
-            onlineNavList: [
-                {
-                    text: '管理会计',
-                    id: '1',
-                    children: [
-                        {
-                            title: '预算管理',
-                            list: [
-                                { id: '10', text: '预算管理0' },
-                                { id: '11', text: '预算管理1' },
-                                { id: '13', text: '预算管理3' },
-                                { id: '14', text: '预算管理4' },
-                            ],
-                        },
-                        {
-                            title: '分析与决策',
-                            list: [
-                                { id: '10', text: '报表解读' },
-                                { id: '11', text: '经营分析' },
-                                { id: '13', text: '预算管理3' },
-                                { id: '14', text: '预算管理4' },
-                            ],
-                        },
-                    ],
-                },
-                {
-                    text: '财务会计',
-                    id: '2',
-                    children: [
-                        {
-                            title: '预算管理',
-                            list: [
-                                { id: '10', text: '预算管理0' },
-                                { id: '11', text: '预算管理1' },
-                                { id: '12', text: '预算管理2' },
-                                { id: '13', text: '预算管理3' },
-                            ],
-                        },
-                        {
-                            title: '分析与决策',
-                            list: [
-                                { id: '10', text: '报表解读' },
-                                { id: '11', text: '经营分析' },
-                                { id: '12', text: '预算管理2' },
-                                { id: '14', text: '预算管理4' },
-                            ],
-                        },
-                    ],
-                },
-                {
-                    text: '财资管理',
-                    id: '3',
-                    children: [
-                        {
-                            title: '预算管理',
-                            list: [
-                                { id: '10', text: '预算管理0' },
-                                { id: '11', text: '预算管理1' },
-                                { id: '12', text: '预算管理2' },
-                                { id: '13', text: '预算管理3' },
-                            ],
-                        },
-                        {
-                            title: '分析与决策',
-                            list: [
-                                { id: '10', text: '报表解读' },
-                                { id: '11', text: '经营分析' },
-                                { id: '12', text: '预算管理2' },
-                                { id: '13', text: '预算管理3' },
-                            ],
-                        },
-                    ],
-                },
-            ],
+            onlineNavList: [],
 
             showUserBox: false, // 用户信息弹框
             user: {
-                name: '李白',
-                level: '会员等级',
+                name: '',
+                level: '',
             },
 
             userNav: [
                 {
-                    text: '个人设置',
-                    href: '/my/setting',
-                },
-                {
-                    text: '我的收藏',
-                    href: '/my/my-collect',
-                },
-                {
-                    text: '我的订单',
-                    href: '/my/my-order',
+                    text: '个人中心',
+                    value: '0',
+                    icon: 'preson',
+                    href: '/center/preson',
                 },
                 {
                     text: '我的课程',
-                    href: '/my/my-classes',
+                    value: '1',
+                    icon: 'myclass',
+                    href: '/center/myclass',
                 },
                 {
-                    text: '我的学习卡',
-                    href: '/my/my-card',
+                    text: '我的收藏',
+                    value: '2',
+                    icon: 'mycol',
+                    href: '/center/mycol',
                 },
                 {
-                    text: '我的预约',
-                    href: '/my/my-sub',
+                    text: '我的报名',
+                    value: '3',
+                    icon: 'signin',
+                    href: '/center/signin',
+                },
+                {
+                    text: '我的订单',
+                    value: '4',
+                    icon: 'myorder',
+                    href: '/center/myorder',
+                },
+                {
+                    text: '个人设置',
+                    value: '5',
+                    icon: 'myset',
+                    href: '/center/myset',
                 },
             ],
 
@@ -400,33 +361,8 @@ export default {
             searchTabIndex: 0,
             showSearchInput: false,
             showSearchBox: false, // 搜索联动框
-            searchResult: {
-                classNums: 20, // 课程结果数
-                specialNums: 20, // 专题结果数
-                list: [ // 搜索结果列表
-                    {
-                        href: 'http://www.baidu.com', // 课程链接
-                        imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                        title: '标题，最多显示两行放不下自动换行，两行放不下用…代替即可', // 标题
-                        time: '60分钟',
-                        peopleNum: 209,
-                    },
-                    {
-                        href: 'http://www.baidu.com', // 课程链接
-                        imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                        title: '标题，最多显示两行放不下自动换行，两行放不下用…代替即可', // 标题
-                        time: '60分钟',
-                        peopleNum: 209,
-                    },
-                    {
-                        href: 'http://www.baidu.com', // 课程链接
-                        imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                        title: '标题，最多显示两行放不下自动换行，两行放不下用…代替即可', // 标题
-                        time: '60分钟',
-                        peopleNum: 209,
-                    },
-                ],
-            },
+            getSearchListList: [], // 搜索结果
+            isShowSearchLoading: false, // 搜索等待
 
             aside: {
                 qq: `http://wpa.qq.com/msgrd?v=3&uin=${12345678}&site=在线客服&menu=yes`, // 侧栏QQ
@@ -443,15 +379,39 @@ export default {
             },
 
             timer: null,
-
+            searchTimer: null,
+            backToptimer: null,
+            evurl: '',
+            getSearchListData: {
+                online: {
+                    total: 0,
+                    list: [],
+                },
+                offline: {
+                    total: 0,
+                    list: [],
+                },
+            },
+            searchResultType: 'online',
         };
     },
     mounted() {
         this.init();
     },
+    watch: {
+        /*eslint-disable*/
+        'search.value': function () {
+            this.getSearchListFn();
+        },
+        '$route':function(){
+          this.initNavListIndex();
+        },
+        /* eslint-enable */
+    },
     methods: {
 
         init() {
+            // this.setToken('111');
             // 初始化用户信息
             this.initUserInfo();
             // 初始化导航位置
@@ -460,8 +420,121 @@ export default {
             this.initProcess();
             // 初始化滚动条
             this.initScroll();
+            // 获取线下课程列表
+            this.getCategoryListFn();
+            // 初始化测评相关
+            this.initReview();
+            // 获取个人信息
+            // this.initPerson();
+            console.log(this.commonUserData);
+        },
+        goDetail(item) {
+            this.showSearchBox = false;
+            if (this.searchResultType === 'online') {
+                this.$router.push({ path: '/online-detail', query: { id: item.id } });
+            } else {
+                this.$router.push({ path: '/detail', query: { id: item.id } });
+            }
+        },
+        getSearchTime(item) {
+            if (this.searchResultType === 'online') {
+                let num = 0;
+                if (item.courseVideoEntity.length > 0) {
+                    item.courseVideoEntity.forEach((min) => {
+                        num += min.videoMinute;
+                    });
+                }
+                return `${num}分钟`;
+            }
+
+            return `讲师:${item.teacherName}`;
+        },
+        getSearchLearn(item) {
+            if (this.searchResultType === 'online') {
+                return `${item.learnNum}人在学`;
+            }
+            let price = item.price ? `${item.price}元` : '免费';
+            return price;
+        },
+        changeSearchTab(index, type) {
+            this.searchTabIndex = index;
+            this.searchResultType = type;
+        },
+        initPerson() {
+            // 获取个人信息
+            queryPersonalMap().then((res) => {
+                if (res.data.code === '0000') {
+                    console.log(res);
+                }
+            }).catch((err) => {
+                this.$message({
+                    message: '获取个人数据失败，请稍后再试',
+                    type: 'warning',
+                });
+                console.log(err);
+            });
+        },
+        initReview() {
+            if (!this.token) {
+            // 用户未登录  展示测评
+                this.isEvad = false;
+            } else {
+                // this.getReviewFn();
+                this.getReviewUrlFn();
+            }
+        },
+        showEva() {
+            if (this.token && this.evurl) {
+            // 如果token存在且跳转地址存在 去测评
+                window.location.href = this.evurl;
+            } else if (!this.token) {
+            // 否则 登录失效 去登录
+                // this.loginout();
+                this.$message({ message: '您还没有登录，请先登录', type: 'warning' });
+            } else {
+                this.getReviewUrlFn();
+            }
+        },
+        getReviewUrlFn() {
+            // 获取测评地址
+
+            getReviewUrl().then((res) => {
+                if (res.data.code === '0000' || res.data.code === '0009') {
+                    console.log(res);
+                    if (res.data.code === '0009') {
+                        this.evadStore.num = res.data.review.memberCorrectCount; // 用户答对题数
+                        this.evadStore.total = res.data.review.examTotal; // 总题数
+                        // 已经评测过
+                        this.isEvad = true;
+                    } else {
+                        this.isEvad = false;
+                    }
+                    this.evurl = res.data.url;
+                } else {
+                    this.isEvad = false;
+                    // 获取测评地址失败
+                    this.$message({
+                        message: '获取测评地址失败,请稍后再试',
+                        type: 'warning',
+                    });
+                }
+            }).catch((err) => {
+                this.isEvad = false;
+                this.$message({
+                    message: '获取测评信息失败,请稍后再试',
+                    type: 'warning',
+                });
+                console.log(err);
+            });
         },
         initUserInfo() {
+            if (this.token && this.commonUserData && this.commonUserData.userName) {
+                // 如果用户名信息存在 return;
+                this.user.name = this.commonUserData.userName;
+                this.user.level = this.commonUserData.leaguerLevelName;
+                return;
+            }
+
             // 获取用户信息
             const code = getUrlParam('code');
             if (code) {
@@ -469,6 +542,84 @@ export default {
                 if (!this.token) {
                     this.getTokenByCode();
                 }
+            }
+            this.getUserInfoFn();
+        },
+        onlineNavClick(item) {
+            this.$router.push({ path: '/online-class', query: { nid: item.id } });
+        },
+
+        arrFindById(arr, id) {
+            let i = -1;
+            arr.forEach((item, index) => {
+                if (item.id === id) {
+                    i = index;
+                }
+            });
+            return i;
+        },
+        initNavList(list) {
+            function getChildById(id) {
+                let childs = [];
+                list.forEach((item) => {
+                    if (item.pid === id && item.id !== item.pid) {
+                        childs.push({ children: getChildById(item.id), ...item });
+                    }
+                });
+                return childs;
+            }
+
+            let arr = [];
+            list.forEach((item) => {
+                if (item.id === item.pid) {
+                    arr.push({ children: getChildById(item.id), ...item });
+                }
+            });
+
+
+            return arr;
+        },
+
+        getCategoryListFn() {
+            // 获取线下课程列表
+            getCategoryList().then((res) => {
+                if (res.status === 200) {
+                    let arr = [];
+                    let { list } = res.data;
+                    // id === pid 是一级菜单
+                    arr = this.initNavList(list);
+                    console.log(arr);
+                    this.onlineNavList = arr;
+                }
+            }).catch((err) => {
+                this.$message({
+                    message: '获取线下课程列表失败,请稍后再试',
+                    type: 'warning',
+                });
+                console.log(err);
+            });
+        },
+        getSearchListFn() {
+            // 搜索联动
+            this.isShowSearchLoading = true;
+            const title = this.search.value;
+            if (title) {
+                clearTimeout(this.searchTimer);
+                this.searchTimer = setTimeout(() => {
+                    getSearchList({ title }).then((res) => {
+                        this.isShowSearchLoading = false;
+                        console.log(res);
+                        if (res.data.code === '0000') {
+                            // this.getSearchListData = res.data
+                            this.$set(this.getSearchListData, 'online', res.data.online);
+                            this.$set(this.getSearchListData, 'offline', res.data.offLine);
+                            console.log(this.getSearchListData[this.searchResultType].total);
+                        }
+                    }).catch((err) => {
+                        this.isShowSearchLoading = false;
+                        console.log(err);
+                    });
+                }, 2000);
             }
         },
         initScroll() {
@@ -489,11 +640,13 @@ export default {
             if (this.$route.meta && this.$route.meta.navIndex) {
                 this.navIndex = this.$route.meta.navIndex;
             } else {
+                let nav = -1;
                 this.navlist.forEach((item, index) => {
                     if (item.href === this.$route.path) {
-                        this.navIndex = index;
+                        nav = index;
                     }
                 });
+                this.navIndex = nav;
             }
         },
 
@@ -511,9 +664,9 @@ export default {
             }
         },
 
-        routerGo(href) {
-            if (href) {
-                window.location.href = href;
+        routerGo(path) {
+            if (path) {
+                this.$router.push({ path });
             }
         },
 
@@ -532,16 +685,15 @@ export default {
             const scrollTop = getScrollTop();
             // step 计算每次滚动距离
             const step = Math.ceil((scrollTop - this.aside.scrollTop) / (scrollTime / stepTime));
-            let timer = null;
 
-            clearInterval(timer);
-            timer = setInterval(() => {
+            clearInterval(this.backToptimer);
+            this.backToptimer = setInterval(() => {
                 const curScroll = getScrollTop();
                 let top = 0;
                 if (curScroll - step > 0) {
                     top = curScroll - step;
                 } else {
-                    clearInterval(timer);
+                    clearInterval(this.backToptimer);
                 }
                 setScrollTop(top);
             }, stepTime);
@@ -551,9 +703,10 @@ export default {
         },
 
         changeNav(item, index) {
+            console.log(item);
             this.navIndex = index;
             if (item.href) {
-                this.$router.push(item.href);
+                this.$router.push({ path: item.href });
             }
         },
 
@@ -599,6 +752,9 @@ export default {
 };
 </script>
 <style scoped>
+.main{
+  min-height: 600px;
+}
   .register,
   .nologin{
     font-size: 16px;
@@ -667,7 +823,7 @@ export default {
   .online-box{
     /*height: 360px;*/
     display: flex;
-    align-items: top;
+    align-items: flex-start;
     justify-content: space-between;
     padding: 20px 10px;
     text-align: left;
@@ -693,9 +849,13 @@ export default {
     border-right: 1px solid #D4D4D4;
   }
   .online-box .online-nav-left .item{
+    display: flex;
+    min-height: 22px;
     line-height: 22px;
     margin-bottom: 20px;
     cursor: pointer;
+    align-items: center;
+    border: none;
   }
   .online-box .online-nav-left .item.active{
     color: #FB683C;
@@ -714,8 +874,9 @@ export default {
     margin-bottom: 20px;
     font-size: 14px;
     color: #868686;
+   min-height: 22px;
     line-height: 22px;
-    padding-top: 10px;
+    /*margin-top: 10px;*/
   }
   .online-nav-right-list li span{
     display: block;
@@ -727,7 +888,9 @@ export default {
     color: #444;
     font-weight: bold;
   }
-
+.el-icon-close{
+  color: #fff;
+}
 
   /*搜索框*/
   .search-box-slot{
@@ -807,6 +970,9 @@ export default {
     justify-content: space-between;
     padding: 20px 0 10px 0;
   }
+  .result-list li .title-box{
+    width: 228px;
+  }
   .result-list li img{
     display: block;
     width: 131px;
@@ -860,6 +1026,7 @@ export default {
     display: block;
     width: 50%;
     padding-bottom: 20px;
+    cursor: pointer;
   }
   .user-nav li:nth-child(2n){
     text-align: right;
@@ -872,16 +1039,7 @@ export default {
     font-size: 16px;
     margin-right: 6px;
   }
-  .icon-triangle{
-    display: inline-block;
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 6px solid #868686;
-    position: relative;
-    top: -3px;
-  }
+
   .level{
     display: inline-block;
     width: 64px;
@@ -919,7 +1077,7 @@ export default {
     position: fixed;
     bottom: 78px;
     right: 100px;
-    z-index: 999;
+    z-index: 99;
     text-align: center;
   }
   .aside-evaluation .title{
@@ -969,9 +1127,8 @@ export default {
     position: fixed;
     right: 0px;
     bottom:60px;
-    z-index: 9999;
+    z-index: 99;
   }
-  .icon-close,
   .icon-ev,
   .icon-backtop,
   .icon-qq{
@@ -986,14 +1143,6 @@ export default {
   }
   .icon-ev{
     background-image: url('./imgs/icon-ev.png');
-  }
-  .icon-close{
-    width: 12px;
-    height: 12px;
-    background-image: url('./imgs/icon-close.png');
-    position: absolute;
-    right: 10px;
-    top: 10px;
   }
 
   /*评测分环状*/

@@ -3,16 +3,16 @@
     <!-- 站内搜索框 -->
     <div class="search-inweb">
         <input v-model="searchVal" type="text">
-        <span class="btn-sub">站内搜索</span>
+        <span @click="getSearchListFn('init')" class="btn-search-sub">站内搜索</span>
     </div>
 
     <!-- 专题 课程tab -->
     <div class="tab-box">
         <span v-for="(item,index) in tablist"
-        @click="changeTab(index)"
+        @click="changeTab(index,item)"
         :class="{active:index == tabindex}"
         :key="index">
-            {{item.text}} ( {{item.value}} )
+            {{item.text}} ( {{getSearchListData[item.type].total}} )
         </span>
     </div>
 
@@ -20,28 +20,14 @@
     <div class="contain-box">
       <!-- 结果展示 -->
       <div class="contain">
-          <div v-if="list.length<1" class="empty">
+          <div v-if="getSearchListData[searchResultType].list.length<1 && isShowPage" class="empty">
             天了噜，0个“{{searchVal}}”相关的结果。
           </div>
-          <div v-if="list.length>0" class="search-list-box">
+          <div v-if="getSearchListData[searchResultType].list.length>0" class="search-list-box">
               <ul class="list-box">
-                <li v-for="(item,index) in list"
-                 v-show="item != null && index<pageSize"
+                <li v-for="(item,index) in getSearchListData[searchResultType].list"
                 :key="index">
-                  <Card :type="cardType"
-                  :titleStyle="titleStyle"
-                  :classData="item"></Card>
-                </li>
-              </ul>
-          </div>
-          <!-- 新课程推荐 -->
-          <div class="new-list-box">
-            <p class="title">最新课程推荐</p>
-              <ul class="list-box">
-                <li v-for="(item,index) in newlist"
-                 v-show="item != null && index<pageSize"
-                :key="index">
-                  <Card :type="cardType"
+                  <Card v-if="item != null" :type="cardType"
                   :titleStyle="titleStyle"
                   :classData="item"></Card>
                 </li>
@@ -49,14 +35,29 @@
           </div>
 
         <el-pagination
-          v-if="list.length>0"
+          v-if="getSearchListData[searchResultType].list.length>0
+          && getSearchListData[searchResultType].total>pageSize"
+          @current-change="handleCurrentChange"
           layout="prev, pager, next"
           :pager-count="pagerCount"
           prev-text="上一页"
           next-text="下一页"
           :page-size="pageSize"
-          :total="total">
+          :total="getSearchListData[searchResultType].total">
         </el-pagination>
+
+        <!-- 新课程推荐 -->
+          <div v-if="newlist.length>0" class="new-list-box">
+            <p class="title">最新课程推荐</p>
+              <ul class="list-box">
+                <li v-for="(item,index) in newlist"
+                :key="index">
+                  <Card v-if="item != null" type="search-online"
+                  :titleStyle="titleStyle"
+                  :classData="item"></Card>
+                </li>
+              </ul>
+          </div>
       </div>
     <!-- 右侧热门搜索 -->
       <div class="aside">
@@ -64,16 +65,18 @@
         <div class="hot-word">
           <p class="title">热门搜索词</p>
           <span v-for="(item,index) in hotWordList"
-          :key="index">{{item.text}}</span>
+          @click="routerGo(item.word)"
+          :key="index">{{item.word}}</span>
         </div>
         <!-- 热门搜索 -->
         <div class="hot-search">
           <p class="title">热门搜索</p>
           <ul class="hot-search-list">
             <li v-for="(item,index) in hotSearchList"
+            @click="routerGo(item.title)"
             :key="index">
-              <span class="rank">{{item.rank}}</span>
-              <p>{{item.text}}</p>
+              <span class="rank">{{index+1}}</span>
+              <p>{{item.title}}</p>
             </li>
           </ul>
         </div>
@@ -86,200 +89,52 @@
 </template>
 <script>
 import Card from '@/views/web/components/card/card.vue';
+import {
+    getSearchList,
+    getHighWordList,
+    getCourseList,
+    getHighTitleList,
+} from '@/api/apis';
 
 export default {
     name: 'open-class',
     data() {
         return {
             name: 'open-class',
-            cardType: 'search',
+            cardType: 'search-online',
             searchVal: '',
+            getCourseListPageSize: 10,
+            getCourseListPageNum: 1,
+            pageNum: 1,
+            pageSize: 10,
+            pagerCount: 11,
             titleStyle: {
                 color: '#444',
                 fontSize: '16px',
             },
             tabindex: 0, // 当前选中tab index
             tablist: [ // tab列表
-                { text: '课程', value: 0 },
-                { text: '专题', value: 0 },
+                { text: '线上课', value: 0, type: 'online' },
+                { text: '公开课', value: 1, type: 'offline' },
             ],
-            hotWordList: [ // 热门搜索词
-                { text: '企业增值税' },
-                { text: '个人所得税' },
-                { text: '个人所得税' },
-                { text: '个人所得税' },
-                { text: '个人所得税' },
-                { text: '个人所得税' },
-                { text: '个人所得税' },
-            ],
-            hotSearchList: [ // 热门搜索
-                {
-                    text: '热门文章标题',
-                    rank: 1,
-                },
-                {
-                    text: '热门文章标题热门文章标题热门文章标题热门文章标题热门文章标题',
-                    rank: 3,
-                },
-                {
-                    text: '热门文章标题',
-                    rank: 4,
-                },
-                {
-                    text: '热门文章标题',
-                    rank: 7,
-                },
-                {
-                    text: '热门文章标题',
-                    rank: 2,
-                },
-                {
-                    text: '热门文章标题',
-                    rank: 5,
-                },
-                {
-                    text: '热门文章标题',
-                    rank: 6,
-                },
-            ],
+            hotWordList: [],
+            hotSearchList: [],
+            getSearchListList: [], // 搜索结果列表
+            getSearchListListByOpen: [], // 公开课列表
 
-
-            pageSize: 8, // 一页最多展示的条数
-            total: 50,
-            pagerCount: 11,
-            list: [], // 搜索结果列表
-            newlist: [ // 最新课程推荐
-                {
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    teacherSrc: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 老师头像
-                    time: '4', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    intro: '财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值',
-                    freeTxt: '会员免费',
-                    money: 1000,
-                    peopleNum: 209,
-                    classNum: 1,
-                    type: '预算管理',
+            newlist: [], // 最新课程推荐,
+            isShowPage: false,
+            getSearchListData: {
+                online: {
+                    total: 0,
+                    list: [],
                 },
-                {
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    teacherSrc: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 老师头像
-                    time: '4', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    intro: '财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值',
-                    freeTxt: '会员免费',
-                    money: 1000,
-                    peopleNum: 209,
-                    classNum: 1,
-                    type: '预算管理',
+                offline: {
+                    total: 0,
+                    list: [],
                 },
-                {
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    teacherSrc: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 老师头像
-                    time: '4', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    intro: '财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值',
-                    freeTxt: '会员免费',
-                    money: 1000,
-                    peopleNum: 209,
-                    classNum: 1,
-                    type: '预算管理',
-                },
-                {
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    teacherSrc: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 老师头像
-                    time: '4', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    intro: '财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值',
-                    freeTxt: '会员免费',
-                    money: 1000,
-                    peopleNum: 209,
-                    classNum: 1,
-                    type: '预算管理',
-                },
-            ],
-            newlist1: [ // 专题
-                {
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    teacherSrc: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 老师头像
-                    time: '4', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    intro: '财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值',
-                    freeTxt: '会员免费',
-                    money: 1000,
-                    peopleNum: 209,
-                    classNum: 1,
-                    type: '预算管理',
-                },
-                {
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    teacherSrc: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 老师头像
-                    time: '4', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    intro: '财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值',
-                    freeTxt: '会员免费',
-                    money: 1000,
-                    peopleNum: 209,
-                    classNum: 1,
-                    type: '预算管理',
-                },
-                {
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    teacherSrc: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 老师头像
-                    time: '4', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    intro: '财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值',
-                    freeTxt: '会员免费',
-                    money: 1000,
-                    peopleNum: 209,
-                    classNum: 1,
-                    type: '预算管理',
-                },
-                {
-                    href: 'http://www.baidu.com', // 课程链接
-                    teacherHref: 'http://www.sina.com', // 老师链接
-                    teacherName: '刘德华', // 老师名称
-                    teacherSrc: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 老师头像
-                    time: '4', // 上课时间
-                    imgurl: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3999219137,1518109222&fm=173&app=49&f=JPEG?w=218&h=146&s=9AA04181325321D21EB93016030080C1', // 图片地址
-                    teacherAddress: '香港', // 老师地址
-                    title: '财务如何为企业创造价值', // 标题
-                    intro: '财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值财务如何为企业创造价值',
-                    freeTxt: '会员免费',
-                    money: 1000,
-                    peopleNum: 209,
-                    classNum: 1,
-                    type: '预算管理',
-                },
-            ],
+            },
+            searchResultType: 'online',
         };
     },
     mounted() {
@@ -293,23 +148,92 @@ export default {
     methods: {
         init() {
             this.searchVal = this.$route.query.val;
+            // 搜索结果
+            this.getSearchListFn('init');
+            // 获取热门搜索词
+            this.getHighWordListFn();
+            // 获取热门文章
+            this.getHighTitleListFn();
+            // 查询最新课程列表
+            this.getCourseListFn();
             // 初始化热门搜索排名
-            this.initHotSearchList();
+            // this.initHotSearchList();
         },
-        changeTab(index) {
-            this.tabindex = index;
-            if (index === 0) {
-                this.cardType = 'search';
-                this.list = this.newlist;
-            } else {
-                this.cardType = 'search1';
-                this.list = this.newlist1;
+        routerGo(item) {
+            this.$router.push({ path: '/search', query: { val: item } });
+        },
+        getCourseListFn() {
+            // 查询最新课程列表
+            let pageNum = this.getCourseListPageNum;
+            let pageSize = this.getCourseListPageSize;
+            let params = {
+                boolean: 2,
+                pageNum,
+                pageSize,
+            };
+            getCourseList(params).then((res) => {
+                if (res.status === 200) {
+                    this.newlist = res.data.list;
+                }
+                console.log('=======================', res.data.list);
+            }).catch((err) => {
+                console.log(err);
+            });
+        },
+        getHighTitleListFn() {
+            // 获取热门文章
+            getHighTitleList().then((res) => {
+                if (res.data.code === '0000') {
+                    this.hotSearchList = res.data.list;
+                }
+            }).catch((err) => {
+                console.log(err);
+            });
+        },
+        getHighWordListFn() {
+            // 获取热门搜索词
+            getHighWordList().then((res) => {
+                if (res.data.code === '0000') {
+                    this.hotWordList = res.data.list;
+                }
+            }).catch((err) => {
+                console.log(err);
+            });
+        },
+        handleCurrentChange(val) {
+            this.pageNum = val;
+            this.getSearchListFn();
+        },
+        getSearchListFn(t) {
+            // 搜索
+            if (t === 'init') {
+                this.pageNum = 1;
             }
+            let { pageNum } = this;
+            let title = this.searchVal;
+            let { pageSize } = this;
+            if (!title) {
+                return;
+            }
+            getSearchList({ title, pageNum, pageSize }).then((res) => {
+                if (res.data.code === '0000') {
+                    this.$set(this.getSearchListData, 'online', res.data.online);
+                    this.$set(this.getSearchListData, 'offline', res.data.offLine);
+                    this.isShowPage = true;
+                    console.log(this.getSearchListData);
+                }
+            }).catch((err) => {
+                console.log(err);
+            });
+        },
+        changeTab(index, item) {
+            this.tabindex = index;
+            this.searchResultType = item.type;
+            this.cardType = `search-${item.type}`;
         },
         initHotSearchList() {
-            const list = this.hotSearchList;
+            let list = this.hotSearchList;
             this.hotSearchList = list.sort((a, b) => (a.rank < b.rank ? -1 : 1));
-            console.log(this.hotSearchList);
         },
 
     },
@@ -357,7 +281,7 @@ export default {
     color: #444;
   }
 
-  .search-inweb .btn-sub{
+  .search-inweb .btn-search-sub{
     position: absolute;
     right: 0;
     width: 100px;
@@ -426,8 +350,8 @@ export default {
     display: inline-block;
     font-size: 14px;
     color: #FB683C;
-    margin-right: 60px;
-    margin-bottom: 20px;
+    padding-right: 60px;
+    padding-bottom: 20px;
     cursor: pointer;
   }
   .hot-word span:nth-child(2n+1){

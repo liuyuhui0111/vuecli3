@@ -1,6 +1,8 @@
 /* eslint-disable */
 const getters = {
     token: state => state.token,
+    commonUserData: state => state.user.commonUserData,
+    commonCenterData: state => state.center.commonCenterData,
 
     isShowLoading: state => state.isShowLoading,
 
