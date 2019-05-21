@@ -98,7 +98,7 @@
                   <!-- 留言框 -->
                   <div class="textarea">
                     <span>其他建议</span>
-                    <textarea placeholder="提出您的建议，帮助我们改进"></textarea>
+                    <textarea v-model.trim="rate.otherTips" placeholder="提出您的建议，帮助我们改进"></textarea>
                   </div>
                 </div>
 
@@ -111,7 +111,7 @@
           <div class="list-box">
             <p>共{{detail.courseVideoEntity.length}}章节&nbsp;
             ({{getTime(detail.courseVideoEntity)}})</p>
-            <ul class="list">
+            <ul class="list common-scroll-bar">
               <li v-for="(item,index) in detail.courseVideoEntity"
               :class="{active:index===curIndex}"
               @click="changeVideo(item,index)"
@@ -119,8 +119,8 @@
                 <div class="minute-box">
                   <span class="icon-play"></span>
                   <span v-if="index==0" class="name">{{item.name}}</span>
-                  <span v-else>第{{index}}章</span>
-                  <span class="minite">{{item.videoMinute}}</span>
+                  <span v-else>第{{index}}章 </span>
+                  <span class="minite"> {{item.videoMinute}}分钟</span>
                 </div>
                 <div v-if="index>0" class="title">{{item.name}}</div>
               </li>
@@ -178,30 +178,34 @@
           </div>
 
           <baseTitle title="老师教授课程"></baseTitle>
+          <div class="teacherCourseList">
+            <span v-for="(item,index) in teacherCourse"
+            @click="routerGo(item,'/online-detail')"
+            :key="index">{{item.title}}</span >
+          </div>
 
         </template>
         <!-- 资料下载 -->
         <template v-if="curTabIndex == 1">
-          <div v-if="detail.coursePreviewEntity.length>0">
-            <div class="previewIframe-box">
+            <div v-if="detail.coursePreviewEntity.length>0"
+            class="previewIframe-box">
               <div class="previewIframe">
                 <iframe :src="previewIframeSrc" frameborder="0"></iframe>
               </div>
             </div>
-            <div class="downLoadIframe">
-              <iframe :src="downLoadIframeSrc" frameborder="0"></iframe>
-            </div>
+
             <!-- <Preview :list="detail.coursePreviewEntity"></Preview> -->
-           <!--  <div v-if="detail.courseFileEntity.length>0" class="download-box">
-              <div v-for="item in detail.courseFileEntity" class="icon-pdf">
+            <div v-if="detail.courseFileEntity.length>0" class="download-box">
+              <div v-for="(item,index) in detail.courseFileEntity"
+              :key="index" class="icon-pdf">
                 {{item.fileName}}.{{item.fileType}}
                 <div class="fr">
                   {{(item.fileSize/1024).toFixed(1)}}M
-                  <a :href="item.downloadUrl" class="btn-sub">下载</a>
+                  <a @click="download(item.downloadUrl)"
+                  class="btn-sub">下载</a>
                 </div>
               </div>
-            </div> -->
-          </div>
+            </div>
           <div class="empty" v-else>
               没有可下载资料
           </div>
@@ -265,14 +269,15 @@
 </template>
 <script>
 import {
-    getCourse,
-    getVideoUrl,
-    insertEvaluate,
-    getGoodEvaluateCount,
-    getEvaluateList,
-    initCourseRecord,
-    saveMyCollection,
-    videorights,
+  getCourse,
+  getVideoUrl,
+  insertEvaluate,
+  getGoodEvaluateCount,
+  getEvaluateList,
+  initCourseRecord,
+  saveMyCollection,
+  equityConsume,
+  videorights,
 } from '@/api/apis';
 import baseTitle from '@/views/web/components/base/base-title.vue';
 import { transferString } from '@/assets/utils/util';
@@ -281,450 +286,535 @@ import { transferString } from '@/assets/utils/util';
 const defaultPhotoUrl = require('@/views/imgs/default.png');
 
 export default {
-    name: 'online-class-detail',
-    data() {
-        return {
-            name: 'online-class-detail',
-            previewIframeSrc: 'https://live.xiucai.com:8890/Yumi4Sina/s/services/Res4View/b0e1b734e3f81b20830fa889a4396417', // 文件预览
-            downLoadIframeSrc: 'http://www.baidu.com', // 第三方下载
-            isShowDialogToBuy: false, // 是否显示购买弹窗
-            isShowDialogTomes: false, // 是否显示评价弹窗
-            isShowDialogToIn: false, // 消耗权益弹窗
-            defaultUrl: defaultPhotoUrl, // 默认头像
-            rate: { // 评分 内容  水平 流畅 其他意见
-                contentScore: 3,
-                speakingLevel: 3,
-                classFluently: 3,
-                otherTips: '',
-            },
+  name: 'online-class-detail',
+  data() {
+    return {
+      name: 'online-class-detail',
+      previewIframeSrc: 'https://live.xiucai.com:8890/Yumi4Sina/s/services/Res4View/b0e1b734e3f81b20830fa889a4396417', // 文件预览
+      downLoadIframeSrc: 'http://www.baidu.com', // 第三方下载
+      isShowDialogToBuy: false, // 是否显示购买弹窗
+      isShowDialogTomes: false, // 是否显示评价弹窗
+      isShowDialogToIn: false, // 消耗权益弹窗
+      defaultUrl: defaultPhotoUrl, // 默认头像
+      rate: { // 评分 内容  水平 流畅 其他意见
+        contentScore: 5,
+        speakingLevel: 5,
+        classFluently: 5,
+        otherTips: '',
+      },
 
-            detail: null,
-            url: '', // 视频播放地址
-            curIndex: 0, // 当前播放章节
-            isShowIframe: false,
-            curUrl: '',
-            iframe: {
-                width: '100%',
-                height: '100%',
-            },
-            curTabIndex: 0,
-            tablist: [
-                { name: '课程详情' },
-                { name: '资料下载' },
-                { name: '课程评价' },
-            ],
-            typelist: [],
-            courseId: '', // 课程id
-            type: '1', // 课程类型1线上视频课 2线下课 3线上专题课
-            videoId: '', // 视频id
-            getEvaluateListParams: {
-                isGood: '',
-                pageSize: 20,
-                pageNum: 1,
-            },
-            pagerCount: 11, // 最多多少页出现...
-            getEvaluateListTotal: 0,
-            getEvaluateListList: [], // 评价列表
-            goodNum: 0, // 好评数
-            medNum: 0, // 好评数
-            badNum: 0, // 好评数
-            allNum: 0, // 好评数
-            goodlist: [ // 好评度
-                {
-                    name: '全部评价',
-                    value: '',
-                    total: 0,
-                },
-                {
-                    name: '好评',
-                    value: '0',
-                },
-                {
-                    name: '中评',
-                    value: '1',
-                },
-                {
-                    name: '差评',
-                    value: '2',
-                    total: 0,
-                },
-            ],
-            initCourseRecordTimer: {},
-            saveMyCollectionParam: { // 收藏参数
-                courseId: '', // 课程id
-                onOffType: '1', // 线上线下0 : 线下课； 1 线上课
-            },
-            sec: 0, // 已经播放时间  秒为单位
-            curPlayItem:null,
-            curPlayIndex:0,
-        };
+      detail: null,
+      url: '', // 视频播放地址
+      curIndex: 0, // 当前播放章节
+      isShowIframe: false,
+      curUrl: '',
+      iframe: {
+        width: '100%',
+        height: '100%',
+      },
+      curTabIndex: 0,
+      tablist: [
+        { name: '课程详情' },
+        { name: '资料下载' },
+        { name: '课程评价' },
+      ],
+      typelist: [],
+      courseId: '', // 课程id
+      type: '1', // 课程类型1线上视频课 2线下课 3线上专题课
+      videoId: '', // 视频id
+      getEvaluateListParams: {
+        isGood: '',
+        pageSize: 20,
+        pageNum: 1,
+      },
+      pagerCount: 11, // 最多多少页出现...
+      getEvaluateListTotal: 0,
+      getEvaluateListList: [], // 评价列表
+      goodNum: 0, // 好评数
+      medNum: 0, // 好评数
+      badNum: 0, // 好评数
+      allNum: 0, // 好评数
+      goodlist: [ // 好评度
+        {
+          name: '全部评价',
+          value: '',
+          total: 0,
+        },
+        {
+          name: '好评',
+          value: '0',
+        },
+        {
+          name: '中评',
+          value: '1',
+        },
+        {
+          name: '差评',
+          value: '2',
+          total: 0,
+        },
+      ],
+      initCourseRecordTimer: {},
+      saveMyCollectionParam: { // 收藏参数
+        courseId: '', // 课程id
+        onOffType: '1', // 线上线下0 : 线下课； 1 线上课
+      },
+      sec: 0, // 已经播放时间  秒为单位
+      curPlayItem: null,
+      curPlayIndex: 0,
+      teacherCourse: [],
+      isCanRequest: true,
+    };
+  },
+  beforeRouteLeave(to, from, next) {
+    Object.keys(this.initCourseRecordTimer).forEach((key) => {
+      clearInterval(this.initCourseRecordTimer[key]);
+    });
+    next();
+  },
+
+  mounted() {
+    this.init();
+  },
+  watch: {
+    $route() {
+      this.initNavListIndex();
     },
-    beforeRouteLeave(to, from, next) {
-        console.log(to, from, '清除定时器');
-        Object.keys(this.initCourseRecordTimer).forEach((key) => {
-            clearInterval(this.initCourseRecordTimer[key]);
+  },
+  computed: {
+    goodDeg() {
+      if (this.allNum !== 0) {
+        return parseInt((this.goodNum / this.allNum) * 100, 10);
+      }
+      return 0;
+    },
+  },
+  methods: {
+    init() {
+      // 获取公开课详情
+      this.courseId = parseInt(this.$route.query.id, 10) || '';
+      this.getCourseFn();
+      // 获取评价列表
+      this.getEvaluateListFn('init');
+      // 获取好评总次数
+      this.getGoodEvaluateCountFn();
+      // 已经播放时间
+      this.sec = this.$route.query.sec || 0;
+    },
+    transferStringFn(str) {
+      return transferString(str) || '';
+    },
+    download(url) {
+      if (!this.token) {
+        this.$message({
+          message: '您还没有登录，请先登录',
+          type: 'warning',
         });
-        next();
+      } else if (url && this.commonUserData && this.commonUserData.leaguerLevelId) {
+        // 有连接 且是会员的可以下载
+        window.open(url);
+      } else {
+        this.$message({
+          message: '您没有权限下载该文件',
+          type: 'warning',
+        });
+      }
     },
-    mounted() {
-        this.init();
+    continueShow() {
+      if (this.isCanRequest) {
+        this.isCanRequest = false;
+      } else {
+        return;
+      }
+      // 消耗权益继续观看
+      equityConsume({ equityNum: 1, courseType: 0 }).then((res) => {
+        this.isCanRequest = true;
+        if (res.data.code === '0000') {
+          this.isShowDialogToIn = false;
+          this.startPlay();
+        } else {
+          this.$message({
+            message: '消耗权益失败，请重试',
+            type: 'warning',
+          });
+        }
+      }).catch((err) => {
+        this.isCanRequest = true;
+        console.log(err);
+        this.$message({
+          message: '消耗权益失败，请重试',
+          type: 'warning',
+        });
+      });
     },
-    computed: {
-        goodDeg() {
-            if (this.allNum !== 0) {
-                return parseInt((this.goodNum / this.allNum) * 100, 10);
-            }
-            return 0;
+    routerGo(item, path) {
+      if (!path) {
+        this.$router.push({ path: '/online-class', query: { nid: item.id } });
+      } else {
+        this.$router.push({ path, query: { id: item.id } });
+      }
+    },
+    goFree(path) {
+      // 免费学  立即购买
+      if (!this.token) {
+        this.$message({
+          message: '您还没有登录，请先登录',
+          type: 'warning',
+        });
+        return;
+      }
+      this.$router.push({
+        path,
+        query: {
+          id: this.courseId,
+          type: this.type,
         },
+      });
     },
-    methods: {
-        init() {
-            // 获取公开课详情
-            this.courseId = parseInt(this.$route.query.id,10) || '';
-            this.getCourseFn();
-            // 获取评价列表
+    collectFn() {
+      // 点击收藏
+      this.saveMyCollectionParam.courseId = this.courseId;
+      this.saveMyCollectionFn();
+    },
+    saveMyCollectionFn() {
+      // 收藏 如果未登录  提示去登陆
+      if (!this.token) {
+        this.$message({
+          message: '您还没有登录，请先登录',
+          type: 'warning',
+        });
+        return;
+      }
+
+      saveMyCollection(this.saveMyCollectionParam).then((res) => {
+        if (res.data.code === '0000') {
+          this.detail.isColl = !this.detail.isColl;
+        }
+      }).catch((err) => {
+        console.log(err);
+        this.$message({
+          message: '服务器错误，请稍后再试',
+          type: 'warning',
+        });
+      });
+    },
+    initCourseRecordFn() {
+      // 同步播放请求定时器
+      if (this.initCourseRecordTimer[this.videoId]) {
+        clearInterval(this.initCourseRecordTimer[this.videoId]);
+      }
+
+      this.initCourseRecordTimer[this.courseId] = setInterval(() => {
+        initCourseRecord({
+          course_id: this.courseId,
+          video_id: this.videoId,
+        }).then((res) => {
+          if (res.data.code === '0001') {
+            clearInterval(this.initCourseRecordTimer[this.videoId]);
+          }
+        });
+      }, 60 * 1000);
+    },
+    getGoodEvaluateCountFn() {
+      // 获取好评总次数
+      if (this.courseId) {
+        getGoodEvaluateCount({ courseId: this.courseId }).then((res) => {
+          if (res.data.code === '0000' && res.data.evaluate) {
+            this.goodNum = res.data.evaluate.goodNum;
+            this.medNum = res.data.evaluate.medNum;
+            this.badNum = res.data.evaluate.badNum;
+            this.allNum = res.data.evaluate.allNum;
+          }
+        }).catch((err) => {
+          console.log(err);
+          this.$message({
+            message: '获取好评次数失败，请稍后再试',
+            type: 'warning',
+          });
+        });
+      }
+    },
+
+    getVideoUrlFn() {
+      // 获取视频地址
+
+      let { courseId, videoId } = this;
+      if (videoId && courseId) {
+        getVideoUrl({ courseId, videoId }).then((res) => {
+          if (res.data.code === '0000') {
+            this.curUrl = res.data.videoUrl;
+            this.isShowIframe = true;
+            this.getList();
+          }
+        }).catch((err) => {
+          console.log(err);
+          this.isShowIframe = false;
+          this.$message({
+            message: '获取视频播放地址失败，请稍后再试',
+            type: 'warning',
+          });
+        });
+      }
+    },
+    startPlay() {
+      // 开始播放
+      this.courseId = this.curPlayItem.courseId;
+      this.videoId = this.curPlayItem.id;
+      this.getVideoUrlFn();
+      this.curIndex = this.curPlayIndex;
+      // 开启同步播放记录
+      this.initCourseRecordFn();
+    },
+    changeVideo(item, index) {
+      this.curPlayItem = item;
+      this.curPlayIndex = index;
+      if (item.isTry === 0 && this.detail.payType === '1') {
+        // 如果不是试听章节 且需要付费时 判断当前用户是否有听课权力
+        this.checkUserIsCanPlay();
+      } else if (item.isTry === 1) {
+        // 如果是试听章节
+        this.startPlay();
+      } else if (this.token) {
+        // 不是试听，但是免费的 登录后才可以观看
+        this.startPlay();
+      } else {
+        // 未登录
+        this.$message({
+          message: '该章节需要登录才可以继续观看',
+          type: 'warning',
+        });
+      }
+    },
+    checkUserIsCanPlay() {
+      // 判断用户是否登录
+      if (!this.token) {
+        this.$message({
+          message: '该章节需要登录才可以继续观看',
+          type: 'warning',
+        });
+        return;
+      }
+      if (this.token) {
+        // token 存在  查看是否可以播放  去购买  消耗权益提醒
+        // 查询视频播放权限code"1000";可以观看   "1001";
+        // 不是会员   "1002";//没有权限
+        videorights({ courseId: this.courseId }).then((res) => {
+          if (res.data.code === '1000') {
+            // 可以观看
+            this.startPlay();
+          } else if (res.data.code === '1001'
+                    || res.data.code === '1002') {
+            this.showDialog(2);
+          } else if (res.data.code === '1003') {
+            // 消耗权益
+            this.showDialog(1);
+          }
+        }).catch((err) => {
+          console.log(err);
+          this.$message({
+            message: '服务器错误，请稍后再试',
+            type: 'warning',
+          });
+        });
+      }
+    },
+    showDialog(type) {
+      if (!this.token) {
+        this.$message({
+          message: '您还没有登录，请先登录',
+          type: 'warning',
+        });
+        return;
+      }
+      this.isShowIframe = false;
+      this.isShowDialogTomes = false;
+      this.isShowDialogToBuy = false;
+      this.isShowDialogToIn = false;
+      if (type === 0) {
+        // 展示评论
+        this.isShowDialogTomes = true;
+      } else if (type === 1) {
+        // 展示消耗权益
+        this.isShowDialogToIn = true;
+      } else if (type === 2) {
+        // 展示购买
+        this.isShowDialogToBuy = true;
+      }
+    },
+    play() {
+      if (this.sec > 0) {
+        // 计算当前播放秒数处在第几个播放时间段内
+        let flag = true;
+        let cursec = 0;
+        this.detail.courseVideoEntity.forEach((item, index) => {
+          cursec += parseInt(item.videoMinute, 10) * 60;
+          console.log(cursec);
+          if (this.sec <= cursec && flag) {
+            this.curIndex = index;
+            flag = false;
+          }
+        });
+      } else {
+        // 如果当前播放时间小于0
+        this.curIndex = 0;
+      }
+      let item = this.detail.courseVideoEntity[this.curIndex];
+      this.changeVideo(item, this.curIndex);
+    },
+    getTime(list) {
+      let num = 0;
+      list.forEach((item) => {
+        num += parseInt(item.videoMinute, 10);
+      });
+      return `${parseInt(num / 60, 10)}小时${num % 60}分钟`;
+    },
+    getList() {
+      // 获取顶部面包屑
+      this.typelist = [
+        {
+          id: this.detail.direction,
+          name: this.detail.directionName,
+        },
+        {
+          id: this.detail.major,
+          name: this.detail.majorName,
+        },
+        {
+          id: this.detail.category,
+          name: this.detail.categoryName,
+        },
+      ];
+    },
+    radioChange() {
+      this.getEvaluateListFn('init');
+    },
+    handleCurrentChange(val) {
+      this.getEvaluateListParams.pageNum = val;
+      this.getEvaluateListFn();
+    },
+    insertEvaluateFn() {
+      // 提交课程评价
+      if (!this.rate.otherTips) {
+        this.$message({
+          message: '请填写评价内容',
+          type: 'warning',
+        });
+        return;
+      }
+      if (this.rate.otherTips.length < 2 || this.rate.otherTips.length > 50) {
+        this.$message({
+          message: '评价内容应该在2-50给字符内',
+          type: 'warning',
+        });
+        return;
+      }
+      let params = {
+        courseId: this.courseId,
+        ...this.rate,
+      };
+      if (this.courseId) {
+        if (this.isCanRequest) {
+          this.isCanRequest = false;
+        } else {
+          return;
+        }
+        insertEvaluate(params).then((res) => {
+          this.isCanRequest = true;
+          if (res.data.code === '0000') {
+            // console.log(res);
+            this.isShowIframe = true;
+            this.$message({
+              message: '评价成功',
+              type: 'success',
+            });
             this.getEvaluateListFn('init');
-            // 获取好评总次数
-            this.getGoodEvaluateCountFn();
-            // 已经播放时间
-            this.sec = this.$route.query.sec || 0;
-
-            
-        },
-        transferStringFn(str) {
-            return transferString(str) || '';
-        },
-        continueShow() {
-            // 消耗权益继续观看
-        },
-        routerGo(item) {
-            this.$router.push({ path: '/online-class', query: { nid: item.id } });
-        },
-        goFree(path) {
-            // 免费学  立即购买
-            if (!this.token) {
-                this.$message({
-                    message: '您还没有登录，请先登录',
-                    type: 'warning',
-                });
-                return;
-            }
-            this.$router.push({
-                path,
-                query: {
-                    id: this.courseId,
-                    type: this.type,
-                },
+          } else if (res.data.code === '0012') {
+            this.$message({
+              message: '已经评价过该课程,不允许重复评价',
+              type: 'success',
             });
-        },
-        collectFn() {
-            // 点击收藏
-            this.saveMyCollectionParam.courseId = this.courseId;
-            this.saveMyCollectionFn();
-        },
-        saveMyCollectionFn() {
-            // 收藏 如果未登录  提示去登陆
-            if (!this.token) {
-                this.$message({
-                    message: '您还没有登录，请先登录',
-                    type: 'warning',
-                });
-                return;
-            }
-
-            saveMyCollection(this.saveMyCollectionParam).then((res) => {
-                if (res.data.code === '0000') {
-                    this.detail.isColl = !this.detail.isColl;
-                }
-            }).catch((err) => {
-                console.log(err);
-                this.$message({
-                    message: '服务器错误，请稍后再试',
-                    type: 'warning',
-                });
-            });
-        },
-        initCourseRecordFn() {
-            // 同步播放请求定时器
-            if (this.initCourseRecordTimer[this.videoId]) {
-                clearInterval(this.initCourseRecordTimer[this.videoId]);
-            }
-
-            this.initCourseRecordTimer[this.courseId] = setInterval(() => {
-                initCourseRecord({
-                    course_id: this.courseId,
-                    video_id: this.videoId,
-                }).then((res) => {
-                    if (res.data.code === '0001') {
-                        clearInterval(this.initCourseRecordTimer[this.videoId]);
-                    }
-                });
-            }, 60 * 1000);
-        },
-        getGoodEvaluateCountFn() {
-            // 获取好评总次数
-            if (this.courseId) {
-                getGoodEvaluateCount({ courseId: this.courseId }).then((res) => {
-                    if (res.data.code === '0000' && res.data.evaluate) {
-                        this.goodNum = res.data.evaluate.goodNum;
-                        this.medNum = res.data.evaluate.medNum;
-                        this.badNum = res.data.evaluate.badNum;
-                        this.allNum = res.data.evaluate.allNum;
-                    }
-                }).catch((err) => {
-                    console.log(err);
-                    this.$message({
-                        message: '获取好评次数失败，请稍后再试',
-                        type: 'warning',
-                    });
-                });
-            }
-        },
-        
-        getVideoUrlFn() {
-            // 获取视频地址
-
-            let { courseId, videoId } = this;
-            if (videoId && courseId) {
-                getVideoUrl({ courseId, videoId }).then((res) => {
-                    if (res.data.code === '0000') {
-                        this.curUrl = res.data.videoUrl;
-                        this.isShowIframe = true;
-                        this.getList();
-                    }
-                }).catch((err) => {
-                    console.log(err);
-                    this.isShowIframe = false;
-                    this.$message({
-                        message: '获取视频播放地址失败，请稍后再试',
-                        type: 'warning',
-                    });
-                });
-            }
-        },
-        startPlay() {
-
-            // 开始播放
-            this.courseId = this.curPlayItem.courseId;
-            this.videoId = this.curPlayItem.id;
-            this.getVideoUrlFn();
-            this.curIndex = this.curPlayIndex;
-            // 开启同步播放记录
-            this.initCourseRecordFn();
-        },
-        changeVideo(item, index) {
-            this.curPlayItem = item;
-            this.curPlayIndex = index;
-            if (item.isTry === 0 && this.detail.payType === 0) {
-                // 如果不是试听章节 且需要付费时 判断当前用户是否有听课权力
-                this.checkUserIsCanPlay();
-            } else if (item.isTry === 1) {
-                // 如果是试听章节
-                this.startPlay();
-            } else if (this.token) {
-                // 不是试听，但是免费的 登录后才可以观看
-                this.startPlay();
-            } else {
-            // 未登录
-                this.$message({
-                    message: '该章节需要登录才可以继续观看',
-                    type: 'warning',
-                });
-            }
-        },
-        checkUserIsCanPlay() {
-            // 判断用户是否登录
-            if (this.token) {
-            // token 存在  查看是否可以播放  去购买  消耗权益提醒
-                console.log(this.token, item, index);
-                // 查询视频播放权限code"1000";可以观看   "1001";
-              //不是会员   "1002";//没有权限
-              videorights({courseId:this.courseId}).then((res) => {
-                  if(res.data.code === '1000'){
-                    // 可以观看
-                    this.startPlay();
-                  }else if(res.data.code === '1001' || 
-                    res.data.code === '1002'){
-                    this.showDialog(2);
-                  }else if(res.data.code === '1003'){
-                    // 消耗权益
-                    this.showDialog(1);
-                  }
-              }).catch((err) => {
-                  console.log(err);
-                  this.$message({
-                      message: '服务器错误，请稍后再试',
-                      type: 'warning',
-                  });
-              });
-            }
-        },
-        showDialog(type) {
-            this.isShowIframe = false;
-            this.isShowDialogTomes = false;
-            this.isShowDialogToBuy = false;
-            this.isShowDialogToIn = false;
-            if (type === 0) {
-            // 展示评论
-                this.isShowDialogTomes = true;
-            } else if (type === 1) {
-                // 展示消耗权益
-                this.isShowDialogToIn = true;
-            } else if (type === 2){
-            // 展示购买
-                this.isShowDialogToBuy = true;
-            }
-        },
-        play() {
-            if (this.sec > 0) {
-                // 计算当前播放秒数处在第几个播放时间段内
-                let flag = true;
-                let cursec = 0;
-                this.detail.courseVideoEntity.forEach((item, index) => {
-                    cursec += parseInt(item.videoMinute, 10) * 60;
-                    console.log(cursec);
-                    if (this.sec <= cursec && flag) {
-                        this.curIndex = index;
-                        flag = false;
-                    }
-                });
-                console.log(this.curIndex);
-            } else {
-                // 如果当前播放时间小于0
-                this.curIndex = 0;
-            }
-            let item = this.detail.courseVideoEntity[this.curIndex];
-            this.changeVideo(item, this.curIndex);
-        },
-        getTime(list) {
-            let num = 0;
-            list.forEach((item) => {
-                num += parseInt(item.videoMinute, 10);
-            });
-            return `${parseInt(num / 60, 10)}小时${num % 60}分钟`;
-        },
-        getList() {
-            // 获取顶部面包屑
-            this.typelist = [
-                {
-                    id: this.detail.direction,
-                    name: this.detail.directionName,
-                },
-                {
-                    id: this.detail.major,
-                    name: this.detail.majorName,
-                },
-                {
-                    id: this.detail.category,
-                    name: this.detail.categoryName,
-                },
-            ];
-        },
-        radioChange(val) {
-            console.log(val);
-            this.getEvaluateListFn('init');
-        },
-        handleCurrentChange(val) {
-            this.getEvaluateListParams.pageNum = val;
-            this.getEvaluateListFn();
-        },
-        initMes() {
-            // 更新评价列表数据
-            console.log('更新列表');
-        },
-        insertEvaluateFn() {
-            // 提交课程评价
-            let params = {
-                courseId: this.courseId,
-                ...this.rate,
-            };
-            if (this.courseId) {
-                insertEvaluate(params).then((res) => {
-                    if (res.data.code === '0000') {
-                        // console.log(res);
-                        this.isShowIframe = true;
-                        this.$message({
-                            message: '评价成功',
-                            type: 'success',
-                        });
-                        this.initMes();
-                    }
-                }).catch((err) => {
-                    console.log(err);
-                    this.$message({
-                        message: '提交课程评价失败，请稍后再试',
-                        type: 'warning',
-                    });
-                });
-            }
-        },
-        getEvaluateListFn(t) {
-            if (t === 'init') {
-                this.getEvaluateListParams.pageNum = 1;
-            }
-            // 获取评价列表
-            if (this.courseId) {
-                getEvaluateList(
-                    {
-                        courseId: this.courseId,
-                        ...this.getEvaluateListParams,
-                    },
-                ).then((res) => {
-                    if (res.data.code === '0000') {
-                        this.getEvaluateListTotal = res.data.total;
-                        this.getEvaluateListList = res.data.list;
-                        /*eslint-disable*/ 
+          }
+        }).catch((err) => {
+          this.isCanRequest = true;
+          console.log(err);
+          this.$message({
+            message: '提交课程评价失败，请稍后再试',
+            type: 'warning',
+          });
+        });
+      }
+    },
+    getEvaluateListFn(t) {
+      if (t === 'init') {
+        this.getEvaluateListParams.pageNum = 1;
+      }
+      // 获取评价列表
+      if (this.courseId) {
+        getEvaluateList(
+          {
+            courseId: this.courseId,
+            ...this.getEvaluateListParams,
+          },
+        ).then((res) => {
+          if (res.data.code === '0000') {
+            this.getEvaluateListTotal = res.data.total;
+            this.getEvaluateListList = res.data.list;
+            /*eslint-disable*/ 
                         this.getEvaluateListList.forEach((item) => {
                             item.rate = parseInt((item.contentScore + 
                               item.speakingLevel + 
                               item.classFluently) / 3, 10);
                         });
                         /* eslint-enable */
-                    }
-                }).catch((err) => {
-                    console.log(err);
-                    this.$message({
-                        message: '评价列表获取失败',
-                        type: 'warning',
-                    });
-                });
-            }
-        },
-        getCourseFn() {
-            // 获取公开课详情
-            if (this.courseId) {
-                getCourse({ id: this.courseId }).then((res) => {
-                    if (res.data.code === '0000') {
-                        /*eslint-disable*/ 
+          }
+        }).catch((err) => {
+          console.log(err);
+          this.$message({
+            message: '评价列表获取失败',
+            type: 'warning',
+          });
+        });
+      }
+    },
+    getCourseFn() {
+      // 获取公开课详情
+      if (this.courseId) {
+        getCourse({ id: this.courseId }).then((res) => {
+          if (res.data.code === '0000') {
+            /*eslint-disable*/ 
                         // favorite字段，是否收藏 0否 1是 默认0
-                        res.data.course[0].isColl = res.data.course[0].favorite === 1;
-                        this.detail = res.data.course[0];
-
+                        res.data.course.isColl = res.data.favorite;
+                        this.detail = res.data.course;
+                        this.teacherCourse = res.data.teacherCourse
                        /* eslint-enable */
-                        if (this.detail) {
-                            this.getList();
-                            if (!this.isShowIframe) {
-                                this.play();
-                            }
-                        }
-                    }
-                }).catch((err) => {
-                    console.log(err);
-                    this.$message({
-                        message: '线上课详情获取失败，请稍后再试',
-                        type: 'warning',
-                    });
-                });
+            if (this.detail) {
+              this.getList();
+              if (!this.isShowIframe) {
+                this.play();
+              }
             }
-        },
+          }
+        }).catch((err) => {
+          console.log(err);
+          this.$message({
+            message: '线上课详情获取失败，请稍后再试',
+            type: 'warning',
+          });
+        });
+      }
     },
-    components: {
-        baseTitle,
-        // Preview,
-    },
+  },
+  components: {
+    baseTitle,
+    // Preview,
+  },
 };
 </script>
 <style scoped>
+.teacherCourseList span{
+  margin-right: 20px;
+  cursor: pointer;
+}
 .empty{
   padding: 20px 0;
   font-size: 16px;
@@ -792,11 +882,19 @@ overflow: hidden;
   align-items: center;
   justify-content: flex-start;
   height: 54px;
+
   margin-top: 20px;
+  overflow: hidden\0;
 }
 .good-box .nav .item{
   margin-left: 40px;
   text-align: center;
+  line-height: 54px\0;
+  float: left\0;
+}
+.good-box .nav .item:nth-child(1){
+  line-height: 20px\0;
+  margin-top: 10px\0;
 }
 .good-box .nav .active{
   color: #FB683C;
@@ -835,6 +933,7 @@ overflow: hidden;
   justify-content: space-around;
   width: 294px;
   margin: 30px auto;
+  overflow: hidden\0;
 }
 .dialog-buy .btn-sub,
 .dialog-buy .btn-buy{
@@ -848,6 +947,7 @@ overflow: hidden;
   line-height: 28px;
   cursor: pointer;
   border-radius: 30px;
+  float: left\0;
 }
 .dialog-buy .btn-sub{
   color: #Fff;
@@ -868,6 +968,15 @@ overflow: hidden;
   display: flex;
   align-items: flex-start;
   justify-content: space-around;
+  overflow: hidden\0;
+  width: 560px\0;
+  margin: 0 auto\0;
+}
+.rate-box{
+  float: left\0;
+}
+.dialog-mes .form .textarea{
+  float: right\0;
 }
 .textarea{
   width: 286px;

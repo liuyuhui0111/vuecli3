@@ -15,41 +15,40 @@
 </template>
 <script>
 export default {
-    name: 'base-title',
-    data() {
-        return {
-            name: 'base-title',
-            navIndex: -1,
-        };
+  name: 'base-title',
+  data() {
+    return {
+      name: 'base-title',
+      navIndex: -1,
+    };
+  },
+  props: {
+    title: { // 标题内容
+      type: String,
+      default: () => '',
     },
-    props: {
-        title: { // 标题内容
-            type: String,
-            default: () => '',
-        },
-        list: { // 列表
-            type: Array,
-            default: () => [],
-        },
-        curIndex: { // 当前选中那个
-            type: Number,
-            default: () => 0,
-        },
+    list: { // 列表
+      type: Array,
+      default: () => [],
+    },
+    curIndex: { // 当前选中那个
+      type: Number,
+      default: () => 0,
+    },
 
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
+      this.navIndex = this.curIndex;
     },
-    mounted() {
-        this.init();
+    navclick(item, index) {
+      this.navIndex = index;
+      this.$emit('navclick', item, index);
     },
-    methods: {
-        init() {
-            this.navIndex = this.curIndex;
-        },
-        navclick(item, index) {
-            this.navIndex = index;
-            console.log(this.navIndex);
-            this.$emit('navclick', item, index);
-        },
-    },
+  },
 };
 </script>
 <style scoped>
@@ -70,12 +69,14 @@ export default {
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    overflow: hidden\0;
   }
   .list li{
     padding-bottom: 10px;
     position: relative;
     margin-right: 40px;
     cursor: pointer;
+    float: left\0;
   }
   .list li.active{
     color: #FB683C;

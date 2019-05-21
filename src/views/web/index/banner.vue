@@ -1,82 +1,231 @@
 <template>
-    <div class="banner common-web-index-banner">
+    <div id="commonBanner" class="banner common-web-index-banner">
+      <div v-if="list.length>0"
+      class="swiper-container swiper-banner ie9">
+          <div class="swiper-wrapper">
+          <div class="swiper-slide" :index="list.length-1" v-if="isIe9&&list.length>1">
+                <img class="banner-img"
+                @click="swiperClick(list[list.length-1])"
+                :src="list[0].pic?list[list.length-1].pic:defaultUrl"
+                :alt="list[list.length-1].title">
+            </div>
 
-      <swiper v-if="isShowSwiper" :options="swiperOption" ref="bannerSwiper">
-        <!-- slides -->
-        <swiper-slide
-        v-for="(item,index) in list"
-        :key="index">
-            <img class="banner-img"
-            @click="swiperClick(item)"
-            :src="item.pic?item.pic:defaultUrl" :alt="item.title">
-        </swiper-slide>
-        <!-- Optional controls -->
-        <div class="swiper-pagination"  slot="pagination"></div>
+              <div class="swiper-slide"
+              v-for="(item,index) in list"
+               :index="index"
+              :key="index">
+                <img class="banner-img"
+                @click="swiperClick(item)"
+                :src="item.pic?item.pic:defaultUrl"
+                :alt="item.title">
+              </div>
+
+            <div class="swiper-slide"
+            index="0"
+            v-if="isIe9&&list.length>1">
+                <img class="banner-img"
+                @click="swiperClick(list[0])"
+                :src="list[0].pic?list[0].pic:defaultUrl"
+                :alt="list[0].title">
+            </div>
+          </div>
+        <div class="swiper-pagination"  slot="pagination">
+            <span v-for="(item,index) in list"
+            :class="{active:paginationIndex == index}"
+            :key="index"></span>
+        </div>
         <div class="swiper-button-prev" slot="button-prev"></div>
         <div class="swiper-button-next" slot="button-next"></div>
-        <div class="swiper-scrollbar"   slot="scrollbar"></div>
-      </swiper>
+        <!-- <div class="swiper-scrollbar"   slot="scrollbar"></div> -->
+      </div>
     </div>
 </template>
 <script>
 
-import { swiper, swiperSlide } from 'vue-awesome-swiper';
+require('@/plugins/swiper/swiper.min');
 
 export default {
-    name: 'banner',
-    data() {
-        return {
-            name: 'banner',
-            defaultUrl: `${window.location.origin}/banner.png`,
-            swiperOption: {
-                autoplay: {
-                    delay: 3000,
-                    // disableOnInteraction: false,
-                }, // 自动播放
-                loop: true, // 循环播放
-                pagination: { // 分页
-                    el: '.swiper-pagination',
-                    clickable: true,
-                },
-                navigation: {
-                    nextEl: '.swiper-button-next',
-                    prevEl: '.swiper-button-prev',
-                },
-            },
-            isShowSwiper: false,
-        };
-    },
-    props: {
-        list: { // 轮播图数据
-            type: Array,
-            default: () => [],
+  name: 'banner',
+  data() {
+    return {
+      name: 'banner',
+      defaultUrl: `${window.location.origin}/banner.png`,
+      swiperOption: {
+        autoplay: {
+          delay: 3000,
+          // disableOnInteraction: false,
+        }, // 自动播放
+        loop: true, // 循环播放
+        pagination: { // 分页
+          el: '.swiper-pagination',
+          clickable: true,
         },
-    },
-    mounted() {
-        this.init();
-    },
-    computed: {
-        swiper() {
-            return this.$refs.bannerSwiper.swiper;
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
         },
+      },
+      mySwiper: null,
+      paginationIndex: 0,
+      isCanAnimate: true,
+      isIe9: false,
+      autoplayTimer: null,
+      animateTimer: null,
+    };
+  },
+  props: {
+    list: { // 轮播图数据
+      type: Array,
+      default: () => [],
     },
-    methods: {
-        init() {
-            // this.swiper.slideTo(3, 1000, false);
-            // this.swiperOption.autoplay = false;
-            this.isShowSwiper = true;
-        },
-        swiperClick(swiperItem) {
-            if (swiperItem.url) {
-                // 如果存在href 跳转
-                window.location.href = swiperItem.url;
+  },
+  beforeDestroy() {
+    console.log('清除定时器');
+    clearInterval(this.autoplayTimer);
+    clearInterval(this.animateTimer);
+  },
+  mounted() {
+    this.init();
+  },
+  computed: {
+  },
+
+  methods: {
+    init() {
+      // console.log(this.list);
+      /*eslint-disable*/ 
+            if(navigator.appName == "Microsoft Internet Explorer"&&parseInt(navigator.appVersion.split(";")[1].replace(/[ ]/g, "").replace("MSIE",""))==9){
+                this.isIe9 = true;
+                this.$nextTick(()=>{
+                    this.initBannerByIe();
+                });
+
+             }else{
+                this.$nextTick(()=>{
+                    this.mySwiper = new Swiper('.swiper-banner', this.swiperOption);
+                })
+             }
+             
+             /* eslint-enable */
+    },
+    swiperClick(swiperItem) {
+      if (swiperItem.url) {
+        // 如果存在href 跳转
+        window.location.href = swiperItem.url;
+      }
+    },
+    initBannerByIe() {
+      /*eslint-disable*/ 
+            let _that = this;
+            let oBanner = document.getElementById('commonBanner');
+            let oWraper = oBanner.querySelector('.swiper-wrapper');
+            let oSlide = oBanner.querySelectorAll('.swiper-slide');
+            let oNext = oBanner.querySelector('.swiper-button-next');
+            let oPrev = oBanner.querySelector('.swiper-button-prev');
+            let boxWidth = oBanner.offsetWidth;
+            let wraperWidth = oSlide.length * boxWidth;
+            let num = 1;
+            let move = function(type){
+                if(!_that.isCanAnimate) return;
+                if(type==='prev'){
+                     if (num <= 0) {
+                        num = oSlide.length - 1;
+                    } else {
+                        num -= 1;
+                    }
+                    if(num<=0){
+                        _that.paginationIndex = oSlide.length-3;
+                    }else{
+                       _that.paginationIndex = num-1; 
+                    }
+                    _that.animate(oWraper,-(num * boxWidth),()=>{
+                        if (num <= 0) {
+                            num = oSlide.length - 2;
+                            oWraper.style.left = -(num * boxWidth)+'px';
+                        }
+                    });
+                }else if(type === 'next'){
+                    if (num >= oSlide.length - 1) {
+                        num = 1;
+                    } else {
+                        num += 1;
+                    }
+                    if(num >= oSlide.length - 1){
+                        _that.paginationIndex = 0;
+                    }else{
+                        _that.paginationIndex = num-1;
+                    }
+                    _that.animate(oWraper,-(num * boxWidth),()=>{
+                        
+                        if(num == oSlide.length - 1){
+                            num=1;
+                            oWraper.style.left = -(num * boxWidth)+'px';
+                        }
+                    });
+                }
+              
+            };
+
+            if(oSlide.length<2){
+                return;
             }
-        },
+
+            for(let i=0;i<oSlide.length;i++){
+              oSlide[i].style.width = boxWidth + 'px';
+            }
+            oWraper.style.width = wraperWidth + 'px';
+            oWraper.style.left = -(num * boxWidth)+'px';
+
+            oNext.addEventListener('click', () => {
+                move('next')
+            }, false);
+
+
+            oPrev.addEventListener('click', () => {
+               move('prev')
+            }, false);
+
+            clearInterval(this.autoplayTimer);
+            this.autoplayTimer = setInterval(()=>{
+                move('next');
+            },3000);
+            /* eslint-enable */
     },
-    components: {
-        swiper,
-        swiperSlide,
+    animate(obj, toLeft, fn) {
+      /*eslint-disable*/
+            // 过渡动画
+            let curLeft = obj.style.left ? parseInt(obj.style.left, 10) : 0;
+            let step = 0;
+            if (curLeft === toLeft || !this.isCanAnimate) {
+                return;
+            }
+            step = -(curLeft - toLeft) / 15;
+            clearInterval(this.animateTimer);
+            this.isCanAnimate = false;
+            this.animateTimer = setInterval(() => {
+                if (step > 0) {
+                    if (curLeft >= toLeft) {
+                        curLeft = toLeft;
+                        clearInterval(this.animateTimer);
+                        this.isCanAnimate = true;
+                        fn && fn();
+                    } else {
+                        curLeft += step;
+                        obj.style.left = `${curLeft}px`;
+                    }
+                } else if (curLeft <= toLeft) {
+                    curLeft = toLeft;
+                    clearInterval(this.animateTimer);
+                    this.isCanAnimate = true;
+                    fn && fn();
+                } else {
+                    curLeft += step;
+                    obj.style.left = `${curLeft}px`;
+                }
+            }, 20);
+            /* eslint-enable */
     },
+  },
 };
 </script>
 <style scoped>
@@ -90,5 +239,25 @@ export default {
         width: 100%;
         min-height: 304px;
         max-height: 315px;
+    }
+    .swiper-pagination{
+        overflow: hidden\0;
+        position: absolute\0;
+        height: 30px\0;
+        bottom: 0\0;
+        right: 0\0;
+    }
+    .swiper-pagination span{
+        display: block\0;
+        width: 13px\0;
+        height: 13px\0;
+        background: #fff\0;
+        border: 1px solid #fff\0;
+        margin-right: 10px\0;
+        float:left\0;
+        border-radius: 100%\0;
+    }
+    .swiper-pagination span.active{
+        background: #FB683C;
     }
 </style>

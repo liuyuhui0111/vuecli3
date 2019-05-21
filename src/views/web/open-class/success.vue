@@ -11,51 +11,51 @@
 </template>
 <script>
 export default {
-    name: 'success',
-    data() {
-        return {
-            name: 'success',
-            id: '',
-            sid: '',
-            type: '',
-        };
+  name: 'success',
+  data() {
+    return {
+      name: 'success',
+      id: '',
+      sid: '',
+      type: '',
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
+      this.id = this.$route.query.id || '';
+      this.sid = this.$route.query.sid || '';
+      this.type = this.$route.query.type || '';
     },
-    mounted() {
-        this.init();
+    back() {
+      this.$router.go(-1);
     },
-    methods: {
-        init() {
-            this.id = this.$route.query.id || '';
-            this.sid = this.$route.query.sid || '';
-            this.type = this.$route.query.type || '';
-        },
-        back() {
-            this.$router.go(-1);
-        },
-        goBuy() {
-            if (this.id) {
-                this.$router.push({
-                    path: '/order',
-                    query: {
-                        id: this.id,
-                        type: this.type,
-                        sid: this.sid,
-                    },
-                });
-            } else {
-                this.$message({
-                    message: '报名信息获取失败，请重新报名',
-                    type: 'warning',
-                });
-            }
-        },
+    goBuy() {
+      if (this.id) {
+        this.$router.push({
+          path: '/order',
+          query: {
+            id: this.id,
+            type: this.type,
+            sid: this.sid,
+          },
+        });
+      } else {
+        this.$message({
+          message: '报名信息获取失败，请重新报名',
+          type: 'warning',
+        });
+      }
     },
+  },
 };
 </script>
 <style scoped>
 .success{
   width: 100%;
-  padding-top: 19%;
+  padding-top: 15%;
   text-align: center;
   font-size: 14px;
 color: #FB683C;
@@ -75,15 +75,18 @@ letter-spacing: -0.68px;
   margin: 0 auto 15px auto;
 }
 .btns{
-  width: 400px;
+  width: 300px;
   margin: 20px auto;
   display: flex;
   justify-content: space-between;
+  overflow: hidden\0;
 }
 .btns span{
   cursor: pointer;
+  float: left\0;
 }
 .btns .gray{
   background: #ccc;
+  float: right;
 }
 </style>

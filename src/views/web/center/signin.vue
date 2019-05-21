@@ -52,100 +52,99 @@ import { queryMyApplication } from '@/api/apis';
 import { formatDate } from '@/assets/utils/timefn';
 
 export default {
-    name: 'my-signin',
-    mixins: [mixin],
-    data() {
-        return {
-            name: 'my-signin',
-            total: 0,
-            pagerCount: 11,
+  name: 'my-signin',
+  mixins: [mixin],
+  data() {
+    return {
+      name: 'my-signin',
+      total: 0,
+      pagerCount: 11,
 
-            queryMyApplicationParam: {
-                pageSize: 3,
-                pageNum: 1,
-            },
-            titleList: [
-                {
-                    text: '预约课程',
-                    value: 'titleBox',
-                    width: '',
-                },
-                {
-                    text: '称呼',
-                    value: 'name',
-                    width: '',
-                },
-                {
-                    text: '公司',
-                    value: 'company',
-                    width: '',
-                },
-                {
-                    text: '预约手机号',
-                    value: 'phone',
-                    width: '',
-                },
-                {
-                    text: '上课时间',
-                    value: 'time',
-                    width: '',
-                },
-                {
-                    text: '上课地点',
-                    value: 'address',
-                    width: '',
-                },
-            ],
-            classList: [],
-        };
-    },
-    mounted() {
-        this.init();
-    },
-    methods: {
-        init() {
-            // 获取个人中心我的报名页面
-            this.queryMyApplicationFn('init');
+      queryMyApplicationParam: {
+        pageSize: 3,
+        pageNum: 1,
+      },
+      titleList: [
+        {
+          text: '预约课程',
+          value: 'titleBox',
+          width: '',
         },
-        getTime(classItem) {
-            if (classItem.startTime && classItem.endTime) {
-            // 计算上课时间
-                return `${formatDate(classItem.startTime)}-${formatDate(classItem.endTime)}`;
-            }
-            return '';
+        {
+          text: '称呼',
+          value: 'name',
+          width: '',
         },
-        initlist(list) {
-            /*eslint-disable*/ 
+        {
+          text: '公司',
+          value: 'company',
+          width: '',
+        },
+        {
+          text: '预约手机号',
+          value: 'phone',
+          width: '',
+        },
+        {
+          text: '上课时间',
+          value: 'time',
+          width: '',
+        },
+        {
+          text: '上课地点',
+          value: 'address',
+          width: '',
+        },
+      ],
+      classList: [],
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
+      // 获取个人中心我的报名页面
+      this.queryMyApplicationFn('init');
+    },
+    getTime(classItem) {
+      if (classItem.startTime && classItem.endTime) {
+        // 计算上课时间
+        return `${formatDate(classItem.startTime)}-${formatDate(classItem.endTime)}`;
+      }
+      return '';
+    },
+    initlist(list) {
+      /*eslint-disable*/ 
             list.forEach((item) => {
                 item.time = this.getTime(item);
             });
           /* eslint-enable */
-            return list;
-        },
-        handleCurrentChange(val) {
-            this.queryMyApplicationParam.pageNum = val;
-            this.queryMyApplicationFn();
-        },
-        queryMyApplicationFn(t) {
-            // 个人中心我的报名
-            if (t === 'init') {
-                this.queryMyApplicationParam.pageNum = 1;
-            }
-            queryMyApplication(this.queryMyApplicationParam).then((res) => {
-                if (res.data.code === '0000') {
-                    console.log(res);
-                    this.classList = this.initlist(res.data.list);
-                    this.total = res.data.total;
-                }
-            }).catch((err) => {
-                this.$message({
-                    message: '获取报名列表失败，请稍后再试',
-                    type: 'warning',
-                });
-                console.log(err);
-            });
-        },
+      return list;
     },
+    handleCurrentChange(val) {
+      this.queryMyApplicationParam.pageNum = val;
+      this.queryMyApplicationFn();
+    },
+    queryMyApplicationFn(t) {
+      // 个人中心我的报名
+      if (t === 'init') {
+        this.queryMyApplicationParam.pageNum = 1;
+      }
+      queryMyApplication(this.queryMyApplicationParam).then((res) => {
+        if (res.data.code === '0000') {
+          this.classList = this.initlist(res.data.list);
+          this.total = res.data.total;
+        }
+      }).catch((err) => {
+        this.$message({
+          message: '获取报名列表失败，请稍后再试',
+          type: 'warning',
+        });
+        console.log(err);
+      });
+    },
+  },
 };
 </script>
 <style scoped>
@@ -155,5 +154,6 @@ export default {
 }
   .table-box img{
     width: 90%;
-  }
+    height: auto;
+      }
 </style>

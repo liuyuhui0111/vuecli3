@@ -9,7 +9,7 @@
     <!-- 专题 课程tab -->
     <div class="tab-box">
         <span v-for="(item,index) in tablist"
-        @click="changeTab(index,item)"
+        @click="changeTab(index)"
         :class="{active:index == tabindex}"
         :key="index">
             {{item.text}} ( {{getSearchListData[item.type].total}} )
@@ -28,6 +28,7 @@
                 <li v-for="(item,index) in getSearchListData[searchResultType].list"
                 :key="index">
                   <Card v-if="item != null" :type="cardType"
+                  @classClick="classClick"
                   :titleStyle="titleStyle"
                   :classData="item"></Card>
                 </li>
@@ -53,6 +54,7 @@
                 <li v-for="(item,index) in newlist"
                 :key="index">
                   <Card v-if="item != null" type="search-online"
+                  @classClick="routerGoOnline"
                   :titleStyle="titleStyle"
                   :classData="item"></Card>
                 </li>
@@ -90,156 +92,172 @@
 <script>
 import Card from '@/views/web/components/card/card.vue';
 import {
-    getSearchList,
-    getHighWordList,
-    getCourseList,
-    getHighTitleList,
+  getSearchList,
+  getHighWordList,
+  getCourseList,
+  getHighTitleList,
 } from '@/api/apis';
 
 export default {
-    name: 'open-class',
-    data() {
-        return {
-            name: 'open-class',
-            cardType: 'search-online',
-            searchVal: '',
-            getCourseListPageSize: 10,
-            getCourseListPageNum: 1,
-            pageNum: 1,
-            pageSize: 10,
-            pagerCount: 11,
-            titleStyle: {
-                color: '#444',
-                fontSize: '16px',
-            },
-            tabindex: 0, // 当前选中tab index
-            tablist: [ // tab列表
-                { text: '线上课', value: 0, type: 'online' },
-                { text: '公开课', value: 1, type: 'offline' },
-            ],
-            hotWordList: [],
-            hotSearchList: [],
-            getSearchListList: [], // 搜索结果列表
-            getSearchListListByOpen: [], // 公开课列表
+  name: 'open-class',
+  data() {
+    return {
+      name: 'open-class',
+      cardType: 'search-online',
+      searchVal: '',
+      getCourseListPageSize: 10,
+      getCourseListPageNum: 1,
+      pageNum: 1,
+      pageSize: 10,
+      pagerCount: 11,
+      titleStyle: {
+        color: '#444',
+        fontSize: '16px',
+      },
+      tabindex: 0, // 当前选中tab index
+      tablist: [ // tab列表
+        { text: '线上课', value: 0, type: 'online' },
+        { text: '公开课', value: 1, type: 'offline' },
+      ],
+      hotWordList: [],
+      hotSearchList: [],
+      getSearchListList: [], // 搜索结果列表
+      getSearchListListByOpen: [], // 公开课列表
 
-            newlist: [], // 最新课程推荐,
-            isShowPage: false,
-            getSearchListData: {
-                online: {
-                    total: 0,
-                    list: [],
-                },
-                offline: {
-                    total: 0,
-                    list: [],
-                },
-            },
-            searchResultType: 'online',
-        };
+      newlist: [], // 最新课程推荐,
+      isShowPage: false,
+      getSearchListData: {
+        online: {
+          total: 0,
+          list: [],
+        },
+        offline: {
+          total: 0,
+          list: [],
+        },
+      },
+      searchResultType: 'online',
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  watch: {
+    $route() {
+      this.searchVal = this.$route.query.val;
+      this.init();
     },
-    mounted() {
-        this.init();
+  },
+  methods: {
+    init() {
+      this.searchVal = this.$route.query.val;
+      this.tabindex = this.$route.query.tab || 0;
+      this.changeTab(this.tabindex);
+      // 搜索结果
+      this.getSearchListFn('init');
+      // 获取热门搜索词
+      this.getHighWordListFn();
+      // 获取热门文章
+      this.getHighTitleListFn();
+      // 查询最新课程列表
+      this.getCourseListFn();
+      // 初始化热门搜索排名
+      // this.initHotSearchList();
     },
-    watch: {
-        $route() {
-            this.searchVal = this.$route.query.val;
-        },
+    routerGo(item) {
+      this.$router.push({ path: '/search', query: { val: item } });
     },
-    methods: {
-        init() {
-            this.searchVal = this.$route.query.val;
-            // 搜索结果
-            this.getSearchListFn('init');
-            // 获取热门搜索词
-            this.getHighWordListFn();
-            // 获取热门文章
-            this.getHighTitleListFn();
-            // 查询最新课程列表
-            this.getCourseListFn();
-            // 初始化热门搜索排名
-            // this.initHotSearchList();
-        },
-        routerGo(item) {
-            this.$router.push({ path: '/search', query: { val: item } });
-        },
-        getCourseListFn() {
-            // 查询最新课程列表
-            let pageNum = this.getCourseListPageNum;
-            let pageSize = this.getCourseListPageSize;
-            let params = {
-                boolean: 2,
-                pageNum,
-                pageSize,
-            };
-            getCourseList(params).then((res) => {
-                if (res.status === 200) {
-                    this.newlist = res.data.list;
-                }
-                console.log('=======================', res.data.list);
-            }).catch((err) => {
-                console.log(err);
-            });
-        },
-        getHighTitleListFn() {
-            // 获取热门文章
-            getHighTitleList().then((res) => {
-                if (res.data.code === '0000') {
-                    this.hotSearchList = res.data.list;
-                }
-            }).catch((err) => {
-                console.log(err);
-            });
-        },
-        getHighWordListFn() {
-            // 获取热门搜索词
-            getHighWordList().then((res) => {
-                if (res.data.code === '0000') {
-                    this.hotWordList = res.data.list;
-                }
-            }).catch((err) => {
-                console.log(err);
-            });
-        },
-        handleCurrentChange(val) {
-            this.pageNum = val;
-            this.getSearchListFn();
-        },
-        getSearchListFn(t) {
-            // 搜索
-            if (t === 'init') {
-                this.pageNum = 1;
-            }
-            let { pageNum } = this;
-            let title = this.searchVal;
-            let { pageSize } = this;
-            if (!title) {
-                return;
-            }
-            getSearchList({ title, pageNum, pageSize }).then((res) => {
-                if (res.data.code === '0000') {
-                    this.$set(this.getSearchListData, 'online', res.data.online);
-                    this.$set(this.getSearchListData, 'offline', res.data.offLine);
-                    this.isShowPage = true;
-                    console.log(this.getSearchListData);
-                }
-            }).catch((err) => {
-                console.log(err);
-            });
-        },
-        changeTab(index, item) {
-            this.tabindex = index;
-            this.searchResultType = item.type;
-            this.cardType = `search-${item.type}`;
-        },
-        initHotSearchList() {
-            let list = this.hotSearchList;
-            this.hotSearchList = list.sort((a, b) => (a.rank < b.rank ? -1 : 1));
-        },
+    classClick(item) {
+      console.log(item);
+      if (this.tabindex === 1) {
+        // 公开课
+        this.$router.push({ path: '/detail', query: { id: item.id } });
+      } else {
+        // 线上课
+        this.$router.push({ path: '/online-detail', query: { id: item.id } });
+      }
+    },
+    routerGoOnline(item) {
+      this.$router.push({ path: '/online-detail', query: { id: item.id } });
+    },
+    getCourseListFn() {
+      // 查询最新课程列表
+      let pageNum = this.getCourseListPageNum;
+      let pageSize = this.getCourseListPageSize;
+      let params = {
+        boolean: 2,
+        pageNum,
+        pageSize,
+      };
+      getCourseList(params).then((res) => {
+        if (res.status === 200) {
+          this.newlist = res.data.list;
+        }
+        console.log('=======================', res.data.list);
+      }).catch((err) => {
+        console.log(err);
+      });
+    },
+    getHighTitleListFn() {
+      // 获取热门文章
+      getHighTitleList().then((res) => {
+        if (res.data.code === '0000') {
+          this.hotSearchList = res.data.list;
+        }
+      }).catch((err) => {
+        console.log(err);
+      });
+    },
+    getHighWordListFn() {
+      // 获取热门搜索词
+      getHighWordList().then((res) => {
+        if (res.data.code === '0000') {
+          this.hotWordList = res.data.list;
+        }
+      }).catch((err) => {
+        console.log(err);
+      });
+    },
+    handleCurrentChange(val) {
+      this.pageNum = val;
+      this.getSearchListFn();
+    },
+    getSearchListFn(t) {
+      // 搜索
+      if (t === 'init') {
+        this.pageNum = 1;
+      }
+      let { pageNum } = this;
+      let title = this.searchVal;
+      let { pageSize } = this;
+      if (!title) {
+        return;
+      }
+      getSearchList({ title, pageNum, pageSize }).then((res) => {
+        if (res.data.code === '0000') {
+          this.$set(this.getSearchListData, 'online', res.data.online);
+          this.$set(this.getSearchListData, 'offline', res.data.offLine);
+          this.isShowPage = true;
+          console.log(this.getSearchListData);
+        }
+      }).catch((err) => {
+        console.log(err);
+      });
+    },
+    changeTab(index) {
+      this.tabindex = index;
+      this.searchResultType = this.tablist[index].type;
+      this.cardType = `search-${this.searchResultType}`;
+    },
+    initHotSearchList() {
+      let list = this.hotSearchList;
+      this.hotSearchList = list.sort((a, b) => (a.rank < b.rank ? -1 : 1));
+    },
 
-    },
-    components: {
-        Card,
-    },
+  },
+  components: {
+    Card,
+  },
 };
 </script>
 <style scoped>
@@ -321,6 +339,7 @@ export default {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    overflow: hidden\0;
   }
   /*右侧热门搜索*/
   .aside{
@@ -330,6 +349,7 @@ export default {
     color: #444444;
     letter-spacing: 0;
     flex-shrink: 0;
+    float: right\0;
   }
   .title,
   .aside .title{
@@ -341,6 +361,7 @@ export default {
     max-width: 710px;
     width: 100%;
     flex-shrink:1;
+    float: left\0;
   }
   .hot-word{
     font-size: 0;

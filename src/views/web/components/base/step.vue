@@ -20,35 +20,35 @@
 </template>
 <script>
 export default {
-    name: 'step',
-    data() {
-        return {
-            name: 'step',
-            itemStyle: { width: '33%' },
-        };
+  name: 'step',
+  data() {
+    return {
+      name: 'step',
+      itemStyle: { width: '33%' },
+    };
+  },
+  props: {
+    type: { // 步骤条类型
+      type: String,
+      default: () => 'order',
     },
-    props: {
-        type: { // 步骤条类型
-            type: String,
-            default: () => 'order',
-        },
-        stepList: { // 步骤条数据
-            type: Array,
-            default: () => [],
-        },
-        active: {
-            type: Number,
-            default: () => 0,
-        },
+    stepList: { // 步骤条数据
+      type: Array,
+      default: () => [],
     },
-    mounted() {
-        this.init();
+    active: {
+      type: Number,
+      default: () => 0,
     },
-    methods: {
-        init() {
-            this.itemStyle.width = `${100 / this.stepList.length}%`;
-        },
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
+      this.itemStyle.width = `${100 / this.stepList.length}%`;
     },
+  },
 };
 </script>
 <style scoped>
@@ -60,6 +60,7 @@ export default {
     align-items: flex-start;
     justify-content: space-between;
     position: relative;
+    overflow: hidden\0;
   }
 
   .step-head{
@@ -74,6 +75,7 @@ export default {
   }
 
   .step .item{
+    float: left\0;
     text-align: center;
     position: relative;
     font-size: 12px;

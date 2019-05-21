@@ -10,22 +10,22 @@
 import layout from '@/views/layout.vue';
 
 export default {
-    data() {
-        return {
-            name: 'default',
-        };
-    },
-    mounted() {
-        this.init();
-    },
-    methods: {
-        init() {
+  data() {
+    return {
+      name: 'default',
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
 
-        },
     },
-    components: {
-        layout,
-    },
+  },
+  components: {
+    layout,
+  },
 };
 </script>
 <style scoped>

@@ -7,7 +7,9 @@
         <span class="classNum">总看课数</span>
         </p>
         <div class="box">
-        <ul v-if="commonCenterData.videoList.length>0" class="list-box">
+        <ul v-if="commonCenterData &&
+        commonCenterData.videoList.length>0"
+        class="list-box">
             <li v-for="(item,index) in commonCenterData.videoList"
             :key="index">
                 <img @click="routerGo(item)" :src="item.bannerUrl"
@@ -18,15 +20,27 @@
             </li>
         </ul>
         <div class="empty" v-else>
-            暂无最近在看数据
+             <ul class="list-box">
+                <li>
+                    <router-link
+                    tag="span"
+                    to="/online-class"
+                    class="icon-add">
+                        去学习
+                    </router-link >
+                </li>
+            </ul>
         </div>
-        <div class="classNum">{{commonCenterData.classNum}}</div>
+        <div v-if="commonCenterData.classNum" class="classNum">{{commonCenterData.classNum}}</div>
         </div>
     </div>
     <div class="btns">
         <Title title="我的权益"></Title>
         <div
-        v-if="commonCenterData.leaguerList.leaguerRightList.length>0"
+        v-if="commonCenterData &&
+        commonCenterData.leaguerList &&
+        commonCenterData.leaguerList.leaguerRightList &&
+        commonCenterData.leaguerList.leaguerRightList.length>0"
         class="btn-list">
             <div
             class="item"
@@ -44,7 +58,8 @@
             </div >
         </div>
          <div v-else>
-            暂无会员权益
+            <router-link tag="span" class="pointer"
+             to="/interests">开通会员，尊享豪华特权，去看看</router-link>
         </div>
     </div>
   </div>
@@ -53,30 +68,29 @@
 import mixin from './js/mixin';
 
 export default {
-    name: 'my-preson',
-    mixins: [mixin],
-    data() {
-        return {
-            name: 'my-preson',
-            classNum: 0, // 总看课数
-            btnList: [],
-            studyList: [],
-        };
+  name: 'my-preson',
+  mixins: [mixin],
+  data() {
+    return {
+      name: 'my-preson',
+      classNum: 0, // 总看课数
+      btnList: [],
+      studyList: [],
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
     },
-    mounted() {
-        this.init();
-    },
-    methods: {
-        init() {
-            console.log(this.commonCenterData);
-        },
-        navclick() {
+    navclick() {
 
-        },
-        routerGo(item) {
-            this.$router.push({ path: '/online-detail', query: { id: item.id } });
-        },
     },
+    routerGo(item) {
+      this.$router.push({ path: '/online-detail', query: { id: item.id } });
+    },
+  },
 };
 </script>
 <style scoped>
@@ -130,6 +144,7 @@ border: 1px solid #D4D4D4;
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
+    overflow: hidden\0;
 }
 .icon{
     display: block;
@@ -140,6 +155,7 @@ border: 1px solid #D4D4D4;
 }
 .btn-list .item{
     min-width: 25%;
+    float: left\0;
 }
 .btn-list .name{
     font-weight: bold;

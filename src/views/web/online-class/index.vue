@@ -3,7 +3,8 @@
 
     <div class="contain">
       <!-- 类目展开框 -->
-      <template  v-if="onlineNavList.length>0">
+      <div class="onlineNavList-box common-scroll-bar"
+      v-if="onlineNavList.length>0">
       <div class="online-box"
       v-for="(item,index) in onlineNavList"
       :key="index">
@@ -44,7 +45,7 @@
           </ul>
         </div>
       </div>
-    </template>
+    </div>
 
 
       <div class="nav-list">
@@ -127,139 +128,139 @@
 import Card from '@/views/web/components/card/card.vue';
 import { initList } from '@/assets/utils/util';
 import {
-    getCourseList,
-    getCategoryList,
+  getCourseList,
+  getCategoryList,
 } from '@/api/apis';
 
 export default {
-    name: 'online-class',
-    data() {
-        return {
-            name: 'online-class',
-            cardType: 'online',
-            navCurId: '', // 当前选中的id
-            isShowPage: false,
-            isAll: false,
-            titleStyle: {
-                color: '#444',
-                fontSize: '16px',
-            },
-            onlineNavIndex: 0, // 当前选中的在线课程分类
-            onlineNavList: [],
-            pageSize: 12, // 一页最多展示的条数
-            pagerCount: 11, // 11页以上显示...
-            total: 0,
-            navlist: {
-                type: 1,
-                typelist: [
-                    {
-                        name: '视频课',
-                        value: 1,
-                    },
-                    {
-                        name: '专题课',
-                        value: 2,
-                    },
-                ],
-                payType: '',
-                freelist: [
-                    {
-                        name: '只看免费',
-                        value: 1,
-                    },
-                    // {
-                    //     name: '只看已上线',
-                    //     value: 2,
-                    // },
-                ],
-                difficult: '',
-                diflist: [
-                    {
-                        name: '全部',
-                        value: '',
-                    },
-                    {
-                        name: '初级',
-                        value: 1,
-                    },
-                    {
-                        name: '中级',
-                        value: 2,
-                    },
-                    {
-                        name: '高级',
-                        value: 3,
-                    },
-                ],
-                boolean: 0,
-                hotlist: [
-                    {
-                        name: '最新',
-                        value: 0,
-                    },
-                    {
-                        name: '最热',
-                        value: 1,
-                    },
-                ],
-            },
-            list: [],
-        };
+  name: 'online-class',
+  data() {
+    return {
+      name: 'online-class',
+      cardType: 'online-list',
+      navCurId: '', // 当前选中的id
+      isShowPage: false,
+      isAll: false,
+      titleStyle: {
+        color: '#444',
+        fontSize: '16px',
+      },
+      onlineNavIndex: 0, // 当前选中的在线课程分类
+      onlineNavList: [],
+      pageSize: 12, // 一页最多展示的条数
+      pagerCount: 11, // 11页以上显示...
+      total: 0,
+      navlist: {
+        type: 1,
+        typelist: [
+          {
+            name: '视频课',
+            value: 1,
+          },
+          // {
+          //     name: '专题课',
+          //     value: 2,
+          // },
+        ],
+        payType: '',
+        freelist: [
+          {
+            name: '全部课程',
+            value: '',
+          },
+          {
+            name: '只看免费',
+            value: 0,
+          },
+        ],
+        difficult: '',
+        diflist: [
+          {
+            name: '全部',
+            value: '',
+          },
+          {
+            name: '初级',
+            value: 1,
+          },
+          {
+            name: '中级',
+            value: 2,
+          },
+          {
+            name: '高级',
+            value: 3,
+          },
+        ],
+        boolean: 0,
+        hotlist: [
+          {
+            name: '最新',
+            value: 0,
+          },
+          {
+            name: '最热',
+            value: 1,
+          },
+        ],
+      },
+      list: [],
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  watch: {
+    navlist: {
+      handler() {
+        this.getCourseListFn('init');
+      },
+      deep: true,
     },
-    mounted() {
-        this.init();
+    $route() {
+      this.init();
     },
-    watch: {
-        navlist: {
-            handler() {
-                this.getCourseListFn('init');
-            },
-            deep: true,
-        },
-        $route() {
-            this.init();
-        },
+  },
+  methods: {
+    init() {
+      // this.list = initList(this.list, 4);
+      this.navCurId = this.$route.query.nid || '';
+      this.navlist.boolean = this.$route.query.boolean || 0;
+      // 获取线上课程列表
+      this.getCourseListFn('init');
+      // 获取线上课程分类
+      this.getCategoryListFn();
     },
-    methods: {
-        init() {
-            // this.list = initList(this.list, 4);
-            this.navCurId = this.$route.query.nid || '';
-            // 获取线上课程列表
-            this.getCourseListFn('init');
-            // 获取线上课程分类
-            this.getCategoryListFn();
-        },
-        navClick(id, isAll) {
-            this.navCurId = id;
-            this.isAll = isAll || false;
-            console.log(id);
-            this.getCourseListFn('init');
-        },
-        initNavList(list) {
-            function getChildById(id) {
-                let childs = [];
-                list.forEach((item) => {
-                    if (item.pid === id && item.id !== item.pid) {
-                        childs.push({ children: getChildById(item.id), ...item });
-                    }
-                });
-                return childs;
-            }
+    navClick(id, isAll) {
+      this.navCurId = id;
+      this.isAll = isAll || false;
+      this.getCourseListFn('init');
+    },
+    initNavList(list) {
+      function getChildById(id) {
+        let childs = [];
+        list.forEach((item) => {
+          if (item.pid === id && item.id !== item.pid) {
+            childs.push({ children: getChildById(item.id), ...item });
+          }
+        });
+        return childs;
+      }
 
-            let arr = [];
-            list.forEach((item) => {
-                if (item.id === item.pid) {
-                    arr.push({ children: getChildById(item.id), ...item });
-                }
-            });
-            return arr;
-        },
-        initNavHeight() {
-            // 计算分类高度，是否显示展开收起效果
-            let anavParents = this.$refs.navParent;
-            let anavChilds = this.$refs.navChild;
-            let aiconTris = this.$refs.iconTri;
-            /*eslint-disable*/ 
+      let arr = [];
+      list.forEach((item) => {
+        if (item.id === item.pid) {
+          arr.push({ children: getChildById(item.id), ...item });
+        }
+      });
+      return arr;
+    },
+    initNavHeight() {
+      // 计算分类高度，是否显示展开收起效果
+      let anavParents = this.$refs.navParent;
+      let anavChilds = this.$refs.navChild;
+      let aiconTris = this.$refs.iconTri;
+      /*eslint-disable*/ 
             anavParents.forEach((item, index) => {
                 if (item.clientHeight < anavChilds[index].clientHeight) {
                 // 如果父高度大于子高度 设置openClass
@@ -277,89 +278,97 @@ export default {
                 }, false);
             });
             /* eslint-enable */
-        },
-        getCategoryListFn() {
-            // 获取线下课程导航列表
-            getCategoryList().then((res) => {
-                if (res.data.code === '0000') {
-                    let arr = [];
-                    let { list } = res.data;
-                    // id === pid 是一级菜单
-                    arr = this.initNavList(list);
-                    if (arr.length < 1) return;
-                    // this.navCurId = arr[0].id;
+    },
+    getCategoryListFn() {
+      // 获取线下课程导航列表
+      this.onlineNavList = [];
+      getCategoryList().then((res) => {
+        if (res.data.code === '0000') {
+          let arr = [];
+          let { list } = res.data;
+          // id === pid 是一级菜单
+          arr = this.initNavList(list);
+          if (arr.length < 1) return;
+          // this.navCurId = arr[0].id;
 
-                    this.onlineNavList = arr;
-                    this.$nextTick(() => {
-                        this.initNavHeight();
-                    });
-                }
-            }).catch((err) => {
-                this.$message({
-                    message: '获取线下课程列表失败,请稍后再试',
-                    type: 'warning',
-                });
-                console.log(err);
-            });
-        },
-        handleCurrentChange(val) {
-            this.pageNum = val;
-            this.getCourseListFn();
-        },
-        getCourseListFn(t) {
-            if (t === 'init') {
-                this.pageNum = 1;
-            }
-            let { pageNum } = this;
-            let { pageSize } = this;
-            let { type } = this.navlist;
-            let { boolean } = this.navlist;
-            let { payType } = this.navlist;
-            let { difficult } = this.navlist;
-            // 获取公开课列表
-            getCourseList({
-                pageNum,
-                pageSize,
-                payType,
-                boolean,
-                difficult,
-                type,
-                categoryId: this.navCurId,
-            }).then((res) => {
-                if (res.data.code === '0000') {
-                    this.isShowPage = true;
-                    if (res.data.list.length > 0) {
-                        this.list = res.data.list;
-                        this.list = initList(this.list, 4);
-                    } else {
-                        this.list = [];
-                    }
-                    this.total = res.data.total;
-                }
-            }).catch((err) => {
-                console.log(err);
-                this.$message({
-                    message: '公开课列表获取失败，请稍后再试',
-                    type: 'warning',
-                });
-            });
-        },
-        radioChange(val) {
-            this.navlist.freeindex = val;
-        },
-        routerGo(path) {
-            this.$router.push({ path });
-        },
-        classClick(item) {
-            this.$router.push({ path: '/online-detail', query: { id: item.id } });
-        },
+          this.onlineNavList = arr;
+          console.log(this.onlineNavList);
+          this.$nextTick(() => {
+            this.initNavHeight();
+          });
+        }
+      }).catch((err) => {
+        this.$message({
+          message: '获取线下课程列表失败,请稍后再试',
+          type: 'warning',
+        });
+        console.log(err);
+      });
     },
-    components: {
-        Card,
+    handleCurrentChange(val) {
+      this.pageNum = val;
+      this.getCourseListFn();
     },
+    getCourseListFn(t) {
+      if (t === 'init') {
+        this.pageNum = 1;
+      }
+      let { pageNum } = this;
+      let { pageSize } = this;
+      let { type } = this.navlist;
+      let { boolean } = this.navlist;
+      let { payType } = this.navlist;
+      let { difficult } = this.navlist;
+      this.list = [];
+      // 获取公开课列表
+      getCourseList({
+        pageNum,
+        pageSize,
+        payType,
+        boolean,
+        difficult,
+        type,
+        categoryId: this.navCurId,
+      }).then((res) => {
+        if (res.data.code === '0000') {
+          this.isShowPage = true;
+          if (res.data.list.length > 0) {
+            this.list = res.data.list;
+            this.list = initList(this.list, 4);
+            console.log(this.list);
+          } else {
+            this.list = [];
+          }
+          this.total = res.data.total;
+        }
+      }).catch((err) => {
+        console.log(err);
+        this.$message({
+          message: '公开课列表获取失败，请稍后再试',
+          type: 'warning',
+        });
+      });
+    },
+    radioChange(val) {
+      this.navlist.freeindex = val;
+    },
+    routerGo(path) {
+      this.$router.push({ path });
+    },
+    classClick(item) {
+      this.$router.push({ path: '/online-detail', query: { id: item.id } });
+    },
+  },
+  components: {
+    Card,
+  },
 };
 </script>
 <style scoped>
+  .onlineNavList-box{
+    max-height: 305px;
+    overflow: auto;
+  }
   .tips{
     color: #868686;
   }
@@ -381,12 +390,16 @@ export default {
   }
   .list-box{
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     flex-wrap: wrap;
     overflow: hidden;
+    min-height: 500px;
+    width: 104%\0;
   }
   .list-box li{
+    float: left\0;
+    width: 25%\0;
     display: block;
     margin-bottom: 30px;
   }
@@ -404,9 +417,13 @@ export default {
     padding: 0 40px;
     box-sizing:border-box;
     margin: 10px 0 30px 0;
+    overflow: hidden\0;
+    margin-top: 20px\0;
+    line-height: 54px\0;
   }
   .nav-list .group{
     text-align: center;
+    float: left\0;
   }
   .nav-list .group .item{
     display: inline-block;
@@ -429,6 +446,7 @@ export default {
     justify-content: space-between;
     padding: 0px 10px;
     text-align: left;
+    overflow: hidden\0;
   }
   .online-box .online-nav-right,
   .online-box .online-nav-left{
@@ -438,10 +456,15 @@ export default {
     display: block;
     position: relative;
     flex-grow:1;
+    float: left\0;
   }
   .online-box .online-nav-left{
     width: 98px;
     flex-grow:0;
+    width: 10%\0;
+  }
+  .online-box .online-nav-right{
+    width: 90%\0;
   }
 
   .online-box .online-nav-left .item{
@@ -451,6 +474,7 @@ export default {
     letter-spacing: 0;
     min-height: 40px;
     line-height: 20px;
+    line-height: 40px\0;
     cursor: pointer;
     align-items: center;
     border: none;

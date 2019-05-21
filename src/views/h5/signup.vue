@@ -60,125 +60,125 @@
 </template>
 <script>
 import {
-    offlineCourseSignUp,
+  offlineCourseSignUp,
 } from '@/api/apis';
 import { validByPhone } from '@/assets/utils/validator';
 
 export default {
-    name: 'signup',
-    data() {
-        return {
-            name: 'signup',
-            labelPosition: 'left',
-            onlineForm: { // 在线报名表单
-                name: '',
-                tel: '',
-                comp: '',
-                work: '',
-                message: '',
-            },
-            courseId: '',
-            isCanSub: true,
+  name: 'signup',
+  data() {
+    return {
+      name: 'signup',
+      labelPosition: 'left',
+      onlineForm: { // 在线报名表单
+        name: '',
+        tel: '',
+        comp: '',
+        work: '',
+        message: '',
+      },
+      courseId: '',
+      isCanSub: true,
 
-        };
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
+      this.courseId = this.$route.query.id;
     },
-    mounted() {
-        this.init();
+    submitForm() {
+      if (!this.onlineForm.name) {
+        this.$message({
+          showClose: true,
+          message: '请输入称呼',
+          type: 'warning',
+          duration: 2000,
+        });
+        return;
+      }
+      if (!this.onlineForm.tel) {
+        this.$message({
+          message: '请输入电话',
+          type: 'warning',
+          duration: 2000,
+        });
+        return;
+      }
+      if (!validByPhone(this.onlineForm.tel)) {
+        this.$message({
+          message: '电话号码格式不对',
+          type: 'warning',
+          duration: 2000,
+        });
+        return;
+      }
+      if (!this.onlineForm.comp) {
+        this.$message({
+          message: '请输入公司',
+          type: 'warning',
+          duration: 2000,
+        });
+        return;
+      }
+      if (!this.onlineForm.work) {
+        this.$message({
+          message: '请输入职位',
+          type: 'warning',
+          duration: 2000,
+        });
+        return;
+      }
+      if (!this.onlineForm.message) {
+        this.$message({
+          message: '请输入您要咨询的问题',
+          type: 'warning',
+          duration: 2000,
+        });
+        return;
+      }
+      if (this.isCanSub) {
+        this.isCanSub = false;
+      } else {
+        return;
+      }
+      this.offlineCourseSignUpFn();
     },
-    methods: {
-        init() {
-            this.courseId = this.$route.query.id;
-        },
-        submitForm() {
-            if (!this.onlineForm.name) {
-                this.$message({
-                    showClose: true,
-                    message: '请输入称呼',
-                    type: 'warning',
-                    duration: 2000,
-                });
-                return;
-            }
-            if (!this.onlineForm.tel) {
-                this.$message({
-                    message: '请输入电话',
-                    type: 'warning',
-                    duration: 2000,
-                });
-                return;
-            }
-            if (!validByPhone(this.onlineForm.tel)) {
-                this.$message({
-                    message: '电话号码格式不对',
-                    type: 'warning',
-                    duration: 2000,
-                });
-                return;
-            }
-            if (!this.onlineForm.comp) {
-                this.$message({
-                    message: '请输入公司',
-                    type: 'warning',
-                    duration: 2000,
-                });
-                return;
-            }
-            if (!this.onlineForm.work) {
-                this.$message({
-                    message: '请输入职位',
-                    type: 'warning',
-                    duration: 2000,
-                });
-                return;
-            }
-            if (!this.onlineForm.message) {
-                this.$message({
-                    message: '请输入您要咨询的问题',
-                    type: 'warning',
-                    duration: 2000,
-                });
-                return;
-            }
-            if (this.isCanSub) {
-                this.isCanSub = false;
-            } else {
-                return;
-            }
-            this.offlineCourseSignUpFn();
-        },
-        offlineCourseSignUpFn() {
-            // 线上课在线报名提交表单
-            let params = {
-                company: this.onlineForm.comp,
-                offlineCourseId: this.courseId,
-                name: this.onlineForm.name,
-                phone: this.onlineForm.tel,
-                job: this.onlineForm.work,
-                content: this.onlineForm.message,
-            };
-            offlineCourseSignUp(params).then((res) => {
-                this.isCanSub = true;
-                if (res.data.code === '0000') {
-                    // this.detailData = res.data.data
-                    let oThis = this;
-                    this.$message({
-                        message: '报名成功',
-                        type: 'success',
-                        onClose() {
-                            oThis.$router.replace({ path: '/h5/success' });
-                        },
-                    });
-                }
-            }).catch((err) => {
-                this.isCanSub = true;
-                console.log(err);
-                this.$message({
-                    message: '公开课详情获取失败，请稍后再试',
-                    type: 'warning',
-                });
-            });
-        },
+    offlineCourseSignUpFn() {
+      // 线上课在线报名提交表单
+      let params = {
+        company: this.onlineForm.comp,
+        offlineCourseId: this.courseId,
+        name: this.onlineForm.name,
+        phone: this.onlineForm.tel,
+        job: this.onlineForm.work,
+        content: this.onlineForm.message,
+      };
+      offlineCourseSignUp(params).then((res) => {
+        this.isCanSub = true;
+        if (res.data.code === '0000') {
+          // this.detailData = res.data.data
+          let oThis = this;
+          this.$message({
+            message: '报名成功',
+            type: 'success',
+            onClose() {
+              oThis.$router.replace({ path: '/h5/success' });
+            },
+          });
+        }
+      }).catch((err) => {
+        this.isCanSub = true;
+        console.log(err);
+        this.$message({
+          message: '公开课详情获取失败，请稍后再试',
+          type: 'warning',
+        });
+      });
     },
+  },
 };
 </script>
 <style scoped>

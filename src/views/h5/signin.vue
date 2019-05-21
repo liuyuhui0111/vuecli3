@@ -24,66 +24,88 @@
 </template>
 <script>
 import {
-    qrCodeSignIn,
+  qrCodeSignIn,
 } from '@/api/apis';
+import { getUrlParam } from '@/assets/utils/util';
 
 export default {
-    name: 'signin',
-    data() {
-        return {
-            name: 'signin',
-            code: '',
-            courseId: '',
-            isCanSub: true,
-            isShowDialog: false,
-        };
+  name: 'signin',
+  data() {
+    return {
+      name: 'signin',
+      code: '',
+      courseId: '',
+      isCanSub: true,
+      isShowDialog: false,
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
+      console.log(this.$route.query.id);
+      this.courseId = this.$route.query.id;
+      this.initUserInfo();
     },
-    mounted() {
-        this.init();
+    initUserInfo() {
+      // 获取用户信息
+      const code = getUrlParam('code');
+      if (code) {
+        // 如果code 存在 token不存在
+        if (!this.token) {
+          this.getTokenByCode();
+        }
+      }
     },
-    methods: {
-        init() {
-            this.courseId = this.$route.query.id;
-        },
-        qrCodeSignInFn() {
-            // 线上课在线报名提交表单
-            if (!this.code) {
-                this.$message({
-                    message: '请输入听课凭借码',
-                    type: 'warning',
-                    duration: 1000,
-                });
-                return;
-            }
-            let params = {
-                tkm: this.code,
-                courseId: this.courseId,
-            };
-            if (this.isCanSub) {
-                this.isCanSub = false;
-            } else {
-                return;
-            }
-            qrCodeSignIn(params).then((res) => {
-                this.isCanSub = true;
-                if (res.data.code === '0000') {
-                    this.isShowDialog = true;
-                } else {
-                    this.$message({
-                        message: '签到失败，请检查您的听课凭借码是否正确',
-                        type: 'warning',
-                    });
-                }
-            }).catch((err) => {
-                this.isCanSub = true;
-                console.log(err);
-                this.$message({
-                    message: '签到失败，请稍后再试',
-                    type: 'warning',
-                });
-            });
-        },
+    qrCodeSignInFn() {
+      // 线上课在线报名提交表单
+      if (!this.token || !this.courseId) {
+        this.login();
+        return;
+      }
+      if (!this.code) {
+        this.$message({
+          message: '请输入听课凭借码',
+          type: 'warning',
+          duration: 1000,
+        });
+        return;
+      }
+      let params = {
+        tkm: this.code,
+        courseId: this.courseId,
+      };
+      if (this.isCanSub) {
+        this.isCanSub = false;
+      } else {
+        return;
+      }
+      qrCodeSignIn(params).then((res) => {
+        this.isCanSub = true;
+        if (res.data.code === '0000') {
+          this.isShowDialog = true;
+        } else if (res.data.code === '0012') {
+          this.$message({
+            message: '您已签到成功，无需重复签到哦~',
+            type: 'warning',
+          });
+        } else {
+          this.$message({
+            message: '签到失败，请检查您的听课凭借码是否正确',
+            type: 'warning',
+          });
+        }
+      }).catch((err) => {
+        this.isCanSub = true;
+        console.log(err);
+        this.$message({
+          message: '签到失败，请稍后再试',
+          type: 'warning',
+        });
+      });
     },
+  },
 };
 </script>
 <style scoped>

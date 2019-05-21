@@ -2,7 +2,7 @@
 // initial state
 // shape: [{ id, quantity }]
 const state = {
-    commonUserData: JSON.parse(window.localStorage.getItem('commonUserData')) || null,
+    commonUserData: JSON.parse(window.sessionStorage.getItem('commonUserData')) || null,
 };
 
 
@@ -15,7 +15,7 @@ const actions = {
 const mutations = {
 
     setUsers(state, user) {
-        window.localStorage.setItem('commonUserData',JSON.stringify(user))
+        window.sessionStorage.setItem('commonUserData',JSON.stringify(user))
         state.commonUserData = user;
     },
 };

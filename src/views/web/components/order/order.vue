@@ -40,36 +40,36 @@
 </template>
 <script>
 export default {
-    name: 'base-order',
-    data() {
-        return {
-            name: 'base-order',
-        };
+  name: 'base-order',
+  data() {
+    return {
+      name: 'base-order',
+    };
+  },
+  props: {
+    type: { // 订单类型  order 普通订单  orderSet 组合订单
+      type: String,
+      default: () => 'order',
     },
-    props: {
-        type: { // 订单类型  order 普通订单  orderSet 组合订单
-            type: String,
-            default: () => 'order',
-        },
-        theaderList: {
-            type: Array,
-            default: () => [],
-        },
-        order: {
-            type: Object,
-            default: () => null,
-        },
+    theaderList: {
+      type: Array,
+      default: () => [],
     },
-    mounted() {
-        this.init();
+    order: {
+      type: Object,
+      default: () => null,
     },
-    methods: {
-        init() {
-        },
-        moreClick() {
-            this.$emit('moreClick');
-        },
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
     },
+    moreClick() {
+      this.$emit('moreClick');
+    },
+  },
 };
 </script>
 <style scoped>
@@ -89,6 +89,7 @@ export default {
       justify-content: space-between;
       text-align: left;
       margin-bottom: 10px;
+      overflow: hidden\0;
     }
     .contain{
       min-height: 118px;
@@ -96,39 +97,53 @@ export default {
       border: 1px solid #D4D4D4;
       text-align: left;
     }
+    .list-box .item{
+      float: left\0;
+
+    }
     .contain .time{
       width: 20%;
+      float: right\0;
+      line-height: 78px\0;
+      padding-top: 20px\0;
     }
     .contain .classData{
       width: 80%;
+      float: left\0;
+       padding: 20px;
+       box-sizing:border-box\0;
     }
     .contain .classData .item{
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      overflow: hidden\0;
+      line-height: 78px\0;
     }
     .contain .classData .item .img-box{
-      padding: 20px;
+
       width: 50%;
       box-sizing:border-box;
       display: flex;
       align-items: center;
       justify-content: flex-start;
+      float: left\0;
     }
-    .contain .classData .item .img-box .title{
 
-    }
     .contain .classData .item img{
       width: 131px;
       height: 78px;
       margin-right: 20px;
+      float: left\0;
     }
     .contain .num{
       width: 25%;
+      float: left\0;
     }
     .contain .money{
       width: 25%;
+       float: left\0;
     }
     .contain .money span{
       color: #868686;

@@ -1,24 +1,28 @@
 <template>
   <div class="interests common-container-width">
     <div class="title">
-      <h3>财税课堂会员   享专属特权</h3>
-      <p>开通会员尊享课程资源免费观看，还有更多特权服务</p>
+      <h3>优税学院会员   享专属特权</h3>
+      <p v-if="dueTime <= 0">开通会员尊享课程资源免费观看，还有更多特权服务</p>
+      <p v-else>
+        Hi,{{commonUserData.userName}},您开通的{{commonUserData.leaguerLevelName}}会员，剩余{{dueTime}}天
+      </p>
     </div>
     <div v-if="lvList.length>0" class="contain-box">
       <div class="item" v-for="(item,index) in lvList"
-      :class="{empty:item == null}"
+      :class="[{empty:item == null},{active:(item && item.openVipType==='1') || dueTime <= 0}]"
       :key="index">
         <template v-if="item != null">
         <h3 class="level">{{item.name}}会员</h3>
         <p class="intro ellipsis2">{{item.remark}}</p>
         <ul v-if="item.equityDtoList" class="list">
           <li v-for="(list,index) in item.equityDtoList"
-          :class="{active:list.tickType === 1}"
+          :class="{active:list.tickType === '1'}"
           :key="index">
             {{list.name}}
           </li>
         </ul>
-        <span @click="goOrder(item)" class="btn-sub">{{item.fee}}/年</span>
+        <span @click="goOrder(item)"
+        class="btn-sub pointer">{{item.fee}}/年</span>
         </template>
       </div >
     </div>
@@ -63,159 +67,163 @@ import { getTokenFn, initList } from '@/assets/utils/util';
 import { validByPhone } from '@/assets/utils/validator';
 
 export default {
-    name: 'interests',
-    mixins: [mixin],
-    data() {
-        return {
-            name: 'interests',
-            formInline: {
-                name: '',
-                company: '',
-                phone: '',
-                job: '',
+  name: 'interests',
+  mixins: [mixin],
+  data() {
+    return {
+      name: 'interests',
+      formInline: {
+        name: '',
+        company: '',
+        phone: '',
+        job: '',
+      },
+      rules: {
+        name: [
+          {
+            required: true,
+            message: '请输入姓名',
+            trigger: 'blur',
+          },
+          {
+            min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur',
+          },
+        ],
+        company: [
+          {
+            min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur',
+          },
+        ],
+        job: [
+          {
+            min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur',
+          },
+        ],
+        phone: [
+          {
+            required: true,
+            message: '请输入电话号码',
+            trigger: 'blur',
+          },
+          {
+            min: 11,
+            max: 11,
+            message: '长度在11个字符',
+            trigger: 'blur',
+          },
+          {
+            validator: (rule, value, callback) => {
+              if (!validByPhone(value)) {
+                callback(new Error());
+              } else {
+                callback();
+              }
             },
-            rules: {
-                name: [
-                    {
-                        required: true,
-                        message: '请输入姓名',
-                        trigger: 'blur',
-                    },
-                    {
-                        min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur',
-                    },
-                ],
-                company: [
-                    {
-                        min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur',
-                    },
-                ],
-                job: [
-                    {
-                        min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur',
-                    },
-                ],
-                phone: [
-                    {
-                        required: true,
-                        message: '请输入电话号码',
-                        trigger: 'blur',
-                    },
-                    {
-                        min: 11,
-                        max: 11,
-                        message: '长度在11个字符',
-                        trigger: 'blur',
-                    },
-                    {
-                        validator: (rule, value, callback) => {
-                            if (!validByPhone(value)) {
-                                callback(new Error());
-                            } else {
-                                callback();
-                            }
-                        },
-                        message: '手机号格式不对',
-                    },
-                ],
-            },
-            lvList: [],
+            message: '手机号格式不对',
+          },
+        ],
+      },
+      lvList: [],
+      lvId: '',
 
-            courseId: '',
-            type: 2, // 1线上视频课 2线下课 3线上专题课
-            isCanReq: true,
-        };
+      courseId: '',
+      type: 3, // 1线上视频课 2线下课 3会员
+      isCanReq: true,
+      dueTime: '', // 会员到期时间
+
+    };
+  },
+  beforeRouteEnter(to, from, next) {
+    if (getTokenFn()) {
+      next();
+    } else {
+      next(from);
+    }
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
+      // 查询会员权益
+      this.queryListFn();
     },
-    beforeRouteEnter(to, from, next) {
-        if (getTokenFn()) {
-            next();
-        } else {
-            next(from);
+    queryListFn() {
+      // 查询会员权益列表
+      queryList().then((res) => {
+        if (res.data.code === '0000') {
+          this.lvList = initList(res.data.list, 4);
+          this.dueTime = res.data.num;
         }
+      }).catch((err) => {
+        console.log(err);
+        this.$message({
+          message: '获取会员权益信息失败，请稍后再试',
+          type: 'warning',
+        });
+      });
     },
-    mounted() {
-        this.init();
+    addcontactMeFn() {
+      // 提交表单
+      if (this.isCanReq) {
+        this.isCanReq = false;
+      } else {
+        return;
+      }
+      addcontactMe(this.formInline).then((res) => {
+        this.isCanReq = true;
+        if (res.data.code === '0000') {
+          this.$message({
+            message: '提交成功',
+            type: 'success',
+          });
+        }
+      }).catch((err) => {
+        console.log(err);
+        this.isCanReq = true;
+        this.$message({
+          message: '提交失败，请稍后再试',
+          type: 'warning',
+        });
+      });
     },
-    methods: {
-        init() {
-            this.courseId = parseInt(this.$route.query.id, 10);
-            this.type = parseInt(this.$route.query.type, 10) || 2;
-            // 查询会员权益
-            this.queryListFn();
+    goOrder(item) {
+      if (item.openVipType !== '1' && this.dueTime > 0) {
+        return;
+      }
+      this.$router.push({
+        path: '/order',
+        query: {
+          money: item.fee,
+          level: item.name,
+          ptype: 'vip',
+          type: this.type,
+          id: item.id,
+          // dueTime:item.dueTime,
         },
-        queryListFn() {
-            // 查询会员权益列表
-            queryList().then((res) => {
-                if (res.data.code === '0000') {
-                    this.lvList = initList(res.data.list, 4);
-                    console.log(this.lvList);
-                }
-            }).catch((err) => {
-                console.log(err);
-                this.$message({
-                    message: '获取会员权益信息失败，请稍后再试',
-                    type: 'warning',
-                });
-            });
-        },
-        addcontactMeFn() {
-            // 提交表单
-            if (this.isCanReq) {
-                this.isCanReq = false;
-            } else {
-                return;
-            }
-            addcontactMe(this.formInline).then((res) => {
-                this.isCanReq = true;
-                if (res.data.code === '0000') {
-                    this.$message({
-                        message: '提交成功',
-                        type: 'success',
-                    });
-                }
-            }).catch((err) => {
-                console.log(err);
-                this.isCanReq = true;
-                this.$message({
-                    message: '提交失败，请稍后再试',
-                    type: 'warning',
-                });
-            });
-        },
-        goOrder(item) {
-            this.$router.push({
-                path: '/order',
-                query: {
-                    money: item.fee,
-                    level: item.name,
-                    ptype: 'vip',
-                    type: this.type,
-                    id: this.courseId,
-                },
-            });
-        },
-        submitForm(formName) {
-            // 表单提交
-            console.log(this.token);
-            if (!this.token) {
-                this.$message({
-                    message: '您还没有登录，请先登录',
-                    type: 'warning',
-                });
-                return;
-            }
-            let curForm = this.$refs[formName].validate
-                ? this.$refs[formName]
-                : this.$refs[formName][0];
-            curForm.validate((valid) => {
-                if (!valid) {
-                    console.log('提交失败');
-                } else {
-                    this.addcontactMeFn();
-                }
-            });
-        },
+      });
     },
+    submitForm(formName) {
+      // 表单提交
+      if (!this.token) {
+        this.$message({
+          message: '您还没有登录，请先登录',
+          type: 'warning',
+        });
+        return;
+      }
+      let curForm = this.$refs[formName].validate
+        ? this.$refs[formName]
+        : this.$refs[formName][0];
+      curForm.validate((valid) => {
+        if (!valid) {
+          console.log('提交失败');
+        } else {
+          this.addcontactMeFn();
+        }
+      });
+    },
+  },
 };
 </script>
 <style scoped>
@@ -256,6 +264,9 @@ export default {
     box-sizing:border-box;
     margin-bottom: 20px;
   }
+  .contain-box .item.active{
+    /*border-color: #fb683c;*/
+  }
   .contain-box .item.empty{
     opacity: 0;
     height: 0;
@@ -275,6 +286,10 @@ export default {
     margin: 0;
     left: 50%;
     margin-left: -54px;
+    background: #ccc;
+  }
+  .contain-box .item.active .btn-sub{
+    background: #FB683C;
   }
   .contain-box li{
     display: block;

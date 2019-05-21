@@ -8,19 +8,19 @@
 
 
 export default {
-    name: 'app',
-    watch: {
-        isShowLoading() {
-            if (this.isShowLoading) {
-                this.$loading();
-            } else {
-                this.$loading().close();
-            }
-        },
+  name: 'app',
+  watch: {
+    isShowLoading() {
+      if (this.isShowLoading) {
+        this.$loading();
+      } else {
+        this.$loading().close();
+      }
     },
-    mounted() {
-        console.log(this.$route.meta.keepAlive);
-    },
+  },
+  mounted() {
+    // console.log(this.$route.meta.keepAlive);
+  },
 
 };
 </script>

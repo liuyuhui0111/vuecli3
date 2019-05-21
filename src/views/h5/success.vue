@@ -6,20 +6,20 @@
 </template>
 <script>
 export default {
-    name: 'success',
-    data() {
-        return {
-            name: 'success',
-        };
-    },
-    mounted() {
-        this.init();
-    },
-    methods: {
-        init() {
+  name: 'success',
+  data() {
+    return {
+      name: 'success',
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
 
-        },
     },
+  },
 };
 </script>
 <style scoped>

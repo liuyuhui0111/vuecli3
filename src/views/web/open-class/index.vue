@@ -34,69 +34,70 @@
 import Card from '@/views/web/components/card/card.vue';
 import { initList } from '@/assets/utils/util';
 import {
-    offlineCourseList,
+  offlineCourseList,
 } from '@/api/apis';
 
 export default {
-    name: 'open-class',
-    data() {
-        return {
-            name: 'open-class',
-            cardType: 'offline',
-            titleStyle: {
-                color: '#444',
-                fontSize: '16px',
-            },
-            pageSize: 12, // 一页最多展示的条数
-            pagerCount: 11, // 11页以上显示...
-            total: 0,
-            isShowPage: false,
-            pageNum: 1,
-            list: [],
-        };
+  name: 'open-class',
+  data() {
+    return {
+      name: 'open-class',
+      cardType: 'offline',
+      titleStyle: {
+        color: '#444',
+        fontSize: '16px',
+      },
+      pageSize: 12, // 一页最多展示的条数
+      pagerCount: 11, // 11页以上显示...
+      total: 0,
+      isShowPage: false,
+      pageNum: 1,
+      list: [],
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
+      // 获取公开课列表
+      this.offlineCourseListFn('init');
     },
-    mounted() {
-        this.init();
+    handleCurrentChange(val) {
+      this.pageNum = val;
+      this.offlineCourseListFn();
     },
-    methods: {
-        init() {
-            // 获取公开课列表
-            this.offlineCourseListFn('init');
-        },
-        handleCurrentChange(val) {
-            this.pageNum = val;
-            this.offlineCourseListFn();
-        },
 
-        offlineCourseListFn(type) {
-            if (type === 'init') {
-                this.pageNum = 1;
-            }
-            let { pageNum } = this;
-            let { pageSize } = this;
-            // 获取公开课列表
-            offlineCourseList({ pageNum, pageSize }).then((res) => {
-                if (res.data.list.length > 0) {
-                    this.list = res.data.list;
-                    this.list = initList(this.list, 4);
-                }
-                this.total = res.data.total;
-                this.isShowPage = true;
-            }).catch((err) => {
-                console.log(err);
-            });
-        },
-        routerGo(path) {
-            this.$router.push({ path });
-        },
+    offlineCourseListFn(type) {
+      if (type === 'init') {
+        this.pageNum = 1;
+      }
+      this.list = [];
+      let { pageNum } = this;
+      let { pageSize } = this;
+      // 获取公开课列表
+      offlineCourseList({ pageNum, pageSize }).then((res) => {
+        if (res.data.list.length > 0) {
+          this.list = res.data.list;
+          this.list = initList(this.list, 4);
+        }
+        this.total = res.data.total;
+        this.isShowPage = true;
+      }).catch((err) => {
+        console.log(err);
+      });
+    },
+    routerGo(path) {
+      this.$router.push({ path });
+    },
 
-        classClick(item) {
-            this.$router.push({ path: '/detail', query: { id: item.id } });
-        },
+    classClick(item) {
+      this.$router.push({ path: '/detail', query: { id: item.id } });
     },
-    components: {
-        Card,
-    },
+  },
+  components: {
+    Card,
+  },
 };
 </script>
 <style scoped>
@@ -117,13 +118,17 @@ export default {
     color: #FB683C;
   }
   .list-box{
+    min-height: 500px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     flex-wrap: wrap;
     overflow: hidden;
+    width: 104%\0;
   }
   .list-box li{
+    float: left\0;
+    width: 25%\0;
     display: block;
     margin-bottom: 30px;
     flex-grow:0;

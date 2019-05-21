@@ -29,31 +29,34 @@
 </template>
 <script>
 
-import Swiper from 'swiper';
+require('@/plugins/swiper/swiper.min');
 
 export default {
-    name: 'preview',
-    data() {
-        return {
-            name: 'preview',
-            defaultUrl: `${window.location.origin}/banner.png`,
-        };
+  name: 'preview',
+  data() {
+    return {
+      name: 'preview',
+      defaultUrl: `${window.location.origin}/banner.png`,
+    };
+  },
+  props: {
+    list: { // 轮播图数据
+      type: Array,
+      default: () => [],
     },
-    props: {
-        list: { // 轮播图数据
-            type: Array,
-            default: () => [],
-        },
-    },
-    mounted() {
-        this.init();
-    },
-    computed: {
+  },
+  mounted() {
+    this.init();
+  },
+  computed: {
 
-    },
-    methods: {
-        init() {
-            /*eslint-disable*/
+  },
+  methods: {
+    init() {
+      /*eslint-disable*/
+            this.$nextTick(()=>{
+
+
             let thumbsSwiper = new Swiper('#thumbs', {
                 spaceBetween: 10,
                 slidesPerView: 4,
@@ -73,15 +76,16 @@ export default {
                     prevEl: '.swiper-button-prev',
                 },
             });
+            })
              /* eslint-enable */
-        },
-        swiperClick(swiperItem) {
-            if (swiperItem.url) {
-                // 如果存在href 跳转
-                window.location.href = swiperItem.url;
-            }
-        },
     },
+    swiperClick(swiperItem) {
+      if (swiperItem.url) {
+        // 如果存在href 跳转
+        window.location.href = swiperItem.url;
+      }
+    },
+  },
 
 };
 </script>

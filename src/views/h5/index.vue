@@ -34,92 +34,95 @@
 </template>
 <script>
 import {
-    findOfflineCourseById,
+  findOfflineCourseById,
 } from '@/api/apis';
 import { formatDate } from '@/assets/utils/timefn';
 import { setScrollTop } from '@/assets/utils/util';
 
 export default {
-    name: 'h5page',
-    data() {
-        return {
-            name: 'h5page',
-            detailData: null,
-            courseId: '',
-            cuindex: 0,
-            navlist: [
-                {
-                    text: '课程信息',
-                    id: 'kcxx',
-                },
-                {
-                    text: '课程介绍',
-                    id: 'kcjs',
-                },
-                {
-                    text: '课程大纲',
-                    id: 'kcdg',
-                },
-                {
-                    text: '课程计划',
-                    id: 'kcjh',
-                },
-            ],
-        };
+  name: 'h5page',
+  data() {
+    return {
+      name: 'h5page',
+      detailData: null,
+      courseId: '',
+      cuindex: 0,
+      navlist: [
+        {
+          text: '课程信息',
+          id: 'kcxx',
+        },
+        {
+          text: '课程介绍',
+          id: 'kcjs',
+        },
+        {
+          text: '课程大纲',
+          id: 'kcdg',
+        },
+        {
+          text: '课程计划',
+          id: 'kcjh',
+        },
+      ],
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  beforeCreate() {
+    // alert('1')
+  },
+  computed: {
+    getDay() {
+      return this.detailData.endTime - this.detailData.startTime;
     },
-    mounted() {
-        this.init();
+    getTime() {
+      return `${formatDate(this.detailData.startTime)}~${formatDate(this.detailData.endTime)}`;
     },
-    computed: {
-        getDay() {
-            return this.detailData.endTime - this.detailData.startTime;
-        },
-        getTime() {
-            return `${formatDate(this.detailData.startTime)}~${formatDate(this.detailData.endTime)}`;
-        },
+  },
+  methods: {
+    init() {
+      this.courseId = parseInt(this.$route.query.id, 10);
+      // 初始化二维码
+      // 获取详情内容
+      this.findOfflineCourseByIdFn();
     },
-    methods: {
-        init() {
-            this.courseId = parseInt(this.$route.query.id, 10);
-            // 初始化二维码
-            // 获取详情内容
-            this.findOfflineCourseByIdFn();
-        },
-        goSignUp() {
-            // 在线报名
-            if (this.courseId) {
-                this.$router.push({ path: '/h5/signup', query: { id: this.courseId } });
-            }
-        },
-        changeTab(index, item) {
-            this.cuindex = index;
-            this.scrollToDom(item);
-        },
-        scrollToDom(item) {
-            // 滚动条滚动到指定元素位置
-            const obj = document.getElementById(item.id);
-            if (obj) {
-                const top = obj.offsetTop;
-                setScrollTop(top);
-            }
-        },
-        findOfflineCourseByIdFn() {
-        // 获取公开课详情
-            if (this.courseId) {
-                findOfflineCourseById({ id: this.courseId }).then((res) => {
-                    if (res.data.code === '0000') {
-                        this.detailData = res.data.data;
-                    }
-                }).catch((err) => {
-                    console.log(err);
-                    this.$message({
-                        message: '公开课详情获取失败，请稍后再试',
-                        type: 'warning',
-                    });
-                });
-            }
-        },
+    goSignUp() {
+      // 在线报名
+      if (this.courseId) {
+        this.$router.push({ path: '/h5/signup', query: { id: this.courseId } });
+      }
     },
+    changeTab(index, item) {
+      this.cuindex = index;
+      this.scrollToDom(item);
+    },
+    scrollToDom(item) {
+      // 滚动条滚动到指定元素位置
+      const obj = document.getElementById(item.id);
+      if (obj) {
+        const top = obj.offsetTop;
+        setScrollTop(top);
+      }
+    },
+    findOfflineCourseByIdFn() {
+      // 获取公开课详情
+      if (this.courseId) {
+        findOfflineCourseById({ id: this.courseId }).then((res) => {
+          if (res.data.code === '0000') {
+            this.detailData = res.data.data;
+          }
+        }).catch((err) => {
+          console.log(err);
+          this.$message({
+            message: '公开课详情获取失败，请稍后再试',
+            type: 'warning',
+          });
+        });
+      }
+    },
+  },
 };
 </script>
 <style scoped>
@@ -216,5 +219,8 @@ export default {
     bottom: 0;
     left: 50%;
     margin-left: -96px;
+  }
+  .item img{
+    width: 100%;
   }
 </style>

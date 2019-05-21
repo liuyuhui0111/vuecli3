@@ -16,19 +16,19 @@
               <div class="share-box">
                 <div @click="copyFn" class="copy">
                   <textarea id="copy" v-model="copyurl"></textarea>
-                 <p><span class="icon-copy"></span>复制链接</p>
+                 <p class="pointer"><span class="icon-copy"></span>
+                 <span>复制链接</span></p>
                 </div>
                 <div class="wx-box">
                   <span class="qrcode-logo"></span>
                   <p>
                     <span class="icon-wx"></span>
-                    微信扫一扫
+                    <span>微信扫一扫</span>
                   </p>
                   <div class="qrcode">
                     <Qrcode docId="qrcode"
                     :width="qrcodeWidth"
                     :url="copyurl"
-                    :logourl="logourl"
                     ></Qrcode>
                   </div>
                 </div>
@@ -40,7 +40,7 @@
             :class="{active:detailData.isColl}"></span>
 
 
-            <span @click="isShowFormDialog=true" class="btn-online">在线报名</span>
+            <span @click="onlineSignFn()" class="btn-online">在线报名</span>
             <span v-show="isShowFreeBtn" @click="goFree('/interests')" class="btn-free">免费学</span>
           </div>
         </div>
@@ -224,342 +224,385 @@ import { setScrollTop, transferString } from '@/assets/utils/util';
 import { validByPhone } from '@/assets/utils/validator';
 import baseTitle from '@/views/web/components/base/base-title.vue';
 import {
-    findOfflineCourseById,
-    showCourseOffline,
-    offlineCourseSignUp,
-    saveMyCollection,
+  findOfflineCourseById,
+  showCourseOffline,
+  offlineCourseSignUp,
+  saveMyCollection,
 } from '@/api/apis';
 import { formatDate } from '@/assets/utils/timefn';
 
 export default {
-    name: 'detail',
-    data() {
-        return {
-            name: '详情页',
-            qrcodeWidth: 116,
-            logourl: `${window.location.origin}/logo.png`,
-            copyurl: '',
-            isShowFormDialog: false,
-            showShare: false,
-            tabindex: 0, // 当前选中tab index
-            tablist: [ // tab列表
-                { text: '课程信息', id: '1', key: '' },
-                { text: '课程介绍', id: '2', key: 'introduce' },
-                { text: '课程大纲', id: '3', key: 'outline' },
-                { text: '课程计划', id: '4', key: 'plan' },
-                { text: '预约报名', id: 'online', key: '' },
-            ],
-            labelPosition: 'right',
-            onlineForm: { // 在线报名表单
-                name: '',
-                tel: '',
-                comp: '',
-                work: '',
-                message: '',
+  name: 'detail',
+  data() {
+    return {
+      name: '详情页',
+      qrcodeWidth: 116,
+      copyurl: '',
+      isShowFormDialog: false,
+      showShare: false,
+      tabindex: 0, // 当前选中tab index
+      tablist: [ // tab列表
+        { text: '课程信息', id: '1', key: '' },
+        { text: '课程介绍', id: '2', key: 'introduce' },
+        { text: '课程大纲', id: '3', key: 'outline' },
+        { text: '课程计划', id: '4', key: 'plan' },
+        { text: '预约报名', id: 'online', key: '' },
+      ],
+      labelPosition: 'right',
+      onlineForm: { // 在线报名表单
+        name: '',
+        tel: '',
+        comp: '',
+        work: '',
+        message: '',
+      },
+      rules: {
+        name: [
+          {
+            required: true,
+            message: '请输入称呼',
+            trigger: 'blur',
+          },
+          {
+            min: 2,
+            max: 30,
+            message: '长度在 2 到 30 个字符',
+            trigger: 'blur',
+          },
+        ],
+        tel: [
+          {
+            required: true,
+            message: '请输入电话号码',
+            trigger: 'blur',
+          },
+          {
+            min: 11,
+            max: 11,
+            message: '长度在11个字符',
+            trigger: 'blur',
+          },
+          {
+            validator: (rule, value, callback) => {
+              if (!validByPhone(value)) {
+                callback(new Error());
+              } else {
+                callback();
+              }
             },
-            rules: {
-                name: [
-                    {
-                        required: true,
-                        message: '请输入称呼',
-                        trigger: 'blur',
-                    },
-                    {
-                        min: 2,
-                        max: 30,
-                        message: '长度在 1 到 30 个字符',
-                        trigger: 'blur',
-                    },
-                ],
-                tel: [
-                    {
-                        required: true,
-                        message: '请输入电话号码',
-                        trigger: 'blur',
-                    },
-                    {
-                        min: 11,
-                        max: 11,
-                        message: '长度在11个字符',
-                        trigger: 'blur',
-                    },
-                    {
-                        validator: (rule, value, callback) => {
-                            if (!validByPhone(value)) {
-                                callback(new Error());
-                            } else {
-                                callback();
-                            }
-                        },
-                        message: '手机号格式不对',
-                    },
-                ],
-                comp: [
-                    {
-                        required: true,
-                        message: '请输入公司名称',
-                        trigger: 'blur',
-                    },
-                    {
-                        min: 2,
-                        max: 100,
-                        message: '长度在 2 到 100 个字符',
-                        trigger: 'blur',
-                    },
-                ],
-                work: [
-                    {
-                        min: 2,
-                        max: 30,
-                        message: '长度在 2 到 30 个字符',
-                        trigger: 'blur',
-                    },
-                ],
-                message: [
-                    {
-                        min: 2,
-                        max: 300,
-                        message: '长度在 2 到 300 个字符',
-                        trigger: 'blur',
-                    },
-                ],
-            },
-            hotSearchList: [], // 在线训练营
-            detailData: null,
-            courseId: 1,
-            saveMyCollectionParam: { // 收藏参数
-                courseId: '', // 课程id
-                onOffType: '1', // 线上线下0 : 线下课； 1 线上课
-            },
-            isCanSendApi: true,
-            isShowFreeBtn: false,
-            type: 2, // 1线上视频课 2线下课 3线上专题课
-        };
+            message: '手机号格式不对',
+          },
+        ],
+        comp: [
+          {
+            required: true,
+            message: '请输入公司名称',
+            trigger: 'blur',
+          },
+          {
+            min: 2,
+            max: 100,
+            message: '长度在 2 到 100 个字符',
+            trigger: 'blur',
+          },
+        ],
+        work: [
+          {
+            min: 2,
+            max: 30,
+            message: '长度在 2 到 30 个字符',
+            trigger: 'blur',
+          },
+        ],
+        message: [
+          {
+            min: 2,
+            max: 300,
+            message: '长度在 2 到 300 个字符',
+            trigger: 'blur',
+          },
+        ],
+      },
+      hotSearchList: [], // 在线训练营
+      detailData: null,
+      courseId: 1,
+      saveMyCollectionParam: { // 收藏参数
+        courseId: '', // 课程id
+        onOffType: '0', // 线上线下0 : 线下课； 1 线上课
+      },
+      isCanSendApi: true,
+      isShowFreeBtn: false,
+      type: 2, // 1线上视频课 2线下课 3线上专题课
+      copyFlag: true, // 复制是否成功
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  watch: {
+    $route() {
+      this.init();
     },
-    mounted() {
-        this.init();
+  },
+  computed: {
+    getDay() {
+      return this.detailData.endTime - this.detailData.startTime;
     },
-    watch: {
-        $route() {
-            this.init();
-        },
+    getTime() {
+      return `${formatDate(this.detailData.startTime)}~${formatDate(this.detailData.endTime)}`;
     },
-    computed: {
-        getDay() {
-            return this.detailData.endTime - this.detailData.startTime;
-        },
-        getTime() {
-            return `${formatDate(this.detailData.startTime)}~${formatDate(this.detailData.endTime)}`;
-        },
+  },
+  methods: {
+    init() {
+      this.detailData = null;
+      this.courseId = parseInt(this.$route.query.id, 10);
+      // 是否登录 初始化显示免费学btn
+      if (!this.token) {
+        this.isShowFreeBtn = true;
+      } else if (this.user && this.user.leaguerLevelId) {
+        this.isShowFreeBtn = false;
+      } else {
+        this.isShowFreeBtn = true;
+      }
+      // 初始化二维码
+      this.copyurl = `${window.location.href.split('#')[0]}#/h5/index?id=${this.courseId}`;
+      // 获取详情内容
+      this.findOfflineCourseByIdFn();
+      // 获取在线训练营
+      this.showCourseOfflineFn();
     },
-    methods: {
-        init() {
-            this.detailData = null;
-            this.courseId = parseInt(this.$route.query.id, 10);
-            // 是否登录 初始化显示免费学btn
-            if (!this.token) {
-                this.isShowFreeBtn = true;
-            } else {
-                this.isShowFreeBtn = !!this.commonUserData.userName;
-            }
-            // 初始化二维码
-            this.copyurl = `${window.location.origin}/h5/index?id=${this.courseId}`;
-            // 获取详情内容
-            this.findOfflineCourseByIdFn();
-            // 获取在线训练营
-            this.showCourseOfflineFn();
+    onlineSignFn() {
+      if (!this.token) {
+        this.$message({
+          message: '您还没有登录，请先登录',
+          type: 'warning',
+          // duration: 0,
+        });
+        return;
+      }
+      this.isShowFormDialog = true;
+    },
+    transferStringFn(str) {
+      return transferString(str) || '';
+    },
+    goFree(path) {
+      // 免费学
+      if (!this.token) {
+        this.$message({
+          message: '您还没有登录，请先登录',
+          type: 'warning',
+          // duration: 0,
+        });
+        return;
+      }
+      this.$router.push({
+        path,
+        query: {
+          id: this.courseId,
+          type: this.type,
         },
-        transferStringFn(str) {
-            return transferString(str) || '';
-        },
-        goFree(path) {
-            // 免费学
-            if (!this.token) {
-                this.$message({
-                    message: '您还没有登录，请先登录',
-                    type: 'warning',
-                });
-                return;
-            }
+      });
+    },
+    routerGo(item) {
+      this.$router.push({
+        path: '/detail',
+        query: { id: item.courseOfflineEntity.id },
+      });
+    },
+    collectFn() {
+      // 点击收藏
+      this.saveMyCollectionParam.courseId = this.courseId;
+      if (this.isCanSendApi) {
+        this.isCanSendApi = false;
+      } else {
+        return;
+      }
+      this.saveMyCollectionFn();
+    },
+    saveMyCollectionFn() {
+      // 收藏 如果未登录  提示去登陆
+      if (!this.token) {
+        this.$message({
+          message: '您还没有登录，请先登录',
+          type: 'warning',
+        });
+        return;
+      }
+
+      saveMyCollection(this.saveMyCollectionParam).then((res) => {
+        this.isCanSendApi = true;
+        if (res.data.code === '0000') {
+          this.detailData.isColl = !this.detailData.isColl;
+        }
+      }).catch((err) => {
+        this.isCanSendApi = true;
+        console.log(err);
+        let message = '收藏失败，请稍后再试';
+        if (this.detailData.isColl) {
+          message = '取消收藏失败，请稍后再试';
+        }
+        this.$message({
+          message,
+          type: 'warning',
+        });
+      });
+    },
+    offlineCourseSignUpFn() {
+      // 线上课在线报名提交表单
+      //  this.$message({
+      //   message: '公开课详情获取失败，请稍后再试',
+      //   type: 'warning',
+      //   duration: 2000,
+      // });
+      // return;
+      let params = {
+        company: this.onlineForm.comp,
+        offlineCourseId: this.courseId,
+        name: this.onlineForm.name,
+        phone: this.onlineForm.tel,
+        job: this.onlineForm.work,
+        content: this.onlineForm.message,
+      };
+      offlineCourseSignUp(params).then((res) => {
+        if (res.data.code === '0000') {
+          // this.detailData = res.data.data
+          if (res.data.id) {
+            // 跳转报名成功页
             this.$router.push({
-                path,
-                query: {
-                    id: this.courseId,
-                    type: this.type,
-                },
+              path: '/success',
+              query: {
+                sid: res.data.id,
+                id: this.courseId,
+                type: this.type,
+              },
             });
-        },
-        routerGo(item) {
-            this.$router.push({ path: '/detail', query: { id: item.id } });
-        },
-        collectFn() {
-            // 点击收藏
-            this.saveMyCollectionParam.courseId = this.courseId;
-            if (this.isCanSendApi) {
-                this.isCanSendApi = false;
-            } else {
-                return;
-            }
-            this.saveMyCollectionFn();
-        },
-        saveMyCollectionFn() {
-            // 收藏 如果未登录  提示去登陆
-            if (!this.token) {
-                this.$message({
-                    message: '您还没有登录，请先登录',
-                    type: 'warning',
-                });
-                return;
-            }
-
-            saveMyCollection(this.saveMyCollectionParam).then((res) => {
-                this.isCanSendApi = true;
-                if (res.data.code === '0000') {
-                    this.detailData.isColl = !this.detailData.isColl;
-                }
-            }).catch((err) => {
-                this.isCanSendApi = true;
-                console.log(err);
-                let message = '收藏失败，请稍后再试';
-                if (this.detailData.isColl) {
-                    message = '取消收藏失败，请稍后再试';
-                }
-                this.$message({
-                    message,
-                    type: 'warning',
-                });
-            });
-        },
-        offlineCourseSignUpFn() {
-            // 线上课在线报名提交表单
-
-            let params = {
-                company: this.onlineForm.comp,
-                offlineCourseId: this.courseId,
-                name: this.onlineForm.name,
-                phone: this.onlineForm.tel,
-                job: this.onlineForm.work,
-                content: this.onlineForm.message,
-            };
-            offlineCourseSignUp(params).then((res) => {
-                if (res.data.code === '0000') {
-                    // this.detailData = res.data.data
-                    if (res.data.id) {
-                        // 跳转报名成功页
-                        this.$router.push({
-                            path: '/success',
-                            query: {
-                                sid: res.data.id,
-                                id: this.courseId,
-                                type: this.type,
-                            },
-                        });
-                    }
-                }
-            }).catch((err) => {
-                console.log(err);
-                this.$message({
-                    message: '公开课详情获取失败，请稍后再试',
-                    type: 'warning',
-                });
-            });
-        },
-        showCourseOfflineFn() {
-            // 获取在线训练营
-            showCourseOffline().then((res) => {
-                console.log(res);
-                if (res.data.code === '0000') {
-                    // this.detailData = res.data.data
-                    this.hotSearchList = res.data.list;
-                }
-            }).catch((err) => {
-                console.log(err);
-                this.$message({
-                    message: '公开课详情获取失败，请稍后再试',
-                    type: 'warning',
-                });
-            });
-        },
-        findOfflineCourseByIdFn() {
-            // 获取公开课详情
-            if (this.courseId) {
-                findOfflineCourseById({ id: this.courseId }).then((res) => {
-                    if (res.data.code === '0000' && res.data.data) {
-                        res.data.data.isColl = res.data.isFavorite && res.data.isFavorite.code === '8888';
-                        this.detailData = res.data.data;
-                    }
-                }).catch((err) => {
-                    console.log(err);
-                    this.$message({
-                        message: '公开课详情获取失败，请稍后再试',
-                        type: 'warning',
-                    });
-                });
-            }
-        },
-        changeTab(index, item) {
-            this.tabindex = index;
-            this.scrollToDom(item);
-        },
-
-        scrollToDom(item) {
-            // 滚动条滚动到指定元素位置
-            const obj = document.getElementById(item.id);
-            if (obj) {
-                const top = obj.offsetTop;
-                setScrollTop(top);
-            }
-        },
-
-        copyFn() {
-            // 复制链接
-            try {
-                const input = document.getElementById('copy');
-                input.select(); // 选中文本
-                document.execCommand('copy'); // 执行浏览器复制命令
-                this.$message({
-                    message: '复制成功',
-                    type: 'success',
-                });
-            } catch (e) {
-                console.log(e);
-                this.$message.error(`该浏览器不支持复制，请手动选择复制：${this.copyurl}`);
-            }
-        },
-
-        submitForm(formName) {
-            // 表单提交
-            console.log(this.token);
-            if (!this.token) {
-                this.$message({
-                    message: '您还没有登录，请先登录',
-                    type: 'warning',
-                });
-                return;
-            }
-            let curForm = this.$refs[formName].validate
-                ? this.$refs[formName]
-                : this.$refs[formName][0];
-            curForm.validate((valid) => {
-                if (!valid) {
-                    console.log('提交失败');
-                } else {
-                    this.offlineCourseSignUpFn();
-                }
-            });
-        },
-
-
+          }
+        } else {
+          this.$message({
+            message: res.data.message,
+            type: 'warning',
+            duration: 2000,
+          });
+        }
+      }).catch((err) => {
+        console.log(err);
+        this.$message({
+          message: '公开课详情获取失败，请稍后再试',
+          type: 'warning',
+        });
+      });
     },
-    components: {
-        baseTitle,
-        Qrcode,
+    showCourseOfflineFn() {
+      // 获取在线训练营
+      showCourseOffline().then((res) => {
+        console.log(res);
+        if (res.data.code === '0000') {
+          // this.detailData = res.data.data
+          this.hotSearchList = res.data.list;
+        }
+      }).catch((err) => {
+        console.log(err);
+        this.$message({
+          message: '公开课详情获取失败，请稍后再试',
+          type: 'warning',
+        });
+      });
     },
+    findOfflineCourseByIdFn() {
+      // 获取公开课详情
+      if (this.courseId) {
+        findOfflineCourseById({ id: this.courseId }).then((res) => {
+          if (res.data.code === '0000' && res.data.data) {
+            res.data.data.isColl = res.data.isFavorite && res.data.isFavorite.code === '8888';
+            this.detailData = res.data.data;
+          }
+        }).catch((err) => {
+          console.log(err);
+          this.$message({
+            message: '公开课详情获取失败，请稍后再试',
+            type: 'warning',
+            // duration: 0,
+          });
+        });
+      }
+    },
+    changeTab(index, item) {
+      this.tabindex = index;
+      this.scrollToDom(item);
+    },
+
+    scrollToDom(item) {
+      // 滚动条滚动到指定元素位置
+      const obj = document.getElementById(item.id);
+      if (obj) {
+        const top = obj.offsetTop;
+        setScrollTop(top);
+      }
+    },
+
+    copyFn() {
+      // 复制链接
+      try {
+        const input = document.getElementById('copy');
+        input.select(); // 选中文本
+        if (window.clipboardData && this.copyFlag) {
+          this.copyFlag = window.clipboardData.setData('Text', this.copyurl);
+        } else {
+          document.execCommand('copy');
+        }
+        // let flag = document.execCommand('copy'); // 执行浏览器复制命令
+        if (!this.copyFlag) {
+          this.$message({
+            message: '禁用复制功能，请刷新页面或者更换浏览器重试',
+            type: 'warning',
+          });
+        } else {
+          this.$message({
+            message: '复制成功',
+            type: 'success',
+          });
+        }
+      } catch (e) {
+        console.log(e);
+        this.$message.error(`该浏览器不支持复制，请手动选择复制：${this.copyurl}`);
+      }
+    },
+
+    submitForm(formName) {
+      // 表单提交
+      console.log(this.token);
+      if (!this.token) {
+        this.$message({
+          message: '您还没有登录，请先登录',
+          type: 'warning',
+        });
+        return;
+      }
+      let curForm = this.$refs[formName].validate
+        ? this.$refs[formName]
+        : this.$refs[formName][0];
+      curForm.validate((valid) => {
+        if (!valid) {
+          console.log('提交失败');
+        } else {
+          this.offlineCourseSignUpFn();
+        }
+      });
+    },
+
+
+  },
+  components: {
+    baseTitle,
+    Qrcode,
+  },
 };
 </script>
 <style scoped>
 /*在线学习弹框*/
-
+.open-class{
+  position: relative;
+}
 .dialog-online{
   background: #FFFFFF;
   border: 1px solid #979797;
@@ -587,6 +630,7 @@ export default {
   width: 382px;
   font-size: 14px;
   color: #FB683C;
+  float: right\0;
 }
 .class-box .img-box{
   overflow: hidden;
@@ -595,6 +639,7 @@ export default {
 .class-box .img-box img{
   float: left;
   width: 178px;
+  height: auto;
   margin-right: 20px;
 }
 .class-box .ellipsis2{
@@ -690,14 +735,18 @@ export default {
   }
   .wx-box p,
   .copy p{
-    height: 22px;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin-bottom: 20px;
-    padding-left: 21px;
+    height: 32px;
+    display: block;
+    text-align: center;
+    font-size: 0;
   }
+  .wx-box p{
+    margin-bottom: 10px;
+  }
+    .copy span,
+    .wx-box span{
+      font-size: 14px;
+    }
   .icon-wx,
   .icon-copy{
     display: inline-block;
@@ -706,6 +755,9 @@ export default {
     margin-right: 12px;
     position: relative;
     background: url('./imgs/icon-copy.png') no-repeat top left;
+    /*float: left\0;*/
+    position: relative;
+    top: 4px;
   }
   .icon-wx{
     width: 26px;
@@ -745,6 +797,13 @@ export default {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    overflow: hidden\0;
+  }
+  .contain-box>.aside{
+    float: right\0;
+  }
+  .contain-box>.contain{
+    float: left\0;
   }
   .contain-box .item{
     padding-bottom: 30px;
@@ -771,9 +830,11 @@ export default {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    overflow: hidden\0;
   }
   .form .form-box{
     width: 300px;
+    float: left\0;
   }
   .form .mes-box{
     width: 360px;
@@ -781,10 +842,12 @@ export default {
     padding-top: 30px;
     position: relative;
     box-sizing:border-box;
+    float: right\0;
   }
   .dialog-online .mes-box{
     width: 280px;
     left: 20px;
+    left:0\0;
   }
   .form .mes-box p{
     position: absolute;

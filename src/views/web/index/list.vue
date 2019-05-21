@@ -3,7 +3,9 @@
     <baseTitle @moreClick="moreClick" :title="title" :more="more"></baseTitle>
       <slot>
         <div v-if="list.length>0" class="contain-box">
-          <div v-for="(item,index) in list" :key="index" class="item">
+          <div v-for="(item,index) in list" :key="index"
+          :class="{empty:item==null}"
+          class="item">
             <Card v-if="item != null"
             @classClick="classClick"
             :type="cardType" :classData="item"></Card>
@@ -17,48 +19,48 @@ import Card from '@/views/web/components/card/card.vue';
 import baseTitle from '@/views/web/components/base/base-title.vue';
 
 export default {
-    data() {
-        return {
-            moreText: '更多',
-            name: 'list',
-        };
+  data() {
+    return {
+      moreText: '更多',
+      name: 'list',
+    };
+  },
+  props: {
+    title: {
+      type: String,
+      derequired: true,
     },
-    props: {
-        title: {
-            type: String,
-            derequired: true,
-        },
-        more: {
-            type: String,
-            default: () => '',
-        },
-        cardType: { // 卡片类型 online 线上课程 offline 线下公开课
-            type: String,
-            default: () => '',
-        },
-        list: {
-            type: Array,
-            default: () => [],
-        },
+    more: {
+      type: String,
+      default: () => '',
     },
-    mounted() {
-        this.init();
+    cardType: { // 卡片类型 online 线上课程 offline 线下公开课
+      type: String,
+      default: () => '',
     },
-    methods: {
-        init() {
+    list: {
+      type: Array,
+      default: () => [],
+    },
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
 
-        },
-        moreClick() {
-            this.$emit('moreClick');
-        },
-        classClick(item, type) {
-            this.$emit('classClick', item, type);
-        },
     },
-    components: {
-        Card,
-        baseTitle,
+    moreClick() {
+      this.$emit('moreClick');
     },
+    classClick(item, type) {
+      this.$emit('classClick', item, type);
+    },
+  },
+  components: {
+    Card,
+    baseTitle,
+  },
 };
 </script>
 <style scoped>
@@ -68,8 +70,14 @@ export default {
     padding: 20px 0 0 0;
     align-items: center;
     justify-content: space-between;
+    overflow: hidden;
+    width: 104%\0;
   }
   .contain-box .item{
-    /*width: 25%;*/
+    width: 25%\0;
+    float: left\0;
+  }
+  .contain-box .empty{
+    min-width: 219px;
   }
 </style>

@@ -1,29 +1,28 @@
 <template>
   <div class="my-myset">
-  <Title title="我的设置"
-  @navclick="navclick"
-  :list="list"></Title>
+  <Title title="我的设置"></Title>
     <div class="iframe-box">
-      <iframe src="http://www.baidu.com" frameborder="0"></iframe>
+      <iframe :src="src" frameborder="0"></iframe>
     </div>
   </div>
 </template>
 <script>
 export default {
-    name: 'my-myset',
-    data() {
-        return {
-            name: 'my-myset',
-        };
+  name: 'my-myset',
+  data() {
+    return {
+      name: 'my-myset',
+      src: '',
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
+      this.src = `${window.COMMON_ENV.SSO_URL}/authentication/require#/pclogin?changePassword=1&token=${this.token}`;
     },
-    mounted() {
-        this.init();
-    },
-    methods: {
-        init() {
-
-        },
-    },
+  },
 };
 </script>
 <style scoped>

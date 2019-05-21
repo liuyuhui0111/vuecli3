@@ -10,33 +10,33 @@
 </template>
 <script>
 export default {
-    name: 'base-title',
-    data() {
-        return {
-            name: 'base-title',
-        };
+  name: 'base-title',
+  data() {
+    return {
+      name: 'base-title',
+    };
+  },
+  props: {
+    title: { // 标题内容
+      type: String,
+      default: () => '',
     },
-    props: {
-        title: { // 标题内容
-            type: String,
-            default: () => '',
-        },
-        more: { // 更多
-            type: String,
-            default: () => '',
-        },
+    more: { // 更多
+      type: String,
+      default: () => '',
+    },
 
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
     },
-    mounted() {
-        this.init();
+    moreClick() {
+      this.$emit('moreClick');
     },
-    methods: {
-        init() {
-        },
-        moreClick() {
-            this.$emit('moreClick');
-        },
-    },
+  },
 };
 </script>
 <style scoped>

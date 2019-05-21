@@ -72,102 +72,102 @@ import mixin from './js/mixin';
 import { queryClassList, removeClass } from '@/api/apis';
 
 export default {
-    name: 'my-preson',
-    mixins: [mixin],
-    data() {
-        return {
-            name: 'my-preson',
-            curList: 0,
-            total: 0,
-            list: [
-                {
-                    text: '最近在学',
-                    value: '0',
-                },
-                {
-                    text: '专题课',
-                    value: '1',
-                },
-            ],
-            queryClassListParam: {
-                isComplete: '',
-                pageNum: 1,
-                pageSize: 10,
-            },
-            navlist: [
-                {
-                    text: '全部',
-                    value: '',
-                },
-                {
-                    text: '进行中',
-                    value: '0',
-                },
-                {
-                    text: '已学完',
-                    value: '1',
-                },
-            ],
-            masterList: [],
-            queryClassListList: [],
-            isShowPage: false,
-        };
+  name: 'my-preson',
+  mixins: [mixin],
+  data() {
+    return {
+      name: 'my-preson',
+      curList: 0,
+      total: 0,
+      list: [
+        {
+          text: '最近在学',
+          value: '0',
+        },
+        // {
+        //     text: '专题课',
+        //     value: '1',
+        // },
+      ],
+      queryClassListParam: {
+        isComplete: '',
+        pageNum: 1,
+        pageSize: 10,
+      },
+      navlist: [
+        {
+          text: '全部',
+          value: '',
+        },
+        {
+          text: '进行中',
+          value: '0',
+        },
+        {
+          text: '已学完',
+          value: '1',
+        },
+      ],
+      masterList: [],
+      queryClassListList: [],
+      isShowPage: false,
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
+      this.queryClassListFn('init');
     },
-    mounted() {
-        this.init();
+    goStudy(item) {
+      // 继续学习
+      this.$router.push({
+        path: '/online-detail',
+        query: {
+          id: item.id,
+          sec: item.duration,
+        },
+      });
     },
-    methods: {
-        init() {
-            this.queryClassListFn('init');
-        },
-        goStudy(item) {
-            // 继续学习
-            this.$router.push({
-                path: '/online-detail',
-                query: {
-                    id: item.id,
-                    sec: item.duration,
-                },
-            });
-        },
-        delFn(item) {
-            console.log(item.id);
-            removeClass({ courseId: item.id }).then((res) => {
-                if (res.data.code === '0000') {
-                    this.$message({
-                        message: '删除成功',
-                        type: 'success',
-                    });
-                    this.queryClassListFn('init');
-                }
-            }).catch((err) => {
-                this.$message({
-                    message: '删除失败，请稍后再试',
-                    type: 'warning',
-                });
-                console.log(err);
-            });
-        },
-        navclick(item, index) {
-            console.log(item);
-            this.curList = index;
-        },
-        navBoxChange(item) {
-            this.queryClassListParam.isComplete = item.value;
-            this.queryClassListFn();
-        },
-        handleCurrentChange(val) {
-            this.queryClassListParam.pageNum = val;
-            this.queryClassListFn();
-        },
-        queryClassListFn(t) {
-            // 个人中心我的报名
-            if (t === 'init') {
-                this.queryClassListParam.pageNum = 1;
-            }
-            queryClassList(this.queryClassListParam).then((res) => {
-                if (res.data.code === '0000') {
-                /*eslint-disable*/ 
+    delFn(item) {
+      removeClass({ courseId: item.id }).then((res) => {
+        if (res.data.code === '0000') {
+          this.$message({
+            message: '删除成功',
+            type: 'success',
+          });
+          this.queryClassListFn('init');
+        }
+      }).catch((err) => {
+        this.$message({
+          message: '删除失败，请稍后再试',
+          type: 'warning',
+        });
+        console.log(err);
+      });
+    },
+    navclick(item, index) {
+      console.log(item);
+      this.curList = index;
+    },
+    navBoxChange(item) {
+      this.queryClassListParam.isComplete = item.value;
+      this.queryClassListFn();
+    },
+    handleCurrentChange(val) {
+      this.queryClassListParam.pageNum = val;
+      this.queryClassListFn();
+    },
+    queryClassListFn(t) {
+      // 个人中心我的报名
+      if (t === 'init') {
+        this.queryClassListParam.pageNum = 1;
+      }
+      queryClassList(this.queryClassListParam).then((res) => {
+        this.isShowPage = true;
+        if (res.data.code === '0000') {
+          /*eslint-disable*/ 
                   res.data.list.forEach((item)=>{
                     if(this.queryClassListParam.isComplete == '1'){
                       item.progress = 100;
@@ -180,25 +180,35 @@ export default {
                     
                   })
                   /* eslint-enable */
-                    this.queryClassListList = res.data.list;
-                    this.total = res.data.total;
-                }
-            }).catch((err) => {
-                this.$message({
-                    message: '获取报名列表失败，请稍后再试',
-                    type: 'warning',
-                });
-                console.log(err);
-            });
-        },
+          this.queryClassListList = res.data.list;
+          this.total = res.data.total;
+        }
+      }).catch((err) => {
+        this.isShowPage = true;
+        this.$message({
+          message: '获取报名列表失败，请稍后再试',
+          type: 'warning',
+        });
+        console.log(err);
+      });
     },
+  },
 };
 </script>
 <style scoped>
+.empty{
+  display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 18px;
+    height: 100%;
+    line-height: 400px;
+}
   .nav-box{
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    overflow: hidden\0;
   }
   .nav-box span{
     padding: 20px 0;
@@ -207,6 +217,7 @@ export default {
     letter-spacing: 0;
     margin-right: 40px;
     cursor: pointer;
+    float: left\0;
   }
   .active,
   .nav-box span.active{
@@ -225,6 +236,13 @@ export default {
     justify-content: space-between;
     font-size: 14px;
     margin-bottom: 20px;
+    overflow: hidden\0;
+  }
+  .type span{
+    float: left\0;
+  }
+  .type span.num{
+    float: right\0;
   }
 
   .img-box,
@@ -232,9 +250,12 @@ export default {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    overflow: hidden\0;
+    width: 100%\0;
   }
   .btn-box{
     width: 148px;
+    float: right\0;
   }
   .btn-box .btn-sub{
     margin: 0 0 0 40px;
@@ -244,8 +265,9 @@ export default {
   }
   .img-box{
     justify-content: flex-start;
-    width: 500px;
+    width: 600px;
     color: #444;
+    float: left\0;
   }
   .num{
     color: #868686;
@@ -253,10 +275,13 @@ export default {
   }
   .img-box img{
     width: 171px;
+    height: auto;
     margin-right: 20px;
+    float: left\0;
   }
   .img-box .item{
     width:340px;
+    float: left\0;
   }
   .btn-del{
     display: block;

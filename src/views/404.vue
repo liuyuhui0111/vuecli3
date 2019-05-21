@@ -9,26 +9,26 @@
 </template>
 <script>
 export default {
-    data() {
-        return {
-            name: '404',
-        };
-    },
-    mounted() {
-        this.init();
-    },
-    methods: {
-        init() {
+  data() {
+    return {
+      name: '404',
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
 
-        },
-        routerGo(path) {
-            if (path === -1) {
-                this.$router.go(-1);
-            } else {
-                this.$router.push({ path });
-            }
-        },
     },
+    routerGo(path) {
+      if (path === -1) {
+        this.$router.go(-1);
+      } else {
+        this.$router.push({ path });
+      }
+    },
+  },
 };
 </script>
 <style scoped>
@@ -45,6 +45,7 @@ export default {
 .btns{
   margin: 30px auto;
   max-width: 428px;
+  min-width: 213px;
   width: 44%;
     display: flex;
     align-items: center;
@@ -54,5 +55,9 @@ export default {
     letter-spacing: -0.39px;
     text-align: center;
     cursor: pointer;
+    overflow: hidden\0;
+}
+:root .btns span{
+    float: left\0;
 }
 </style>
