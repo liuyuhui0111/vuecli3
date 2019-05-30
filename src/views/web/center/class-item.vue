@@ -12,42 +12,57 @@
                 </slot>
             </div>
             <div class="status">
+            <div class="dib">
                 <slot :item="item" name="status">
-                    <template v-if="item.status===5">
+
+                    <template v-if="item.status===6">
+
                         <span class="cancel">
                             订单已取消
                         </span>
                         <br>
                         <span class="detail pointer" @click="routerGo(item)">订单详情</span>
+
                     </template>
                     <div v-else>
-                      {{statusType[item.status] || ''}}
-                    </div>
+                      {{statusType[item.status] || '----'}}
+                      <br>
+                      <span class="detail pointer" @click="routerGo(item)">订单详情</span>
+
+                     </div>
                 </slot>
+                </div>
             </div>
             <div class="options">
+            <div class="dib">
                 <slot name="options" :item="item">
-                  <div v-if="item.status === 1">
+                  <div v-if="item.status === 1||item.status === 2">
                       <div v-if="getTime(item.expireDate) != ''">
                         <p class="time">剩余：
                         {{getTime(item.expireDate)}}</p>
-                        <span v-if="item.status===1" @click="emit('buy',item)"
+                        <span v-if="item.status===1||item.status === 2" @click="emit('buy',item)"
                         class="btn-sub">立即支付</span>
                         <span @click="emit('cancel',item)"
                         class="cancel pointer">取消订单</span>
                       </div>
                       <div v-else>
-                        已过期
+                        ----
                       </div>
                   </div>
                   <div v-else-if="item.status === 3">
+                    <template v-if="goodstype != 2">
                     <span @click="emit('goStudy',item)" class="btn-sub">去学习</span>
+                    </template>
+                    <template v-else>
+                        听课码：{{item.orderItems[0].tkm}}
+                    </template>
                   </div>
                   <div v-else>
                     ----
                   </div>
 
                 </slot>
+                </div>
             </div>
          </li>
      </ul>
@@ -63,12 +78,12 @@ export default {
       name: 'base-title',
       navIndex: -1,
       statusType: {
-        1: '未付款',
-        2: '付款中',
-        3: '已付款',
+        1: '等待付款',
+        2: '等待付款',
+        3: '交易成功',
         4: '退款中',
         5: '已退款',
-        6: '已取消',
+        6: '订单已取消',
       },
     };
   },
@@ -76,6 +91,14 @@ export default {
     item: { // 列表
       type: Object,
       default: () => null,
+    },
+    index: {
+      type: Number,
+      default: () => -1,
+    },
+    goodstype: {
+      type: Number,
+      default: () => -1,
     },
   },
   mounted() {
@@ -88,10 +111,23 @@ export default {
       return `${timeStampToHour(time)}`;
     },
     emit(eventName, item) {
-      this.$emit(eventName, item);
+      if (this.index !== -1) {
+        this.$emit(eventName, item, this.index);
+      } else {
+        this.$emit(eventName, item);
+      }
     },
     routerGo(item) {
-      this.$router.push({ path: '/center/detail', query: { orderId: item.orderCode } });
+      let query = {
+        orderId: item.id,
+      };
+      if (item.status) {
+        query.status = item.status;
+      }
+      if (item.orderItems && item.orderItems[0].tkm) {
+        query.tkm = item.orderItems[0].tkm;
+      }
+      this.$router.push({ path: '/center/detail', query });
     },
   },
 };
@@ -113,6 +149,11 @@ export default {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    overflow: hidden\0;
+  }
+  .dib{
+    display: inline-block\0;
+    line-height: 20px\0;
   }
   .class-box .imgbox{
     width: 43.4%;
@@ -125,6 +166,7 @@ export default {
     align-items: center;
     height: 100%;
     cursor: pointer;
+    line-height: 78px\0;
   }
   .options,
   .status,
@@ -136,28 +178,28 @@ export default {
     float: left;
     /*flex-grow:0;*/
     flex-shrink:0;
+    height: 78px\0;
+    line-height: 78px\0;
+    padding-top: 0\0;
   }
   .options,
   .status{
     width: 20%;
-    padding-top: 10px\0;
   }
   .options{
     padding-top: 0;
   }
   .class-box .imgbox img{
     width: 131px;
-    height: auto;
-    min-height: 80px;
-    max-height: 80px;
+    height: 78px;
     float: left;
   }
   .class-box .imgbox p{
-    float: left;
     line-height: 20px;
     padding-left: 20px;
     padding-top: 20px\0;
-
+    display: inline-block;
+    max-width: 138px\0;
   }
   .btn-sub{
     margin:10px auto;

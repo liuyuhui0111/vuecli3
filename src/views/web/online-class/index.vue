@@ -10,39 +10,33 @@
       :key="index">
 
         <div class="online-nav-left">
-          <div @click="navClick(item.id)"
-          :class="{active:navCurId == item.id}"
-           class="item">
-            {{item.name}}
+          <div class="item">
+            {{onlineNavListTypes[index].name}}
           </div >
         </div>
 
         <div id="navBox" ref="navBox" class="online-nav-right">
-          <ul v-if="item.children"
-          class="online-nav-right-list">
-            <li
-            ref="navParent"
-            v-for="(firstItem,firstIndex) in item.children"
-            :key="firstIndex">
-              <span class="all" @click="navClick(firstItem.id,true)"
-              :class="{active:firstItem.id==navCurId && isAll}">全部</span>
-              <div ref="navChild" class="show-nav-box">
-                <span @click="navClick(firstItem.id)"
-                :class="{active:navCurId == firstItem.id && !isAll}">
-                  {{firstItem.name}}
-                </span>
-                <span v-for="(list,listindex) in firstItem.children"
-                @click="navClick(list.id)"
-                :class="{active:navCurId == list.id}"
-                :key="listindex">
-                  {{list.name}}
+          <ul class="online-nav-right-list" v-if="item.length>0">
+          <li ref="navParent">
+            <span class="all"
+              @click="checkAll(index)"
+              :class="{active:index==onlineNavListTypesIndex || isAll}">
+              全部</span>
+               <div ref="navChild" class="show-nav-box">
+
+                <span v-for="(nav,navindex) in item"
+                @click="navClick(nav.id,false)"
+                :class="{active:navCurId == nav.id&&!isAll}"
+                :key="navindex">
+                  {{nav.name}}
                 </span>
               </div>
               <div ref="iconTri" class="icon-trin-box">
                 <span class="icon-triangle"></span>
               </div>
-            </li>
+         </li>
           </ul>
+
         </div>
       </div>
     </div>
@@ -94,9 +88,16 @@
 
       </div>
       <div v-if="list.length<1 && isShowPage" class="empty">
-      暂时还没有线上课程哦~去看看<span
-      class="pointer"
-      @click="routerGo('/open-class')">公开课</span>吧
+      <template v-if="!allCount">
+         暂时还没有线上课程哦~去看看
+        <span
+        class="pointer"
+        @click="routerGo('/open-class')">公开课</span>吧
+      </template>
+      <template v-else>
+        当前查询条件暂无相关课程，换个条件试试吧！
+      </template>
+
     </div>
       <ul v-if="list.length>0" class="list-box">
           <li v-for="(item,index) in list"
@@ -140,11 +141,17 @@ export default {
       cardType: 'online-list',
       navCurId: '', // 当前选中的id
       isShowPage: false,
-      isAll: false,
+      isAll: true,
       titleStyle: {
         color: '#444',
         fontSize: '16px',
       },
+      onlineNavListTypesIndex: -1,
+      onlineNavListTypes: [
+        { name: '方向' },
+        { name: '专业' },
+        { name: '分类' },
+      ],
       onlineNavIndex: 0, // 当前选中的在线课程分类
       onlineNavList: [],
       pageSize: 12, // 一页最多展示的条数
@@ -205,6 +212,7 @@ export default {
         ],
       },
       list: [],
+      allCount: 0,
     };
   },
   mounted() {
@@ -225,35 +233,53 @@ export default {
     init() {
       // this.list = initList(this.list, 4);
       this.navCurId = this.$route.query.nid || '';
+      if (this.navCurId) {
+        this.isAll = false;
+      }
       this.navlist.boolean = this.$route.query.boolean || 0;
       // 获取线上课程列表
       this.getCourseListFn('init');
       // 获取线上课程分类
       this.getCategoryListFn();
     },
+    checkAll(index) {
+      this.onlineNavListTypesIndex = index;
+      this.isAll = true;
+      this.navCurId = '';
+      this.getCourseListFn('init');
+    },
     navClick(id, isAll) {
+      this.onlineNavListTypesIndex = -1;
       this.navCurId = id;
       this.isAll = isAll || false;
       this.getCourseListFn('init');
     },
     initNavList(list) {
+      /*eslint-disable*/ 
       function getChildById(id) {
         let childs = [];
         list.forEach((item) => {
-          if (item.pid === id && item.id !== item.pid) {
-            childs.push({ children: getChildById(item.id), ...item });
+          if (item.pid !== item.id && item.pid === id) {
+            childs.push( item );
           }
         });
         return childs;
       }
 
-      let arr = [];
+      let arr = [[],[],[]];
       list.forEach((item) => {
         if (item.id === item.pid) {
-          arr.push({ children: getChildById(item.id), ...item });
+          arr[0].push(item);
         }
       });
+      arr[0].forEach((item)=>{
+        arr[1].push(...getChildById(item.id))
+      })
+      arr[1].forEach((item)=>{
+        arr[2].push(...getChildById(item.id))
+      })
       return arr;
+      /* eslint-enable */
     },
     initNavHeight() {
       // 计算分类高度，是否显示展开收起效果
@@ -262,9 +288,13 @@ export default {
       let aiconTris = this.$refs.iconTri;
       /*eslint-disable*/ 
             anavParents.forEach((item, index) => {
+                let curActive = item.querySelector('span.active');
                 if (item.clientHeight < anavChilds[index].clientHeight) {
                 // 如果父高度大于子高度 设置openClass
                     item.className = 'openClass';
+                }
+                if(curActive && !this.isAll){
+                  item.className = 'openClass open';
                 }
             });
 
@@ -284,15 +314,10 @@ export default {
       this.onlineNavList = [];
       getCategoryList().then((res) => {
         if (res.data.code === '0000') {
-          let arr = [];
           let { list } = res.data;
           // id === pid 是一级菜单
-          arr = this.initNavList(list);
-          if (arr.length < 1) return;
-          // this.navCurId = arr[0].id;
-
-          this.onlineNavList = arr;
-          console.log(this.onlineNavList);
+          this.onlineNavList = this.initNavList(list);
+          console.log('onlinelist', this.onlineNavList);
           this.$nextTick(() => {
             this.initNavHeight();
           });
@@ -319,6 +344,8 @@ export default {
       let { boolean } = this.navlist;
       let { payType } = this.navlist;
       let { difficult } = this.navlist;
+      // this.total = 0;
+      this.isShowPage = false;
       this.list = [];
       // 获取公开课列表
       getCourseList({
@@ -340,6 +367,7 @@ export default {
             this.list = [];
           }
           this.total = res.data.total;
+          this.allCount = res.data.allCount;
         }
       }).catch((err) => {
         console.log(err);
@@ -356,7 +384,7 @@ export default {
       this.$router.push({ path });
     },
     classClick(item) {
-      this.$router.push({ path: '/online-detail', query: { id: item.id } });
+      this.$router.push({ path: '/online-detail', query: { cid: item.id } });
     },
   },
   components: {
@@ -395,13 +423,20 @@ export default {
     flex-wrap: wrap;
     overflow: hidden;
     min-height: 500px;
-    width: 104%\0;
+    width: 100%\0;
   }
   .list-box li{
     float: left\0;
-    width: 25%\0;
+    width: 219px\0;
+    float: left\0;
+    margin-right: 34px\0;
+    min-height: 266px\0;
     display: block;
     margin-bottom: 30px;
+    flex-grow:0;
+  }
+  .list-box li:nth-child(4n){
+    margin-right: 0\0;
   }
 
   .nav-list{
@@ -416,7 +451,7 @@ export default {
     justify-content: space-around;
     padding: 0 40px;
     box-sizing:border-box;
-    margin: 10px 0 30px 0;
+    margin: 30px 0 30px 0;
     overflow: hidden\0;
     margin-top: 20px\0;
     line-height: 54px\0;
@@ -431,7 +466,7 @@ export default {
     cursor: pointer;
   }
   .nav-list .group .item.tips{
-    margin-right: 10px;
+    margin-right: 40px;
   }
 
   .nav-list .group .mr0:nth-last-child(1){
@@ -450,6 +485,8 @@ export default {
   }
   .online-box .online-nav-right,
   .online-box .online-nav-left{
+    /*max-width: 980px;*/
+    width: 100%;
     height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
@@ -475,13 +512,13 @@ export default {
     min-height: 40px;
     line-height: 20px;
     line-height: 40px\0;
-    cursor: pointer;
+    /*cursor: pointer;*/
     align-items: center;
     border: none;
     padding-top: 10px;
   }
   .active,
-  .online-nav-left .item:hover,
+  /*.online-nav-left .item:hover,*/
   .online-nav-right-list span:hover,
   .contain .online-box .active{
     color: #FB683C;
@@ -490,12 +527,13 @@ export default {
   .online-nav-right-list li{
     font-size: 14px;
     color: #868686;
-    height: 40px;
+    height: 60px;
     line-height: 20px;
      border-bottom: 1px dashed #d4d4d4;
-    padding: 20px 0 0px 88px;
+    padding: 20px 50px 0px 88px;
     position: relative;
     overflow: hidden;
+    box-sizing:border-box;
     /*margin-top: 10px;*/
   }
   .icon-trin-box{
@@ -526,6 +564,12 @@ export default {
   }
   .online-nav-right-list li.open .icon-triangle{
     transform: rotate(180deg);
+    transform: rotate(0deg)\0;
+    display: inline-block;
+    border-left: 8px solid transparent\0;
+    border-right: 8px solid transparent\0;
+    border-top: 0px solid #868686\0;
+    border-bottom: 8px solid #868686\0;
   }
   .online-nav-right-list li.openClass .icon-triangle{
     display: block;

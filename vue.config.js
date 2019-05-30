@@ -1,4 +1,5 @@
 let baseProxyUrl = '';
+let publicPath = '/course/'; // 生产环境发布路径
 /*eslint-disable*/
 // 线下课相关接口
 // let apiOffline = ['/offline', 'offlineUnLogin', '/orderUnLogin', '/orderInfo', '/orderId'];
@@ -7,9 +8,10 @@ let baseProxyUrl = '';
 // // 线上课程相关
 // let apiOnline = ['/course-web', '/courseUnlogin-web', '/category-web', '/searchword-web', '/searchword-web', '/evaluate', '/review'];
 let proxyData = {
-    'http://wxkf.5ifapiao.com': ['/authentication', '/api-gateway'],
-    'http://10.1.31.140:9983': ['/fatscourse'],
-    // 'http://10.1.29.53:9983': ['/fatscourse'],
+
+    'http://wxkf.5ifapiao.com': ['/course_authentication', '/course_api-gateway'],  //开发环境登录
+    // 'http://ysxy.5ifapiao.com': ['/fatscourse'],
+    'http://10.1.29.53:9983': ['/fatscourse'],
     // 'http://10.1.28.167:9983': ['/fatscourse'],
 };
 
@@ -35,7 +37,7 @@ Object.keys(proxyData).forEach((key) => {
 
 module.exports = {
     // 基本路径
-    publicPath: process.env.NODE_ENV === 'development' ? '/' : '/course/',
+    publicPath: process.env.NODE_ENV === 'development' ? '/' : publicPath,
     lintOnSave: process.env.NODE_ENV !== 'production',
     devServer: {
         proxy,
@@ -51,10 +53,10 @@ module.exports = {
       if (process.env.NODE_ENV === 'production') {
         config.optimization.minimizer[0].options.terserOptions.compress.drop_console = true
       }
-      
     }
 };
 
-// http://wxkf.5ifapiao.com/api-gateway/fatscourse/fatscourse
+// http://wxkf.5ifapiao.com     //开发登录地址
 // http://10.1.31.140  陈埼
 // 10.1.28.167:9983  赵聪
+// http://10.1.29.53:9983  梁玉欢

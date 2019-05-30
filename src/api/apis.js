@@ -10,30 +10,41 @@ import {
 const { SSO_URL } = COMMON_ENV;
 const CLIENT_ID = 'fatc';
 const BASE_URL = '/fatscourse';
-export function goLogin() {
+export function goLogin(type) {
   const REDIRECT_URI = encodeURIComponent(replaceCode());
   // alert(replaceCode())
   // 去登录页 去登录的时候本地缓存 REDIRECT_URI 获取token传参无需编码，直接存href
   window.localStorage.setItem('REDIRECT_URI', replaceCode());
-  const url = `/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}`;
+
+  let url = `/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}`;
   // let flag = confirm(`登录REDIRECT_URI地址是${replaceCode()}`);
   // if (!flag) {
   //     return;
   // }
+  if (type === 'reg') {
+    // 注册
+    url = `/oauth/authorize?page=register&client_id=${CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}`;
+  }
   window.location.href = SSO_URL + url;
+}
+
+export function noPassLogin(params) {
+  // 查询订单详情
+  const url = `${BASE_URL}/unlogin/noPassLogin`;
+  return post(url, params || {});
 }
 
 export function loginout() {
   // 退出登录
   const REDIRECT_URI = encodeURIComponent(replaceCode());
   window.localStorage.setItem('REDIRECT_URI', replaceCode());
-  const url = `/authentication/h5/logout?redirect_uri=${REDIRECT_URI}`;
+  const url = `/course_authentication/h5/logout?redirect_uri=${REDIRECT_URI}`;
   window.location.href = SSO_URL + url;
 }
 
 export function locations(params) {
   // 获取地区接口 缓存本地数据
-  const url = '/api-gateway/customer/customer/dictionary/locations';
+  const url = '/course_api-gateway/customer/customer/dictionary/locations';
   let city = [];
   if (window.localStorage.getItem('locationsCityListData')) {
     city = JSON.parse(window.localStorage.getItem('locationsCityListData'));
@@ -55,7 +66,7 @@ export function locations(params) {
 
 export function getToken(params) {
   // alert(window.localStorage.getItem('REDIRECT_URI'))
-  const url = '/authentication/oauth/token';
+  const url = '/course_authentication/oauth/token';
   // // 获取token 从本地获取上一次REDIRECT_URI
   const formData = {
     client_id: CLIENT_ID, // 为client_id:secret，分配一个即可

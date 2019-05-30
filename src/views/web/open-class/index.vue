@@ -92,7 +92,7 @@ export default {
     },
 
     classClick(item) {
-      this.$router.push({ path: '/detail', query: { id: item.id } });
+      this.$router.push({ path: '/detail', query: { cid: item.id } });
     },
   },
   components: {
@@ -124,13 +124,19 @@ export default {
     justify-content: space-between;
     flex-wrap: wrap;
     overflow: hidden;
-    width: 104%\0;
+    width: 100%\0;
   }
   .list-box li{
     float: left\0;
-    width: 25%\0;
+    width: 219px\0;
+    float: left\0;
+    margin-right: 34px\0;
+    min-height: 266px\0;
     display: block;
     margin-bottom: 30px;
     flex-grow:0;
+  }
+  .list-box li:nth-child(4n){
+    margin-right: 0\0;
   }
 </style>

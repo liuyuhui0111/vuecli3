@@ -16,10 +16,17 @@
         :prop="item.value"
         :label="item.text">
         <template slot-scope="scope">
-          <img :src="scope.row.pic">
-          <span style="margin-left: 10px">{{ scope.row.title }}</span>
+          <div class="img">
+            <baseImg
+            :width="219"
+            :height="130"
+            :src="scope.row.pic">
+            </baseImg>
+          </div>
+          <div style="margin-left: 10px">{{ scope.row.title }}</div>
         </template>
       </el-table-column>
+      
       <el-table-column
         v-for="(item,index) in titleList"
         v-if="item.value != 'titleBox'"
@@ -27,11 +34,19 @@
         :key="index"
         :prop="item.value"
         :label="item.text">
+        <template slot-scope="scope">
+        <div v-if="item.value != 'startTime'">
+          {{scope.row[item.value]}}
+        </div>
+        <div v-else>
+          {{scope.row.startTime}}~{{scope.row.endTime}}
+        </div>
+      </template>
       </el-table-column>
       </el-table>
       <!-- eslint-enable -->
     </div>
-    <div v-else class="table-box">
+    <div v-else class="table-box empty">
       暂无报名课程
     </div>
     <el-pagination
@@ -49,7 +64,6 @@
 <script>
 import mixin from './js/mixin';
 import { queryMyApplication } from '@/api/apis';
-import { formatDate } from '@/assets/utils/timefn';
 
 export default {
   name: 'my-signin',
@@ -61,7 +75,7 @@ export default {
       pagerCount: 11,
 
       queryMyApplicationParam: {
-        pageSize: 3,
+        pageSize: 5,
         pageNum: 1,
       },
       titleList: [
@@ -87,7 +101,7 @@ export default {
         },
         {
           text: '上课时间',
-          value: 'time',
+          value: 'startTime',
           width: '',
         },
         {
@@ -110,7 +124,7 @@ export default {
     getTime(classItem) {
       if (classItem.startTime && classItem.endTime) {
         // 计算上课时间
-        return `${formatDate(classItem.startTime)}-${formatDate(classItem.endTime)}`;
+        return `${classItem.startTime}-${classItem.endTime}`;
       }
       return '';
     },
@@ -148,12 +162,22 @@ export default {
 };
 </script>
 <style scoped>
+.empty{
+  display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 18px;
+    height: 100%;
+    line-height: 400px;
+}
 .table-box {
     margin-bottom: 20px;
     min-height: 512px;
 }
-  .table-box img{
-    width: 90%;
-    height: auto;
+  .table-box .img{
+    width: 131px;
+    height: 78px;
+    display: block;
+    margin: 0 auto;
       }
 </style>

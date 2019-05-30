@@ -8,17 +8,30 @@
           @click="classClick(classData)"
         >
         <!-- :src="classData.pic" -->
-            <img  v-lazy="classData.pic"
-            :key="classData.pic"
+          <div class="img-box">
+            <baseImg
+            :width="219"
+            :height="130"
+            :src="classData.pic"
             :alt="classData.title">
-            <p class="title ellipsis"
+            </baseImg>
+
+            <div class="card-mask"
+              :class="{red:classData.state == 1}"
+              v-if="classData.state == 1 || classData.state == 2">
+              <span v-if="classData.state == 1">已截止</span>
+              <span v-if="classData.state == 2">已结束</span>
+            </div>
+          </div>
+
+            <p class="title ellipsis2"
             :style="titleStyle"
             :title="classData.title">{{classData.title}}</p>
         </div>
           <p class="teacher ellipsis">主讲师：
           <span :class="{pointer:classData.teacherId}"
           @click="teacherClick(classData)">{{classData.teacherName}}</span>
-          {{classData.address}}</p>
+          {{classData.address + classData.city}}</p>
           <p class="time">上课时间：{{getClassTime(classData)}}</p>
           <div v-if="type != 'offline-index'" class="free-box">
             <span class="freeType1 fl">￥{{classData.price}}</span>
@@ -26,6 +39,8 @@
               {{classData.signUpManNum}}人已报名
             </span>
           </div>
+
+
       </div>
 
        <!-- 首页线下课程模块 -->
@@ -34,10 +49,22 @@
           :class="{pointer:classData.id}"
           @click="classClick(classData)"
         >
-            <!-- <img :src="classData.courseOfflineEntity.pic"
-            :alt="classData.title"> -->
-             <img  v-lazy="classData.courseOfflineEntity.pic"
+
+             <div class="img-box">
+            <baseImg
+            :width="219"
+            :height="130"
+            :src="classData.courseOfflineEntity.pic"
             :alt="classData.title">
+            </baseImg>
+
+            <div class="card-mask"
+              :class="{red:classData.state == 1}"
+              v-if="classData.state == 1 || classData.state == 2">
+              <span v-if="classData.state == 1">已截止</span>
+              <span v-if="classData.state == 2">已结束</span>
+            </div>
+          </div>
             <p class="title ellipsis"
             :style="titleStyle"
             :title="classData.title">{{classData.courseOfflineEntity.title}}</p>
@@ -45,12 +72,12 @@
           <p class="teacher ellipsis">主讲师：
           <span :class="{pointer:classData.teacherId}"
           @click="teacherClick(classData)">{{classData.teacherName}}</span>
-          {{classData.courseOfflineEntity.address}}</p>
+          {{classData.courseOfflineEntity.address + classData.courseOfflineEntity.city}}</p>
           <p class="time">上课时间：{{getClassTime(classData.courseOfflineEntity)}}</p>
           <div v-if="type != 'offline-index'" class="free-box">
             <span class="freeType1 fl">￥{{classData.price}}</span>
             <span class="person fr">
-              {{classData.signUpManNum}}人正在学习
+              {{classData.signUpManNum}}人已学习
             </span>
           </div>
       </div>
@@ -61,14 +88,17 @@
           :class="{pointer:classData.id}"
           @click="classClick(classData)"
         >
-            <!-- <img :src="classData.bannerUrl?classData.bannerUrl:defaultUrl"
-            :alt="classData.title"> -->
-            <img  v-lazy="classData.bannerUrl"
+
+            <baseImg
+            :width="219"
+            :height="130"
+            :src="classData.bannerUrl"
             :alt="classData.title">
+            </baseImg>
             <p class="title ellipsis2" :title="classData.title">{{classData.title}}</p>
         </div>
         <p class="onlinetips" v-if="type === 'online-list'">
-              {{diflist[classData.difficult]}} |{{getMinite(classData.courseVideoEntity)}} |
+              {{diflist[classData.difficult]}} |{{getTime()}} |
              {{classData.learnNum}}人已学
             </p>
           <div class="free-box">
@@ -77,7 +107,7 @@
             {freeType1:classData.price != 0},
             ]">￥{{classData.price == 0 ? '免费' : classData.price}}</span>
             <span v-if="type !== 'online-list'" class="person fr">
-              {{classData.learnNum}}人正在学习
+              {{classData.learnNum}}人已学习
             </span>
           </div>
 
@@ -91,49 +121,64 @@
         <div v-if="type === 'search-offline'"
         @click="classClick(classData)"
         class="item">
-         <!--  <img :src="classData.bannerUrl || classData.pic"
-            :alt="classData.title"> -->
-            <img  v-lazy="classData.bannerUrl || classData.pic"
+
+            <div class="img">
+            <baseImg
+            :width="219"
+            :height="130"
+            :src="classData.bannerUrl || classData.pic"
             :alt="classData.title">
+            </baseImg>
+
+            </div>
+
             <div class="intro">
                <p class="title ellipsis2"
                :title="classData.title">{{classData.title}}</p>
                <p class="time">上课时间：{{getClassTime(classData)}}</p>
                <p class="class-intro ellipsis2">
-                上课地点 {{classData.address}}
+                上课地点 {{classData.address + classData.city}}
                </p>
                <p class="type"><span class="freeType1">￥{{classData.price}}</span></p>
+             <!--   <p v-html="classData.introduce" class="class-intro ellipsis2">
+               </p> -->
             </div>
         </div>
         <div v-if="type === 'search-online'"
         @click="classClick(classData)"
         class="item">
-         <!--  <img :src="classData.bannerUrl || classData.pic"
-            :alt="classData.title"> -->
-            <img  v-lazy="classData.bannerUrl || classData.pic"
+            <div class="img">
+            <baseImg
+            :width="219"
+            :height="130"
+            :src="classData.bannerUrl || classData.pic"
             :alt="classData.title">
+            </baseImg>
+
+            </div>
             <div class="intro">
                <p class="title ellipsis2"
                :title="classData.title">{{classData.title}}</p>
                <p class="time">
-                  {{getTime}}分钟 |
+                  {{getTime()}} |
                   {{classData.learnNum}}人已学 |
                   {{classData.price == 0 ? '免费' : classData.price}}
                </p>
-               <p class="class-intro ellipsis2">
-                 {{classData.introduce}}
+               <p v-html="classData.courseIncome" class="class-intro ellipsis2">
                </p>
                <p class="type">来自分类:{{classData.type == '1' ? '视频课' : '专题课'}}</p>
             </div>
         </div>
         <!-- 右侧老师头像 名称 -->
         <div class="teacher-box">
-         <!--  <img class="photo"
-          :src="classData.teacherAvatar||classData.headPic"
-          :alt="classData.teacherName"> -->
-          <img class="photo"
-          v-lazy="classData.teacherAvatar||classData.headPic"
-            :alt="classData.title">
+          <div class="photo">
+            <baseImg
+              :width="1"
+              :height="1"
+              :src="classData.teacherAvatar||classData.headPic"
+              :alt="classData.teacherName">
+            </baseImg>
+            </div>
           <span class="name">{{classData.teacherName}}</span>
         </div>
       </div>
@@ -142,16 +187,23 @@
       <div v-if="type === 'search1'" class="search-box">
         <!--  -->
         <div @click="classClick(classData)" class="item">
-          <!-- <img :src="classData.bannerUrl?classData.bannerUrl:defaultUrl"
-            :alt="classData.title"> -->
-            <img v-lazy="classData.bannerUrl"
+
+            <div class="img">
+            <baseImg
+            :width="219"
+            :height="130"
+            :src="classData.bannerUrl"
             :alt="classData.title">
+            </baseImg>
+
+            </div>
+
             <div class="intro">
                <p class="title ellipsis2"
                :title="classData.title">{{classData.title}}</p>
                <p class="time">
                   {{classData.classNum}}门课程 |
-                  {{getTime}}小时
+                  <!-- {{getTime}}小时 -->
                </p>
                <p class="class-intro ellipsis2">
                  {{classData.intro}}
@@ -171,6 +223,7 @@
 </template>
 <script>
 import { formatDate } from '@/assets/utils/timefn';
+
 
 export default {
   name: 'card',
@@ -204,24 +257,16 @@ export default {
   mounted() {
     this.init();
   },
-  computed: {
-
-    getTime() {
-      let list = this.classData.courseVideoEntity;
-      let num = 0;
-      list.forEach((item) => {
-        num += parseInt(item.videoMinute, 10);
-      });
-      return num;
-    },
-  },
   methods: {
     init() {
     },
-    getMinite(list) {
+    getTime() {
+      let list = this.classData.courseVideoEntity;
       let num = 0;
-      list.forEach((item) => {
-        num += parseInt(item.videoMinute, 10);
+      list.forEach((item, index) => {
+        if (!(index === 0 && item.isTry === 1)) {
+          num += parseInt(item.videoMinute, 10);
+        }
       });
       return `${num}分钟`;
     },
@@ -238,9 +283,30 @@ export default {
       this.$emit('classClick', item, this.type);
     },
   },
+
 };
 </script>
 <style scoped>
+.img-box{
+  position: relative;
+}
+.card-mask{
+  position: absolute;
+  width: 100%;
+  height: 130px;
+  line-height: 130px;
+  font-size: 16px;
+color: #FFFFFF;
+letter-spacing: 0;
+top: 0;
+    left: 0;
+    text-align: center;
+    background: rgba(0,0,0,0.6);
+}
+.card-mask.red{
+color: #F91E1E;
+
+}
 .onlinetips{
   font-size: 14px;
 color: #868686;
@@ -251,12 +317,9 @@ margin-bottom: 10px;
     letter-spacing: 0;
   }
   .card .item{
-    min-height: 160px\0;
+    /*min-height: 160px\0;*/
   }
-  .card img{
-    width: 100%;
-    height: 130px;
-  }
+
   .title{
     font-size: 16px;
     padding-top: 10px;
@@ -318,6 +381,7 @@ margin-bottom: 10px;
     text-align: center;
     font-size: 14px;
     cursor: pointer;
+    border-radius: 100%;
   }
   .teacher-box .photo{
     display: block;
@@ -325,7 +389,7 @@ margin-bottom: 10px;
     height: 60px;
     border-radius: 100%;
     margin-bottom: 10px;
-
+    overflow: hidden;
   }
   .teacher-box .name{
     font-size: 14px;
@@ -338,9 +402,8 @@ margin-bottom: 10px;
     cursor: pointer;
     overflow: hidden\0;
   }
-  .search-box .item img{
-    width: 219px;
-    height: 130px;
+  .search-box .item .img{
+    width: 350px;
     float: left\0;
     margin-right: 20px\0;
   }
@@ -349,6 +412,8 @@ margin-bottom: 10px;
     font-size: 14px;
     letter-spacing: 0;
     color: #444;
+    width: 100%;
+    overflow-x: hidden;
   }
   .search-box .title{
     padding: 0;

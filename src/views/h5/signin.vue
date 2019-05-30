@@ -44,8 +44,7 @@ export default {
   },
   methods: {
     init() {
-      console.log(this.$route.query.id);
-      this.courseId = this.$route.query.id;
+      this.courseId = this.$route.query.cid;
       this.initUserInfo();
     },
     initUserInfo() {

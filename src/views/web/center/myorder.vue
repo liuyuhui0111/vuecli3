@@ -37,7 +37,19 @@
                 :prop="item.prop"
                 :label="item.label">
                 <template slot-scope="scope">
+                <div v-if="scope.row.status === 1 || 
+                scope.row.status === 2">
+                  <div v-if="getTime(scope.row.expireDate) == ''">
+                      订单已取消
+                  </div>
+                  <div v-else>
+                      {{statusType[scope.row.status]}}
+                  </div>
+                </div>
+                <div v-else>
                   {{statusType[scope.row.status]}}
+                </div>
+                  
                 </template>
                 </el-table-column>
 
@@ -49,17 +61,18 @@
                 prop="cz"
                 label="操作">
                 <template slot-scope="scope">
-                    <div v-if="scope.row.status === 1">
+                    <div v-if="scope.row.status === 1 || 
+                    scope.row.status === 2">
                       <div v-if="getTime(scope.row.expireDate) == ''">
-                          已过期
+                          ----
                       </div>
                       <div v-else>
                           <p>剩余：{{getTime(scope.row.expireDate)}}</p>
-                          <span class="pointer btn-sub" @click="goBuy(scope.row)">去付款</span>
+                          <span class="pointer btn-sub" @click="goBuy(scope.row)">立即支付</span>
                       </div>
                     </div>
                     <div v-else>
-                      {{statusType[scope.row.status]}}
+                      ----
                     </div>
                 </template>
                 </el-table-column>
@@ -105,6 +118,8 @@
             @goStudy="goStudy"
             @buy="goBuy"
             @cancel="updateOrderByIdFn"
+            :goodstype="queryOrderListParam.goods_type"
+            :index="index"
             :item="item"></classItem>
             <div class="time">
               下单时间：{{item.orderDate}} &nbsp;&nbsp;&nbsp;&nbsp;
@@ -153,12 +168,12 @@ export default {
       },
       curTypeListIndex: 0,
       statusType: {
-        1: '未付款',
-        2: '付款中',
-        3: '已付款',
+        1: '等待付款',
+        2: '等待付款',
+        3: '交易成功',
         4: '退款中',
         5: '已退款',
-        6: '已取消',
+        6: '订单已取消',
       },
       typelist: [
         {
@@ -166,28 +181,29 @@ export default {
           text: '全部订单',
         },
         {
-          value: '1',
-          text: '未付款',
+          value: '3',
+          text: '交易成功',
         },
         {
           value: '2',
-          text: '付款中',
+          text: '等待付款',
         },
-        {
-          value: '3',
-          text: '已付款',
-        },
-        {
-          value: '4',
-          text: '退款中',
-        },
-        {
-          value: '5',
-          text: '已退款',
-        },
+        // {
+        //   value: '2',
+        //   text: '付款中',
+        // },
+
+        // {
+        //   value: '4',
+        //   text: '退款中',
+        // },
+        // {
+        //   value: '5',
+        //   text: '已退款',
+        // },
         {
           value: '6',
-          text: '已取消',
+          text: '订单已取消',
         },
       ],
       curNav: 0,
@@ -222,7 +238,7 @@ export default {
         },
         {
           label: '会员类型',
-          prop: 'hylx',
+          prop: 'goodsName',
           align: 'center',
         },
         {
@@ -232,12 +248,12 @@ export default {
         },
         {
           label: '生效时间',
-          prop: 'sxsj',
+          prop: 'buyTime',
           align: 'center',
         },
         {
           label: '结束时间',
-          prop: 'jssj',
+          prop: 'dueTime',
           align: 'center',
         },
         {
@@ -262,7 +278,7 @@ export default {
         status: '', // 订单状态 1未付款  2 付款中 3 已付款 4 退款中 5 已退款 6 已取消
         goods_type: 3, // 商品类型  1 线上 2 线下 3 会员
         user_type: '', // 用户类型  1 个人 2企业
-        offset: 1, // 页码
+        page: 1, // 页码
         limit: 5, // 条数
       },
       endTimer: null, // 定时器计算截止付款时间
@@ -283,12 +299,12 @@ export default {
       this.aside.time = this.COMMON_COMP_DATA.time;
       this.queryOrderListFn('init');
     },
-    updateOrderByIdFn(item) {
-      console.log(item);
+    updateOrderByIdFn(item, index) {
+      console.log(index);
       // 取消订单
-      updateOrderById({ id: item.orderCode }).then((res) => {
+      updateOrderById({ id: item.id }).then((res) => {
         if (res.data.code === '0000') {
-          console.log(res);
+          // item.status = '6';
           this.queryOrderListFn();
         }
       }).catch((err) => {
@@ -301,14 +317,13 @@ export default {
       }
       this.orderlist = [];
       this.isShowList = false;
-      this.queryOrderListParam.offset = this.list[this.curNav].pageNum;
+      this.queryOrderListParam.page = this.list[this.curNav].pageNum;
       this.queryOrderListParam.limit = this.list[this.curNav].pageSize;
       this.queryOrderListParam.status = this.typelist[this.typeIndex].value;
       queryOrderList(this.queryOrderListParam).then((res) => {
         this.isShowPage = true;
         this.isShowList = true;
         if (res.data.code === '0000') {
-          console.log(res);
           this.list[this.curNav].total = res.data.total;
           this.initOrderList(res.data.list.records);
         }
@@ -316,7 +331,7 @@ export default {
         this.isShowPage = true;
         this.isShowList = true;
         this.$message({
-          message: '获取报名列表失败，请稍后再试',
+          message: '获取订单列表失败，请稍后再试',
           type: 'warning',
         });
         console.log(err);
@@ -328,6 +343,16 @@ export default {
                 // item.expireDate = 1000 * 60 * 60 * 24;
                 item.expireDate = item.expireDate || 0;
                 item.expireDate = isNaN(item.expireDate) ? 0 : parseInt(item.expireDate)
+                if (this.curNav === 0) {
+                  if(item.orderItems && item.orderItems[0].termOfValidity){
+                    let time = item.orderItems[0].termOfValidity;
+                    item.buyTime = time.split('|')[0];
+                    item.dueTime = time.split('|')[1];;
+                  }else{
+                    item.buyTime = '----';
+                    item.dueTime = '----';
+                  }
+                }
             });
             
       if (this.curNav === 0) {
@@ -368,14 +393,23 @@ export default {
     goStudy(item) {
       if (item.goodsType === 1) {
         // 去线上课详情
-        this.$router.push({ path: '/online-detail', query: { id: item.goodsId } });
+        this.$router.push({ path: '/online-detail', query: { cid: item.goodsId } });
       } else if (item.goodsType === 2) {
         // 去公开课详情
-        this.$router.push({ path: '/detail', query: { id: item.goodsId } });
+        this.$router.push({ path: '/detail', query: { cid: item.goodsId } });
       }
     },
     goDetail(item) {
-      this.$router.push({ path: '/center/detail', query: { orderId: item.orderCode } });
+      let query = {
+        orderId: item.id,
+      };
+      if (item.status) {
+        query.status = item.status;
+      }
+      if (item.orderItems && item.orderItems[0].tkm) {
+        query.tkm = item.orderItems[0].tkm;
+      }
+      this.$router.push({ path: '/center/detail', query });
     },
     goBuy(item) {
       console.log(item.orderCode);
@@ -386,9 +420,12 @@ export default {
         });
         return;
       }
-      this.$router.push({ path: '/pay-order', query: { orderId: item.orderCode } });
+      this.$router.push({ path: '/pay-order', query: { orderId: item.id } });
     },
     getTime(time) {
+      if (!time) {
+        return '';
+      }
       return `${timeStampToHour(time)}`;
     },
     handleCurrentChange(val) {
@@ -396,6 +433,7 @@ export default {
       this.queryOrderListFn();
     },
     navclick(item, index) {
+      this.isShowTypeList = false;
       this.curNav = index;
       this.queryOrderListParam.goods_type = item.value;
       this.queryOrderListFn('init');
@@ -438,11 +476,17 @@ export default {
   display: inline-block;
   top: 0px;
   margin-left: 5px;
+  -webkit-transform:rotate(0deg);
+  -ms-transform:rotate(0deg);
+  -o-transform:rotate(0deg);
   transform:rotate(0deg);
   transition: transform 0.3s;
 }
 .theader .item.active .icon-triangle{
   top: -2px;
+  -webkit-transform:rotate(180deg);
+  -ms-transform:rotate(180deg);
+  -o-transform:rotate(180deg);
   transform:rotate(180deg);
 }
 .theader .item .list{

@@ -4,11 +4,31 @@
     <h3>订单信息</h3>
     <div class="order-box">
         <div class="item">
-            <p>创建时间：{{getTime(orderInfo.createTime,true)}}</p>
-            <p>订单编号：{{orderId}}</p>
+            <p>下单时间：{{orderInfo.createTime}}</p>
+            <p>订单编号：{{orderInfo.orderCode}}</p>
             <p>订单金额：¥{{orderInfo.amount}}</p>
             <!-- <p>优惠信息：无</p> -->
-            <p v-if="this.type">订单状态：{{statusType[this.type]}}</p>
+            <div v-if="orderInfo.goodsType == '1'">
+            <p v-if="sTime">生效时间：{{sTime}}</p>
+            <p v-if="eTime">结束时间：{{eTime}}</p>
+            </div>
+            <div v-if="orderInfo.goodsType == '2'">
+
+            <p v-if="orderInfo.phone">预约手机号：{{orderInfo.phone}}</p>
+            <p v-if="tkm">听课码：{{tkm}}</p>
+            <p v-if="orderInfo.startTime">上课时间：{{orderInfo.startTime}}
+            ~
+            {{orderInfo.endTime}}
+            </p>
+            <p v-if="orderInfo.address">上课地点：{{orderInfo.address}}</p>
+
+          </div>
+
+
+            <p v-if="(type==1 || type==2) && buyEndTime==''">订单状态：订单已取消</p>
+            <p v-else-if="type">订单状态：{{statusType[type]}}</p>
+            <p v-if="orderInfo.payChannelName">支付方式：{{orderInfo.payChannelName}}</p>
+
             <!-- <p>取消时间：{{getTime(0,true)}}</p> -->
         </div>
         <div class="btns">
@@ -16,15 +36,29 @@
                 <p class="cancel">订单已取消</p>
             </template>
             <template v-else-if="type=='3'">
-                <span @click="goStudy()" class="btn-sub">去学习</span>
+                <span @click="goStudy()"
+                v-if="orderInfo.goodsType == '1'"
+                class="btn-sub">去学习</span>
+                <span class="offlinetips"
+                v-if="orderInfo.goodsType == '2'">
+                  别忘记听课哦~
+                </span>
+               <!--  <span v-if="orderInfo.goodsType == '2' && tkm">
+                  听课码：{{tkm}}
+                </span> -->
             </template>
-            <template v-else-if="type=='1'">
-                <p>请在72小时内完成支付，逾期将取消点多</p>
-                <span class="btn-sub">立即支付</span>
-                <p class="cancel">取消订单</p>
+            <template v-else-if="type=='1' || type=='2'">
+                <template v-if="buyEndTime==''">
+                  订单已取消
+                </template>
+                <template v-else>
+                  <p>请在{{buyEndTime}}内完成支付，逾期将取消订单</p>
+                  <span @click="goBuy()" class="btn-sub">立即支付</span>
+                  <p @click="updateOrderByIdFn" class="cancel pointer">取消订单</p>
+                </template>
             </template>
             <template v-else>
-              {{statusType[this.type]}}
+              {{statusType[type]}}
             </template>
         </div>
     </div>
@@ -52,10 +86,10 @@
   </div>
 </template>
 <script>
-import { queryMyApplication, queryOrderById } from '@/api/apis';
+import { queryMyApplication, queryOrderById, updateOrderById } from '@/api/apis';
 import classItem from '@/views/web/center/class-item.vue';
 import mixin from './js/mixin';
-import { formatDate } from '@/assets/utils/timefn';
+import { formatDate, timeStampToHour } from '@/assets/utils/timefn';
 
 export default {
   name: 'my-order-detail',
@@ -65,14 +99,19 @@ export default {
       name: 'my-order-detail',
       orderId: '',
       type: 1,
+      tkm: '',
       orderInfo: null,
+
+      buyEndTime: '', // 最后付款时间
+      sTime: '', // 生效时间
+      eTime: '', // 到期时间
       statusType: {
-        1: '未付款',
-        2: '付款中',
-        3: '已付款',
+        1: '等待付款',
+        2: '等待付款',
+        3: '交易成功',
         4: '退款中',
         5: '已退款',
-        6: '已取消',
+        6: '订单已取消',
       },
     };
   },
@@ -83,8 +122,36 @@ export default {
   methods: {
     init() {
       this.orderId = this.$route.query.orderId;
+
+      console.log(this.tkm);
       // 查询订单详情
       this.queryOrderByIdFn();
+    },
+    goBuy() {
+      if (!this.buyEndTime) {
+        this.$message({
+          message: '该订单已过期，不可以再付款',
+          type: 'warning',
+        });
+        return;
+      }
+      this.$router.push({ path: '/pay-order', query: { orderId: this.orderId } });
+    },
+    updateOrderByIdFn() {
+      // 取消订单
+      updateOrderById({ id: this.orderId }).then((res) => {
+        if (res.data.code === '0000') {
+          console.log(res);
+          this.type = 6;
+        } else {
+          this.$message({
+            message: '取消订单失败，请稍后再试',
+            type: 'warning',
+          });
+        }
+      }).catch((err) => {
+        console.log(err);
+      });
     },
     getDay(time) {
       if (!time) return '';
@@ -95,23 +162,42 @@ export default {
     },
     queryOrderByIdFn() {
       // 查询订单详情
-      queryOrderById({ id: this.orderId }).then((res) => {
+      queryOrderById({ orderId: this.orderId }).then((res) => {
         if (res.data.code === '0000' && res.data.list.length > 0) {
           this.orderInfo = res.data.list[0] || {};
-          this.type = this.orderInfo.status;
+          /*eslint-disable*/ 
+          if (this.orderInfo.termOfValidity) {
+            // 计算生效时间   过期时间
+            let oftime = this.orderInfo.termOfValidity;
+            this.sTime = oftime.split('|')[0];
+            this.eTime = oftime.split('|')[1];
+          }
+          
+          if (this.orderInfo.expireDate) {
+            let time = this.orderInfo.expireDate;
+            time = time || 0;
+            time = isNaN(time) ? 0 : parseInt(time);
+            this.buyEndTime = `${timeStampToHour(time)}`;
+          }
+          this.type = this.orderInfo.status || '';
+          this.tkm = this.orderInfo.tkm || '';
+          /* eslint-enable */
         }
       }).catch((err) => {
         console.log(err);
       });
     },
     getTime(time, type) {
+      /*eslint-disable*/ 
       if (time === undefined) {
         return '';
       }
+      time = new Date(time).getTime();
       return `${formatDate(time, type)}`;
+       /* eslint-enable */
     },
     goStudy() {
-      this.$router.push({ path: '/online-class', query: {} });
+      this.$router.push({ path: '/online-detail', query: { cid: this.orderInfo.goodsId } });
     },
     queryMyApplicationFn(t) {
       // 获取订单详情
@@ -138,6 +224,9 @@ export default {
 };
 </script>
 <style scoped>
+.offlinetips{
+  line-height: 100px;
+}
 .theader{
     overflow: hidden;
     display: flex;

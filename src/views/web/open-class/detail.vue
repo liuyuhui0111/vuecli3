@@ -4,7 +4,13 @@
       <div class="contain">
         <!-- 详情图片 分享 收藏 在线报名 免费学 -->
         <div class="img-box">
-          <img :src="detailData.pic" alt="detailData.title">
+            <baseImg
+            :width="675"
+            :height="312"
+            :src="detailData.pic"
+            :alt="detailData.title">
+            </baseImg>
+          <!-- <img :src="detailData.pic" alt="detailData.title"> -->
           <div class="btns">
           <!-- 分享弹窗 -->
              <el-popover
@@ -40,8 +46,12 @@
             :class="{active:detailData.isColl}"></span>
 
 
-            <span @click="onlineSignFn()" class="btn-online">在线报名</span>
-            <span v-show="isShowFreeBtn" @click="goFree('/interests')" class="btn-free">免费学</span>
+            <span @click="onlineSignFn()"
+            :class="{gray:detailData.state != 0}"
+            class="btn-online">在线报名</span>
+            <span v-show="isShowFreeBtn" @click="goFree('/interests')"
+            :class="{gray:detailData.state != 0}"
+            class="btn-free">免费学</span>
           </div>
         </div>
 
@@ -61,6 +71,24 @@
           <div class="item"
           v-for="(item,index) in tablist"
           :key="index">
+            <template v-if="index === 0">
+              <div class="teacher-box">
+                <div class="img-box">
+                  <div class="img">
+                    <baseImg
+                    :width="130"
+                    :height="130"
+                    :defaultSrc="defaultUrl"
+                    :src="detailData.headPic"
+                    :alt="detailData.teacherName">
+                    </baseImg>
+                  </div>
+                  <p class="name">{{detailData.teacherName}}</p>
+                </div>
+
+                <p class="intro" v-html="detailData.teacherIntroduction"></p>
+              </div>
+            </template>
             <div :id="item.id" class="title">
               <baseTitle :title="item.text"></baseTitle>
             </div>
@@ -71,7 +99,7 @@
               <p>课程价格：{{detailData.price}} 元</p>
               <p>培训对象：{{detailData.trainObject}}</p>
               <p>培训时间：{{getTime}}</p>
-              <p>培训地点：{{detailData.address}}</p>
+              <p>培训地点：{{detailData.address + detailData.city + detailData.county}}</p>
               <p>咨询电话：{{detailData.hotline}}</p>
               </div>
             </template>
@@ -83,25 +111,45 @@
             <!-- 预约报名 -->
             <template v-if="item.text === '预约报名'">
 
-            <div class="intro form">
+            <div class="intro form common-open-class-detail-form">
               <div class="form-box">
                   <el-form
                 ref="onlineFormSign"
                 :rules="rules"
-                :label-position="labelPosition"
+                label-position="left"
                 label-width="60px"
                 :model="onlineForm">
                   <el-form-item label="称呼" prop="name">
-                    <el-input v-model="onlineForm.name"></el-input>
+                    <!-- <el-input v-model="onlineForm.name"></el-input> -->
+                    <input type="text"
+                    v-model.trim="onlineForm.name"
+                    @blur="validateFieldFn('name','onlineFormSign')"
+                    autocomplete="off"
+                    class="el-input__inner">
                   </el-form-item>
                   <el-form-item label="电话" prop="tel">
-                    <el-input v-model="onlineForm.tel"></el-input>
+                    <!-- <el-input v-model="onlineForm.tel"></el-input> -->
+                    <input type="text"
+                    v-model.trim="onlineForm.tel"
+                    @blur="validateFieldFn('tel','onlineFormSign')"
+                    autocomplete="off"
+                    class="el-input__inner">
                   </el-form-item>
                   <el-form-item label="公司" prop="comp">
-                    <el-input v-model="onlineForm.comp"></el-input>
+                    <!-- <el-input v-model="onlineForm.comp"></el-input> -->
+                    <input type="text"
+                    v-model.trim="onlineForm.comp"
+                    @blur="validateFieldFn('comp','onlineFormSign')"
+                    autocomplete="off"
+                    class="el-input__inner">
                   </el-form-item>
                    <el-form-item label="职位" prop="work">
-                    <el-input v-model="onlineForm.work"></el-input>
+                    <!-- <el-input v-model="onlineForm.work"></el-input> -->
+                     <input type="text"
+                    v-model.trim="onlineForm.work"
+                    @blur="validateFieldFn('work','onlineFormSign')"
+                    autocomplete="off"
+                    class="el-input__inner">
                   </el-form-item>
                   </el-form>
                 </div>
@@ -114,7 +162,7 @@
                 label-width="0px"
                 :model="onlineForm">
                 <el-form-item prop="message">
-                  <el-input type="textarea"
+                  <!-- <el-input type="textarea"
                   rules="[{
                             min: 2,
                             max: 300,
@@ -123,14 +171,24 @@
                             required:true,
                         }]"
                   placeholder="请输入您的问题"
-                   v-model="onlineForm.message"></el-input>
+                   v-model="onlineForm.message"></el-input> -->
+                   <textarea
+          v-model.trim="onlineForm.message"
+          @blur="validateFieldFn('message','onlineFormSign')"
+          autocomplete="off"
+          placeholder="请输入您的问题"
+          class="el-textarea__inner"
+          style="resize: none; min-height: 33px;">
+          </textarea>
                 </el-form-item>
               </el-form>
               </div>
 
             </div>
 
-            <span @click="submitForm('onlineFormSign')" class="btn-sub">提交信息</span>
+            <span @click="submitForm('onlineFormSign')"
+            :class="{gray:detailData.state !== '0'}"
+            class="btn-sub">提交信息</span>
             </template>
 
           </div>
@@ -170,42 +228,74 @@
                   label-width="60px"
                   :model="onlineForm">
                   <el-form-item label="称呼" prop="name">
-                    <el-input v-model="onlineForm.name"></el-input>
+                    <!-- <el-input v-model="onlineForm.name"></el-input> -->
+                    <input type="text"
+                    v-model.trim="onlineForm.name"
+                    @blur="validateFieldFn('name','formDialog')"
+                    autocomplete="off"
+                    class="el-input__inner">
                   </el-form-item>
                   <el-form-item label="电话" prop="tel">
-                    <el-input v-model="onlineForm.tel"></el-input>
+                    <!-- <el-input v-model="onlineForm.tel"></el-input> -->
+                    <input type="text"
+                    v-model.trim="onlineForm.tel"
+                    @blur="validateFieldFn('tel','formDialog')"
+                    autocomplete="off"
+                    class="el-input__inner">
                   </el-form-item>
                   <el-form-item label="公司" prop="comp">
-                    <el-input v-model="onlineForm.comp"></el-input>
+                    <!-- <el-input v-model="onlineForm.comp"></el-input> -->
+                    <input type="text"
+                    v-model.trim="onlineForm.comp"
+                    @blur="validateFieldFn('comp','formDialog')"
+                    autocomplete="off"
+                    class="el-input__inner">
                   </el-form-item>
                    <el-form-item label="职位" prop="work">
-                    <el-input v-model="onlineForm.work"></el-input>
+                    <!-- <el-input v-model="onlineForm.work"></el-input> -->
+                    <input type="text"
+                    v-model.trim="onlineForm.work"
+                    @blur="validateFieldFn('work','formDialog')"
+                    autocomplete="off"
+                    class="el-input__inner">
                   </el-form-item>
                   </el-form>
                   <div class="mes-box">
                     <p>您要咨询的内容</p>
                     <el-form label-width="0px">
                       <el-form-item prop="message">
-                        <el-input type="textarea"
-                        rules="[{
-                                  min: 2,
-                                  max: 300,
-                                  message: '长度在 2 到 300 个字符',
-                                  trigger: 'blur',
-                                  required:true,
-                              }]"
+                        <!-- <el-input type="textarea"
                         placeholder="请输入您的问题"
-                         v-model="onlineForm.message"></el-input>
+                         v-model="onlineForm.message"></el-input> -->
+                          <textarea
+          v-model.trim="onlineForm.message"
+          @blur="validateFieldFn('message','formDialog')"
+          autocomplete="off"
+          placeholder="请输入您的问题"
+          class="el-textarea__inner"
+          style="resize: none; min-height: 33px;">
+          </textarea>
                       </el-form-item>
                     </el-form>
                   </div>
                 </div>
                 <div class="class-box">
                   <div class="img-box">
-                    <img :src="detailData.pic" :alt="detailData.title">
+                    <div class="img">
+                    <baseImg
+                    :width="219"
+                    :height="130"
+                    :lazy="lazy"
+                    :src="detailData.pic"
+                    :alt="detailData.title">
+                    </baseImg>
+                    </div>
+                    <!-- <img :src="detailData.pic" :alt="detailData.title"> -->
                     <p class="ellipsis2">{{detailData.title}}</p>
                   </div>
-                  <p class="address">上课地点：{{detailData.address}}</p>
+                  <p class="address">上课地点：{{detailData.address +
+                  detailData.city +
+                  detailData.county}}</p>
                   <p class="time">上课时间：{{getTime}}</p>
                 </div>
 
@@ -231,15 +321,19 @@ import {
 } from '@/api/apis';
 import { formatDate } from '@/assets/utils/timefn';
 
+const defaultPhotoUrl = require('@/views/imgs/default.png');
+
 export default {
   name: 'detail',
   data() {
     return {
       name: '详情页',
       qrcodeWidth: 116,
+      lazy: false,
       copyurl: '',
       isShowFormDialog: false,
       showShare: false,
+      defaultUrl: defaultPhotoUrl, // 默认头像
       tabindex: 0, // 当前选中tab index
       tablist: [ // tab列表
         { text: '课程信息', id: '1', key: '' },
@@ -290,6 +384,7 @@ export default {
                 callback();
               }
             },
+            trigger: 'blur',
             message: '手机号格式不对',
           },
         ],
@@ -331,7 +426,7 @@ export default {
         onOffType: '0', // 线上线下0 : 线下课； 1 线上课
       },
       isCanSendApi: true,
-      isShowFreeBtn: false,
+      isShowFreeBtn: true,
       type: 2, // 1线上视频课 2线下课 3线上专题课
       copyFlag: true, // 复制是否成功
     };
@@ -343,10 +438,15 @@ export default {
     $route() {
       this.init();
     },
+    token() {
+      this.init();
+    },
   },
   computed: {
     getDay() {
-      return this.detailData.endTime - this.detailData.startTime;
+      let day = (this.detailData.endTime - this.detailData.startTime) / (24 * 60 * 60 * 1000);
+
+      return parseInt(day, 10) + 1;
     },
     getTime() {
       return `${formatDate(this.detailData.startTime)}~${formatDate(this.detailData.endTime)}`;
@@ -355,23 +455,34 @@ export default {
   methods: {
     init() {
       this.detailData = null;
-      this.courseId = parseInt(this.$route.query.id, 10);
+      this.courseId = parseInt(this.$route.query.cid, 10);
       // 是否登录 初始化显示免费学btn
       if (!this.token) {
         this.isShowFreeBtn = true;
-      } else if (this.user && this.user.leaguerLevelId) {
-        this.isShowFreeBtn = false;
+      } else if (this.token
+        && this.commonUserData
+        && this.commonUserData.leaguerLevelName) {
+        this.isShowFreeBtn = this.commonUserData.leaguerLevelName === '用户';
       } else {
         this.isShowFreeBtn = true;
       }
       // 初始化二维码
-      this.copyurl = `${window.location.href.split('#')[0]}#/h5/index?id=${this.courseId}`;
+      this.copyurl = `${window.location.href.split('#')[0]}#/h5/index?cid=${this.courseId}`;
       // 获取详情内容
       this.findOfflineCourseByIdFn();
       // 获取在线训练营
       this.showCourseOfflineFn();
     },
+    validateFieldFn(prop, formname) {
+      let curForm = this.$refs[formname].validate
+        ? this.$refs[formname]
+        : this.$refs[formname][0];
+      curForm.validateField([prop]);
+    },
     onlineSignFn() {
+      if (this.detailData.state !== '0') {
+        return;
+      }
       if (!this.token) {
         this.$message({
           message: '您还没有登录，请先登录',
@@ -387,18 +498,15 @@ export default {
     },
     goFree(path) {
       // 免费学
-      if (!this.token) {
-        this.$message({
-          message: '您还没有登录，请先登录',
-          type: 'warning',
-          // duration: 0,
-        });
+      if (this.detailData.state !== '0') {
+        // 已结束 或者已截至课程
         return;
       }
+
       this.$router.push({
         path,
         query: {
-          id: this.courseId,
+          cid: this.courseId,
           type: this.type,
         },
       });
@@ -406,7 +514,7 @@ export default {
     routerGo(item) {
       this.$router.push({
         path: '/detail',
-        query: { id: item.courseOfflineEntity.id },
+        query: { cid: item.courseOfflineEntity.id },
       });
     },
     collectFn() {
@@ -472,7 +580,7 @@ export default {
               path: '/success',
               query: {
                 sid: res.data.id,
-                id: this.courseId,
+                cid: this.courseId,
                 type: this.type,
               },
             });
@@ -570,6 +678,10 @@ export default {
 
     submitForm(formName) {
       // 表单提交
+      if (this.detailData.state !== '0') {
+        // 已结束 或者已截至课程
+        return;
+      }
       console.log(this.token);
       if (!this.token) {
         this.$message({
@@ -600,6 +712,40 @@ export default {
 </script>
 <style scoped>
 /*在线学习弹框*/
+.teacher-box{
+  display: block;
+  width: 100%;
+  position: relative;
+  padding-left: 99px;
+  min-height: 130px;
+  box-sizing:border-box;
+  word-break: break-all;
+  line-height: 89px;
+}
+.teacher-box .img-box{
+  position: absolute;
+  width: 89px;
+  left: 0;
+  top: 0;
+  text-align: center;
+}
+.teacher-box .intro{
+  font-size: 14px;
+  display: inline-block;
+  line-height: 16px;
+}
+.teacher-box .img-box .img{
+  width: 89px;
+  height: 89px;
+  border-radius: 100%;
+  overflow: hidden;
+}
+.teacher-box .img-box .name{
+  margin-top: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 16px;
+}
 .open-class{
   position: relative;
 }
@@ -609,10 +755,15 @@ export default {
   border-radius: 8px;
   width: 738px;
   min-height: 537px;
+  max-height: 590px;
   position: absolute;
   left: 50%;
-  top: 20%;
-  transform:translate(-50%,0);
+  top: 60px;
+  /*-webkit-transform: translate(-50%,0);
+  -ms-transform: translate(-50%,0);
+  -o-transform: translate(-50%,0);
+  transform: translate(-50%,0);*/
+  margin-left: -369px;
   z-index: 100;
   padding: 10px;
   box-sizing:border-box;
@@ -636,7 +787,7 @@ export default {
   overflow: hidden;
 
 }
-.class-box .img-box img{
+.class-box .img-box .img{
   float: left;
   width: 178px;
   height: auto;
@@ -673,6 +824,7 @@ export default {
   .img-box img{
     display: block;
     width: 100%;
+    max-height: 320px;
     position: relative;
     z-index: 0;
   }
@@ -706,13 +858,13 @@ export default {
   .icon-collect{
     top: 12px;
     left: -2px;
-    background-size:20px auto;
+    background-size:100% auto;
     background-image: url('./imgs/icon-coll-off.png');
   }
   .icon-collect.active{
-    top: 12px;
-    left: -2px;
-    background-size:20px auto;
+    top: 14px;
+    left: 2px;
+    background-size: 22px auto;
     background-image: url('./imgs/icon-coll-on.png');
   }
   .btn-free,
@@ -727,6 +879,10 @@ export default {
   }
   .btn-free{
     background: #59A8FF;
+  }
+
+  .gray{
+    background: #ccc;
   }
 
   /*微信扫码 复制链接*/
@@ -801,6 +957,7 @@ export default {
   }
   .contain-box>.aside{
     float: right\0;
+    width: 220px\0;
   }
   .contain-box>.contain{
     float: left\0;

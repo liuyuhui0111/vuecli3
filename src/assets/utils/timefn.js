@@ -14,7 +14,7 @@ export function formatDate(timeStamp,type){
         if(type){
             return y+'-'+add0(m)+'-'+add0(d)+' '+add0(h)+':'+add0(mm)+':'+add0(s);
         }else{
-            return y+'/'+add0(m)+'/'+add0(d);
+            return y+'.'+add0(m)+'.'+add0(d);
         }
         // return y+'-'+add0(m)+'-'+add0(d)+' '+add0(h)+':'+add0(mm)+':'+add0(s);
         

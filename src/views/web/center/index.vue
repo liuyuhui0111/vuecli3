@@ -5,7 +5,8 @@
       <img class="photo" :src="user.src" alt="头像">
       <p class="name">{{user.name}}</p>
       <p class="level">{{user.level}}</p>
-      <p v-if="user.dueTime" class="time">{{getTime}}</p>
+      <p v-if="user.dueTime" class="time">{{user.dueTime}}</p>
+      <p class="usertip" v-if="user.effective==0">您的会员已到期</p>
       <ul class="navlist">
         <li v-for="(item,index) in userNav"
         :class="{active:item.href === navindex}"
@@ -44,6 +45,7 @@ export default {
         level: '', // 会员等级
         src: defaultUrl,
         dueTime: '', // 到期时间
+        effective: '',
       },
       navindex: '',
       userNav: [
@@ -107,10 +109,14 @@ export default {
   methods: {
     init() {
       // 获取个人中心页面
-      this.queryPersonalMapFn();
-      if (!this.token) {
-        // this.$router.go(-1);
+      this.navindex = this.$route.path;
+      if (this.$route.path === '/center/detail') {
+        this.navindex = '/center/myorder';
       }
+      this.queryPersonalMapFn();
+      // if (!this.token) {
+      // this.$router.go(-1);
+      // }
     },
     changeNav(item) {
       this.navindex = item.href;
@@ -122,6 +128,7 @@ export default {
         if (res.data.code === '0000') {
           this.isShowPage = true;
           this.user.dueTime = res.data.leaguerList.dueTime;
+          this.user.effective = res.data.leaguerList.effective;
           this.setCenterData(res.data);
           if (this.commonUserData) {
             this.user.name = this.commonUserData.userName || '';
@@ -141,6 +148,11 @@ export default {
 };
 </script>
 <style scoped>
+.usertip{
+  text-align: center;
+  font-size: 14px;
+  padding: 10px 0;
+}
 .contain{
   /*background: #ccc;*/
   width: 100%;
@@ -197,26 +209,24 @@ export default {
   .time{
     font-size: 14px;
     text-align: center;
-    margin-bottom: 20px;
   }
   .navlist li{
-    display: flex;
+    display: block;
+    position: relative;
     height: 42px;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding-right: 20px;
-    font-size: 0;
+    line-height: 42px;
+    text-align: left;
+    box-sizing:border-box;
     cursor: pointer;
     margin-bottom: 20px;
-    overflow: hidden\0;
+    overflow: hidden;
+    padding-left: 60px;
   }
   .navlist li.active{
     background: #FB683C;
     color: #Fff;
   }
   .navlist li span{
-    display: inline-block;
     font-size: 16px;
   }
   .icon-preson,
@@ -225,13 +235,15 @@ export default {
   .icon-signin,
   .icon-myorder,
   .icon-myset{
-    display: inline-block;
+    display: block;
+    position: absolute;
+    left: 30px;
+    top: 8px;
     width: 25px;
     height: 25px;
-    background: url('./imgs/icon-preson.png') no-repeat left 2px;
+    background: url('./imgs/icon-preson.png') no-repeat center center;
     background-size: 19px auto;
-    position: relative\0;
-    top: 6px\0;
+    /*top: 6px\0;*/
   }
   .navlist li.active .icon-preson{
     background-image: url('./imgs/icon-preson-on.png');
@@ -266,7 +278,7 @@ export default {
 
   .icon-myclass{
     background-image: url('./imgs/icon-myclass.png');
-    top: 8px\0;
+    /*top: 8px\0;*/
   }
   .navlist li.active .icon-myclass{
     background-image: url('./imgs/icon-myclass-on.png');

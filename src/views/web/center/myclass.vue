@@ -20,7 +20,14 @@
             <li v-for="(item,index) in queryClassListList"
             :key="index">
               <div class="img-box">
-                <img :src="item.bannerUrl" :alt="item.title">
+              <div class="img">
+                <baseImg
+                :width="219"
+                :height="130"
+                :src="item.bannerUrl"
+                :alt="item.title">
+                </baseImg>
+              </div>
                 <div class="item">
                   <p class="title">
                     {{item.title}}
@@ -44,7 +51,7 @@
 
         <div class="empty"
         v-if="isShowPage && queryClassListList.length<1">
-          暂无课程
+          暂无{{emptyTipText}}课程
         </div>
         <el-pagination
         v-if="total>queryClassListParam.pageSize"
@@ -77,6 +84,7 @@ export default {
   data() {
     return {
       name: 'my-preson',
+      emptyTipText: '',
       curList: 0,
       total: 0,
       list: [
@@ -92,7 +100,7 @@ export default {
       queryClassListParam: {
         isComplete: '',
         pageNum: 1,
-        pageSize: 10,
+        pageSize: 5,
       },
       navlist: [
         {
@@ -125,7 +133,7 @@ export default {
       this.$router.push({
         path: '/online-detail',
         query: {
-          id: item.id,
+          cid: item.id,
           sec: item.duration,
         },
       });
@@ -152,7 +160,9 @@ export default {
       this.curList = index;
     },
     navBoxChange(item) {
+      this.emptyTipText = item.text === '全部' ? '' : item.text;
       this.queryClassListParam.isComplete = item.value;
+      this.isShowPage = false;
       this.queryClassListFn();
     },
     handleCurrentChange(val) {
@@ -164,6 +174,7 @@ export default {
       if (t === 'init') {
         this.queryClassListParam.pageNum = 1;
       }
+      this.queryClassListList = [];
       queryClassList(this.queryClassListParam).then((res) => {
         this.isShowPage = true;
         if (res.data.code === '0000') {
@@ -273,9 +284,8 @@ export default {
     color: #868686;
     margin-right: 50px;
   }
-  .img-box img{
-    width: 171px;
-    height: auto;
+  .img-box .img{
+    width: 210px;
     margin-right: 20px;
     float: left\0;
   }

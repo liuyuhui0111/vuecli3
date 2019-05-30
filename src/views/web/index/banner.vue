@@ -1,32 +1,47 @@
 <template>
     <div id="commonBanner" class="banner common-web-index-banner">
-      <div v-if="list.length>0"
+      <div v-if="list.length>1"
       class="swiper-container swiper-banner ie9">
           <div class="swiper-wrapper">
-          <div class="swiper-slide" :index="list.length-1" v-if="isIe9&&list.length>1">
-                <img class="banner-img"
-                @click="swiperClick(list[list.length-1])"
-                :src="list[0].pic?list[list.length-1].pic:defaultUrl"
-                :alt="list[list.length-1].title">
+          <div class="swiper-slide"
+          :index="list.length-1" v-if="isIe9&&list.length>1">
+            <baseImg
+              :width="960"
+              :height="304"
+              :lazy="lazy"
+              @click="swiperClick(list[list.length-1])"
+              :src="list[0].pic?list[list.length-1].pic:defaultUrl"
+              :alt="list[list.length-1].title">
+            </baseImg>
+
             </div>
 
               <div class="swiper-slide"
               v-for="(item,index) in list"
                :index="index"
               :key="index">
-                <img class="banner-img"
+              <baseImg
+                :width="960"
+                :height="304"
+                :lazy="lazy"
                 @click="swiperClick(item)"
                 :src="item.pic?item.pic:defaultUrl"
                 :alt="item.title">
+              </baseImg>
+
               </div>
 
             <div class="swiper-slide"
             index="0"
             v-if="isIe9&&list.length>1">
-                <img class="banner-img"
+                <baseImg
+                :width="960"
+                :height="304"
+                :lazy="lazy"
                 @click="swiperClick(list[0])"
                 :src="list[0].pic?list[0].pic:defaultUrl"
                 :alt="list[0].title">
+              </baseImg>
             </div>
           </div>
         <div class="swiper-pagination"  slot="pagination">
@@ -37,6 +52,23 @@
         <div class="swiper-button-prev" slot="button-prev"></div>
         <div class="swiper-button-next" slot="button-next"></div>
         <!-- <div class="swiper-scrollbar"   slot="scrollbar"></div> -->
+      </div>
+      <div v-if="list.length==1">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide"
+          v-for="(item,index) in list"
+           :index="index"
+          :key="index">
+                <baseImg
+                :width="960"
+                :height="304"
+                :lazy="lazy"
+                @click="swiperClick(item)"
+                :src="item.pic?item.pic:defaultUrl"
+                :alt="item.title">
+              </baseImg>
+          </div>
+        </div>
       </div>
     </div>
 </template>
@@ -49,6 +81,7 @@ export default {
   data() {
     return {
       name: 'banner',
+      lazy: false,
       defaultUrl: `${window.location.origin}/banner.png`,
       swiperOption: {
         autoplay: {
@@ -116,6 +149,7 @@ export default {
     },
     initBannerByIe() {
       /*eslint-disable*/ 
+      if(this.list.length<=1) return;
             let _that = this;
             let oBanner = document.getElementById('commonBanner');
             let oWraper = oBanner.querySelector('.swiper-wrapper');
@@ -177,11 +211,13 @@ export default {
             oWraper.style.left = -(num * boxWidth)+'px';
 
             oNext.addEventListener('click', () => {
+              clearInterval(this.autoplayTimer)
                 move('next')
             }, false);
 
 
             oPrev.addEventListener('click', () => {
+              clearInterval(this.autoplayTimer)
                move('prev')
             }, false);
 
@@ -199,29 +235,34 @@ export default {
             if (curLeft === toLeft || !this.isCanAnimate) {
                 return;
             }
-            step = -(curLeft - toLeft) / 15;
+            step = -parseInt((curLeft - toLeft) / 15 , 10);
             clearInterval(this.animateTimer);
             this.isCanAnimate = false;
             this.animateTimer = setInterval(() => {
                 if (step > 0) {
-                    if (curLeft >= toLeft) {
+                    if (curLeft+step >= toLeft) {
                         curLeft = toLeft;
                         clearInterval(this.animateTimer);
                         this.isCanAnimate = true;
+                        obj.style.left = `${curLeft}px`;
                         fn && fn();
                     } else {
                         curLeft += step;
                         obj.style.left = `${curLeft}px`;
                     }
-                } else if (curLeft <= toLeft) {
+                } else {
+                  if (curLeft+step <= toLeft){
                     curLeft = toLeft;
                     clearInterval(this.animateTimer);
                     this.isCanAnimate = true;
-                    fn && fn();
-                } else {
-                    curLeft += step;
                     obj.style.left = `${curLeft}px`;
-                }
+                    fn && fn();
+                  }else {
+                      this.isCanAnimate = true;
+                      curLeft += step;
+                      obj.style.left = `${curLeft}px`;
+                  }
+                } 
             }, 20);
             /* eslint-enable */
     },
@@ -237,8 +278,6 @@ export default {
     }
     .banner-img{
         width: 100%;
-        min-height: 304px;
-        max-height: 315px;
     }
     .swiper-pagination{
         overflow: hidden\0;

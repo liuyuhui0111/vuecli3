@@ -67,6 +67,9 @@ list-style-type:none;
 caption, th {
 text-align:left;
 }
+input[type=text]::-ms-clear {
+display:none;
+}
 
 
 /*取消ios点击效果*/
@@ -91,11 +94,33 @@ input::-ms-clear{display:none;}/*隐藏文本框叉子*/
 input::-ms-reveal{display:none;}/*隐藏密码框小眼睛*/
 /*公共主体内容宽度*/
 .common-container-width{
-  width: 75%;
-	min-width: 960px;
-	max-width: 1090px;
+  width: 980px;
+	/*min-width: 960px;*/
+	/*max-width: 1090px;*/
 	margin: 0 auto;
   overflow: hidden\0;
+}
+.iebug{
+  display: none;
+  display: block\0;
+  position: absolute\0;
+  background: #fff\0;
+  width: 40px\0;
+  height: 26px\0;
+  right: 10px\0;
+  top: 2px\0;
+  z-index: 99999\0;
+}
+
+html,body{
+  width: 100%;
+}
+#app{
+  width: 100%;
+}
+.common-h5-index .item img{
+  width: 100%;
+  height: auto;
 }
 
 /*单行文字溢出*/
@@ -103,6 +128,8 @@ input::-ms-reveal{display:none;}/*隐藏密码框小眼睛*/
 	overflow: hidden;
 	text-overflow:ellipsis;
 	white-space: nowrap;
+  max-height: 20px\0;
+  line-height: 20px\0;
 }
 
 /*多行文字溢出*/
@@ -111,7 +138,18 @@ input::-ms-reveal{display:none;}/*隐藏密码框小眼睛*/
 	-webkit-box-orient: vertical;
 	-webkit-line-clamp: 2;
 	overflow: hidden;
+  max-height: 40px;
+  line-height: 20px;
 }
+
+
+/*.ellipsis2{position: relative; line-height: 20px; max-height: 40px;overflow: hidden;}
+.ellipsis2::after{content: "..."; position: absolute; bottom: 0; right: 0; padding-left: 40px;
+background: -webkit-linear-gradient(left, transparent, #fff 55%);
+background: -o-linear-gradient(right, transparent, #fff 55%);
+background: -moz-linear-gradient(right, transparent, #fff 55%);
+background: linear-gradient(to right, transparent, #fff 55%);
+}*/
 
 /*手形鼠标*/
 .pointer{
@@ -157,9 +195,8 @@ input::-ms-reveal{display:none;}/*隐藏密码框小眼睛*/
 .swiper-slide{
   float: left\0;
 }
-.el-message--success>p,
-.el-message--warning>p{
-display: inline-block\0;
+p{
+  word-break: break-all;
 }
 
 

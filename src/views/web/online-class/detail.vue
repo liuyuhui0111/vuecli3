@@ -1,6 +1,6 @@
 <template>
   <div class="online-class-detail common-container-width">
-    <div v-if="detail != null">
+    <div v-if="detail != null && !isShowErrorTips">
       <div class="play-box">
         <div v-if="typelist.length>0" class="typelist">
           <span v-for="(item,index) in typelist"
@@ -16,15 +16,16 @@
         <div class="contain">
         <!-- 预览播放图 -->
           <div class="img-box" ref="imgBox">
-            <div v-show="isShowIframe" class="iframe-box">
+            <div v-show="isShowIframe && !isShowIframeImg" class="iframe-box">
               <iframe
               id="playBox"
+              allowfullscreen
               :width="iframe.width"
               :height="iframe.height"
               :src="curUrl"
                frameborder="0"></iframe>
             </div>
-            <img v-show="!isShowIframe"
+            <img v-show="!isShowIframe || isShowIframeImg"
             @click="play()"
             :src="detail.bannerUrl" :alt="detail.title">
             <!-- 评价 购买弹层 -->
@@ -40,7 +41,7 @@
                     权益消耗提醒
                     <p></p>
                   </div>
-                  <p>继续观看本课程会消耗您1次线上课程观看权益</p>
+                  <p>继续观看本课程会消耗您1次线上课程观看权益(剩余{{consumeNum}}次)</p>
 
                   <div class="btns">
                     <span @click="isShowDialogToIn = false" class="btn-buy">
@@ -56,7 +57,11 @@
                     VIP会员专享课程
                     <p>可尊享更多特权与服务</p>
                   </div>
-                  <p>还有4个章节未学习</p>
+                  <p>还有{{
+                  detail.courseVideoEntity[0].isTry === 1 ?
+                   detail.courseVideoEntity.length - 1 :
+                   detail.courseVideoEntity.length
+                   }}个章节未学习</p>
 
                   <div class="btns">
                     <span @click="goFree('/order')" class="btn-buy">
@@ -109,7 +114,11 @@
           </div>
         <!-- 章节列表 -->
           <div class="list-box">
-            <p>共{{detail.courseVideoEntity.length}}章节&nbsp;
+            <p>共{{
+                  detail.courseVideoEntity[0].isTry === 1 ?
+                   detail.courseVideoEntity.length - 1 :
+                   detail.courseVideoEntity.length
+                   }}章节&nbsp;
             ({{getTime(detail.courseVideoEntity)}})</p>
             <ul class="list common-scroll-bar">
               <li v-for="(item,index) in detail.courseVideoEntity"
@@ -120,7 +129,7 @@
                   <span class="icon-play"></span>
                   <span v-if="index==0" class="name">{{item.name}}</span>
                   <span v-else>第{{index}}章 </span>
-                  <span class="minite"> {{item.videoMinute}}分钟</span>
+                  <span class="minite"> {{getMinite(item.videoMinute)}}</span>
                 </div>
                 <div v-if="index>0" class="title">{{item.name}}</div>
               </li>
@@ -167,9 +176,13 @@
           <baseTitle title="老师简介"></baseTitle>
           <div class="item-box">
             <div class="photo">
-              <img :src="detail.teacherAvatar ?
-              detail.teacherAvatar : defaultUrl"
-              :alt="detail.teacherName">
+                <baseImg
+                  :width="130"
+                  :height="130"
+                  :src="detail.teacherAvatar"
+                  :defaultSrc="defaultUrl"
+                  :alt="detail.teacherName">
+                </baseImg>
             </div>
             <div class="item">
               <p class="name">{{detail.teacherName}}</p>
@@ -190,18 +203,24 @@
             <div v-if="detail.coursePreviewEntity.length>0"
             class="previewIframe-box">
               <div class="previewIframe">
-                <iframe :src="previewIframeSrc" frameborder="0"></iframe>
+                <iframe
+                :src="detail.coursePreviewEntity[0].previewUrl"
+                frameborder="0"></iframe>
               </div>
             </div>
 
             <!-- <Preview :list="detail.coursePreviewEntity"></Preview> -->
             <div v-if="detail.courseFileEntity.length>0" class="download-box">
               <div v-for="(item,index) in detail.courseFileEntity"
-              :key="index" class="icon-pdf">
-                {{item.fileName}}.{{item.fileType}}
+              :key="index"
+              :class="{'is-pdf':item.fileType === '.pdf'}"
+              class="icon-pdf">
+                {{item.fileName}}
                 <div class="fr">
                   {{(item.fileSize/1024).toFixed(1)}}M
-                  <a @click="download(item.downloadUrl)"
+                  <a
+                  @click="download(item.downloadUrl)"
+                  :class="{gray:!(commonUserData && commonUserData.leaguerLevelId)}"
                   class="btn-sub">下载</a>
                 </div>
               </div>
@@ -236,7 +255,14 @@
               <li v-for="(item,index) in getEvaluateListList"
               :key="index">
                 <div class="photo">
-                  <img :src="item.userAvatar ? item.userAvatar : defaultUrl" :alt="item.userId">
+                  <baseImg
+                  :width="130"
+                  :height="130"
+                  :src="detail.userAvatar"
+                  :defaultSrc="defaultUrl"
+                  :alt="detail.userId">
+                </baseImg>
+
                 </div>
                 <div class="item">
                   <el-rate
@@ -247,7 +273,6 @@
                   <p v-if="item.otherTips">{{item.otherTips}}</p>
                 </div>
               </li >
-              <li class="empty" v-if="getEvaluateListList.length==0">暂无评论</li>
             </ul>
 
             <el-pagination
@@ -265,6 +290,17 @@
         </template>
       </div>
     </div>
+    <div v-if="isShowErrorTips">
+        <div class="errorTipsBox">
+            <span class="el-icon-warning
+"></span>
+      <p>
+        您查看的课程已下架 <br>
+        <span class="small">您可以返回上一页浏览其他页面</span> <br>
+        <span @click="routerBack" class="pointer">返回上一页</span>
+      </p>
+        </div>
+    </div>
   </div>
 </template>
 <script>
@@ -281,7 +317,6 @@ import {
 } from '@/api/apis';
 import baseTitle from '@/views/web/components/base/base-title.vue';
 import { transferString } from '@/assets/utils/util';
-// import Preview from './preview.vue';
 
 const defaultPhotoUrl = require('@/views/imgs/default.png');
 
@@ -290,8 +325,7 @@ export default {
   data() {
     return {
       name: 'online-class-detail',
-      previewIframeSrc: 'https://live.xiucai.com:8890/Yumi4Sina/s/services/Res4View/b0e1b734e3f81b20830fa889a4396417', // 文件预览
-      downLoadIframeSrc: 'http://www.baidu.com', // 第三方下载
+      isShowErrorTips: false, // 是否展示已下架模块
       isShowDialogToBuy: false, // 是否显示购买弹窗
       isShowDialogTomes: false, // 是否显示评价弹窗
       isShowDialogToIn: false, // 消耗权益弹窗
@@ -302,6 +336,7 @@ export default {
         classFluently: 5,
         otherTips: '',
       },
+      isShowIframeImg: true,
 
       detail: null,
       url: '', // 视频播放地址
@@ -364,6 +399,7 @@ export default {
       curPlayIndex: 0,
       teacherCourse: [],
       isCanRequest: true,
+      consumeNum: '',
     };
   },
   beforeRouteLeave(to, from, next) {
@@ -392,7 +428,7 @@ export default {
   methods: {
     init() {
       // 获取公开课详情
-      this.courseId = parseInt(this.$route.query.id, 10) || '';
+      this.courseId = parseInt(this.$route.query.cid, 10) || '';
       this.getCourseFn();
       // 获取评价列表
       this.getEvaluateListFn('init');
@@ -401,8 +437,17 @@ export default {
       // 已经播放时间
       this.sec = this.$route.query.sec || 0;
     },
+    routerBack() {
+      this.$router.go(-1);
+    },
     transferStringFn(str) {
       return transferString(str) || '';
+    },
+    getMinite(min) {
+      let hour = parseInt(min / 60, 10) > 10 ? parseInt(min / 60, 10)
+        : `0${parseInt(min / 60, 10)}`;
+      let minite = min % 60 > 10 ? (min % 60) : `0${min % 60}`;
+      return `${hour}:${minite}:00`;
     },
     download(url) {
       if (!this.token) {
@@ -415,7 +460,7 @@ export default {
         window.open(url);
       } else {
         this.$message({
-          message: '您没有权限下载该文件',
+          message: '该课件只对会员用户专享',
           type: 'warning',
         });
       }
@@ -427,7 +472,7 @@ export default {
         return;
       }
       // 消耗权益继续观看
-      equityConsume({ equityNum: 1, courseType: 0 }).then((res) => {
+      equityConsume({ equityNum: 1, courseType: 0, courseId: this.courseId }).then((res) => {
         this.isCanRequest = true;
         if (res.data.code === '0000') {
           this.isShowDialogToIn = false;
@@ -449,9 +494,14 @@ export default {
     },
     routerGo(item, path) {
       if (!path) {
-        this.$router.push({ path: '/online-class', query: { nid: item.id } });
+        let query = item.id ? { nid: item.id } : {};
+        this.$router.push({ path: '/online-class', query });
       } else {
-        this.$router.push({ path, query: { id: item.id } });
+        // 在新标签页打开
+        let routeUrl = this.$router.resolve(
+          { path, query: { cid: item.id } },
+        );
+        window.open(routeUrl.href, '_blank');
       }
     },
     goFree(path) {
@@ -466,7 +516,7 @@ export default {
       this.$router.push({
         path,
         query: {
-          id: this.courseId,
+          cid: this.courseId,
           type: this.type,
         },
       });
@@ -558,6 +608,7 @@ export default {
     },
     startPlay() {
       // 开始播放
+      this.isShowIframeImg = false;
       this.courseId = this.curPlayItem.courseId;
       this.videoId = this.curPlayItem.id;
       this.getVideoUrlFn();
@@ -608,6 +659,7 @@ export default {
           } else if (res.data.code === '1003') {
             // 消耗权益
             this.showDialog(1);
+            this.consumeNum = res.data.consumeNum || 0;
           }
         }).catch((err) => {
           console.log(err);
@@ -627,6 +679,7 @@ export default {
         return;
       }
       this.isShowIframe = false;
+      // this.isShowIframeImg = false;
       this.isShowDialogTomes = false;
       this.isShowDialogToBuy = false;
       this.isShowDialogToIn = false;
@@ -641,7 +694,7 @@ export default {
         this.isShowDialogToBuy = true;
       }
     },
-    play() {
+    play(type) {
       if (this.sec > 0) {
         // 计算当前播放秒数处在第几个播放时间段内
         let flag = true;
@@ -659,18 +712,27 @@ export default {
         this.curIndex = 0;
       }
       let item = this.detail.courseVideoEntity[this.curIndex];
-      this.changeVideo(item, this.curIndex);
+      if (!type) {
+        this.isShowIframeImg = false;
+        this.changeVideo(item, this.curIndex);
+      }
     },
     getTime(list) {
       let num = 0;
-      list.forEach((item) => {
-        num += parseInt(item.videoMinute, 10);
+      list.forEach((item, index) => {
+        if (!(index === 0 && item.isTry === 1)) {
+          num += parseInt(item.videoMinute, 10);
+        }
       });
       return `${parseInt(num / 60, 10)}小时${num % 60}分钟`;
     },
     getList() {
       // 获取顶部面包屑
       this.typelist = [
+        {
+          id: '',
+          name: '在线学习',
+        },
         {
           id: this.detail.direction,
           name: this.detail.directionName,
@@ -679,18 +741,20 @@ export default {
           id: this.detail.major,
           name: this.detail.majorName,
         },
-        {
-          id: this.detail.category,
-          name: this.detail.categoryName,
-        },
+        // {
+        //   id: this.detail.category,
+        //   name: this.detail.categoryName,
+        // },
       ];
     },
     radioChange() {
       this.getEvaluateListFn('init');
+      this.getGoodEvaluateCountFn();
     },
     handleCurrentChange(val) {
       this.getEvaluateListParams.pageNum = val;
       this.getEvaluateListFn();
+      this.getGoodEvaluateCountFn();
     },
     insertEvaluateFn() {
       // 提交课程评价
@@ -703,7 +767,7 @@ export default {
       }
       if (this.rate.otherTips.length < 2 || this.rate.otherTips.length > 50) {
         this.$message({
-          message: '评价内容应该在2-50给字符内',
+          message: '评价内容应该在2-50个字符内',
           type: 'warning',
         });
         return;
@@ -728,6 +792,7 @@ export default {
               type: 'success',
             });
             this.getEvaluateListFn('init');
+            this.getGoodEvaluateCountFn();
           } else if (res.data.code === '0012') {
             this.$message({
               message: '已经评价过该课程,不允许重复评价',
@@ -782,17 +847,20 @@ export default {
         getCourse({ id: this.courseId }).then((res) => {
           if (res.data.code === '0000') {
             /*eslint-disable*/ 
-                        // favorite字段，是否收藏 0否 1是 默认0
-                        res.data.course.isColl = res.data.favorite;
-                        this.detail = res.data.course;
-                        this.teacherCourse = res.data.teacherCourse
+            // favorite字段，是否收藏 0否 1是 默认0
+            res.data.course.isColl = res.data.favorite;
+            this.detail = res.data.course;
+            this.teacherCourse = res.data.teacherCourse;
+            console.log(res.data.course.coursePreviewEntity)
                        /* eslint-enable */
             if (this.detail) {
               this.getList();
               if (!this.isShowIframe) {
-                this.play();
+                this.play(true);
               }
             }
+          } else if (res.data.code === '7001') {
+            this.isShowErrorTips = true;
           }
         }).catch((err) => {
           console.log(err);
@@ -811,9 +879,38 @@ export default {
 };
 </script>
 <style scoped>
+.errorTipsBox{
+  width: 200px;
+    margin: 0 auto;
+    position: relative;
+    padding-left: 70px;
+    line-height: 22px;
+    margin-top: 200px;
+    font-size: 18px;
+}
+.errorTipsBox .small{
+  font-size: 14px;
+}
+.errorTipsBox .el-icon-warning
+{
+  position: absolute;
+    left: 0;
+    font-size: 60px;
+    color: #ccc;
+}
+.errorTipsBox .pointer{
+  color: #FB683C;
+  font-size: 14px;
+}
+.minite{
+  float: right;
+}
 .teacherCourseList span{
   margin-right: 20px;
   cursor: pointer;
+}
+.teacherCourseList span:hover{
+  color: #FB683C;
 }
 .empty{
   padding: 20px 0;
@@ -847,8 +944,9 @@ export default {
   margin-top: 20px;
 }
 .icon-pdf{
-  border-top: 1px solid #D4D4D4;
-  padding-top: 24px;
+  /*border-bottom: 1px solid #D4D4D4;*/
+  padding-top: 20px;
+  padding-bottom: 20px;
   display: block;
   position: relative;
   width: 100%;
@@ -856,12 +954,18 @@ export default {
   min-height: 30px;
   line-height: 30px;
   padding-left: 33px;
-  background: url('./imgs/pdf4.png') no-repeat left 26px;
+  background: url('./imgs/excel.png') no-repeat left 26px;
   background-size:23px auto;
   font-size: 16px;
 color: #444444;
 text-align: left;
 overflow: hidden;
+}
+.icon-pdf .is-pdf{
+  background-image:url('./imgs/pdf4.png');
+}
+.icon-pdf:hover{
+  background-color:#eee;
 }
 .icon-pdf .fr{
   float: right;
@@ -931,13 +1035,13 @@ overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-around;
-  width: 294px;
+  width: 314px;
   margin: 30px auto;
   overflow: hidden\0;
 }
 .dialog-buy .btn-sub,
 .dialog-buy .btn-buy{
-  width: 132px;
+  width: 142px;
   height: 30px;
   box-sizing:border-box;
   color: #FB683C;
@@ -948,6 +1052,9 @@ overflow: hidden;
   cursor: pointer;
   border-radius: 30px;
   float: left\0;
+}
+.dialog-buy .btn-buy{
+  margin-right: 20px\0;
 }
 .dialog-buy .btn-sub{
   color: #Fff;
@@ -1161,6 +1268,9 @@ margin-top: 10px;
   align-items: center;
   justify-content: flex-start;
   margin-right: 10px;
+  position: relative\0;
+  padding-left: 127px\0;
+
 }
 .eva-list .photo,
 .tab-contain .item-box .photo{
@@ -1171,27 +1281,41 @@ margin-top: 10px;
     flex-shrink:0;
   flex-grow:0;
    margin-right: 30px;
+   position: absolute\0;
+   left: 0;
+   top: 0;
 }
 .eva-list .photo{
+  position: absolute;
   width: 80px;
   height: 80px;
-
+  left: 0;
+  top: 0;
 }
 .eva-list li{
-  display: flex;
+  display: block;
   align-items: center;
   margin-top: 30px;
+  overflow: hidden;
+  position: relative;
+  min-height: 80px;
+  padding-left: 100px;
+  box-sizing:border-box;
+}
+.eva-list .item p{
+  margin-top: 10px;
+  line-height: 16px;
 }
 
-.tab-contain .photo img{
-  width: 100%;
-  height: auto;
-}
 .tab-contain .item-box .item{
   flex-grow:0;
+  display: inline-block;
 }
 .tab-contain .name{
   font-weight: bold;
   margin-bottom: 10px;
+}
+.gray{
+  background: #ccc;
 }
 </style>

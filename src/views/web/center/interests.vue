@@ -3,7 +3,7 @@
     <div class="title">
       <h3>优税学院会员   享专属特权</h3>
       <p v-if="dueTime <= 0">开通会员尊享课程资源免费观看，还有更多特权服务</p>
-      <p v-else>
+      <p v-if="dueTime > 0 && commonUserData">
         Hi,{{commonUserData.userName}},您开通的{{commonUserData.leaguerLevelName}}会员，剩余{{dueTime}}天
       </p>
     </div>
@@ -16,12 +16,16 @@
         <p class="intro ellipsis2">{{item.remark}}</p>
         <ul v-if="item.equityDtoList" class="list">
           <li v-for="(list,index) in item.equityDtoList"
-          :class="{active:list.tickType === '1'}"
+          :class="{active:list.tickType == '1'}"
           :key="index">
             {{list.name}}
           </li>
         </ul>
+         <span @click="goOrder(item)"
+         v-if="item.openVipType==='1'"
+        class="btn-sub pointer">立即续费</span>
         <span @click="goOrder(item)"
+        v-else
         class="btn-sub pointer">{{item.fee}}/年</span>
         </template>
       </div >
@@ -38,21 +42,46 @@
         <div class="form-line">
           <el-form-item label=""
           prop="name">
-            <el-input v-model.trim="formInline.name" placeholder="请输入你的姓名"></el-input>
+            <!-- <el-input v-model.trim="formInline.name" placeholder="请输入你的姓名"></el-input> -->
+            <input type="text"
+          v-model.trim="formInline.name"
+          @blur="validateFieldFn('name')"
+          autocomplete="off"
+          placeholder="请输入你的姓名"
+          class="el-input__inner">
           </el-form-item>
           <el-form-item label=""
           prop="company">
-            <el-input v-model.trim="formInline.company" placeholder="请输入你的公司名称"></el-input>
+            <!-- <el-input v-model.trim="formInline.company" placeholder="请输入你的公司名称"></el-input> -->
+            <input type="text"
+          v-model.trim="formInline.company"
+          @blur="validateFieldFn('company')"
+          autocomplete="off"
+          placeholder="请输入你的公司名称"
+          class="el-input__inner">
+
           </el-form-item>
         </div>
         <div class="form-line">
           <el-form-item label=""
           prop="phone">
-            <el-input v-model.trim="formInline.phone" placeholder="请输入你的电话"></el-input>
+           <!--  <el-input v-model.trim="formInline.phone" placeholder="请输入你的电话"></el-input> -->
+            <input type="text"
+          v-model.trim="formInline.phone"
+          @blur="validateFieldFn('phone')"
+          autocomplete="off"
+          placeholder="请输入你的电话"
+          class="el-input__inner">
           </el-form-item>
           <el-form-item label=""
           prop="job">
-            <el-input v-model.trim="formInline.job" placeholder="请输入你的职务"></el-input>
+           <!--  <el-input v-model.trim="formInline.job" placeholder="请输入你的职务"></el-input> -->
+           <input type="text"
+          v-model.trim="formInline.job"
+          @blur="validateFieldFn('job')"
+          autocomplete="off"
+          placeholder="请输入你的职务"
+          class="el-input__inner">
           </el-form-item>
         </div>
       </el-form>
@@ -63,7 +92,7 @@
 <script>
 import mixin from './js/mixin';
 import { addcontactMe, queryList } from '@/api/apis';
-import { getTokenFn, initList } from '@/assets/utils/util';
+import { initList } from '@/assets/utils/util';
 import { validByPhone } from '@/assets/utils/validator';
 
 export default {
@@ -86,17 +115,17 @@ export default {
             trigger: 'blur',
           },
           {
-            min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur',
+            min: 2, max: 4, message: '姓名长度请控制在2~4个字内', trigger: 'blur',
           },
         ],
         company: [
           {
-            min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur',
+            min: 0, max: 50, message: '公司名称过长，请控制在50字内', trigger: 'blur',
           },
         ],
         job: [
           {
-            min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur',
+            min: 0, max: 10, message: '职位名字过长，请控制在10字内', trigger: 'blur',
           },
         ],
         phone: [
@@ -108,7 +137,7 @@ export default {
           {
             min: 11,
             max: 11,
-            message: '长度在11个字符',
+            message: '格式错误，请重新输入',
             trigger: 'blur',
           },
           {
@@ -119,7 +148,8 @@ export default {
                 callback();
               }
             },
-            message: '手机号格式不对',
+            trigger: 'blur',
+            message: '格式错误，请重新输入',
           },
         ],
       },
@@ -133,13 +163,13 @@ export default {
 
     };
   },
-  beforeRouteEnter(to, from, next) {
-    if (getTokenFn()) {
-      next();
-    } else {
-      next(from);
-    }
-  },
+  // beforeRouteEnter(to, from, next) {
+  //   if (getTokenFn()) {
+  //     next();
+  //   } else {
+  //     next(from);
+  //   }
+  // },
   mounted() {
     this.init();
   },
@@ -191,20 +221,6 @@ export default {
       if (item.openVipType !== '1' && this.dueTime > 0) {
         return;
       }
-      this.$router.push({
-        path: '/order',
-        query: {
-          money: item.fee,
-          level: item.name,
-          ptype: 'vip',
-          type: this.type,
-          id: item.id,
-          // dueTime:item.dueTime,
-        },
-      });
-    },
-    submitForm(formName) {
-      // 表单提交
       if (!this.token) {
         this.$message({
           message: '您还没有登录，请先登录',
@@ -212,6 +228,27 @@ export default {
         });
         return;
       }
+      this.$router.push({
+        path: '/order',
+        query: {
+          money: item.fee,
+          level: item.name,
+          ptype: 'vip',
+          type: this.type,
+          cid: item.id,
+          // dueTime:item.dueTime,
+        },
+      });
+    },
+    validateFieldFn(prop) {
+      let curForm = this.$refs.ruleInterForm.validate
+        ? this.$refs.ruleInterForm
+        : this.$refs.ruleInterForm[0];
+      curForm.validateField([prop]);
+    },
+    submitForm(formName) {
+      // 表单提交
+
       let curForm = this.$refs[formName].validate
         ? this.$refs[formName]
         : this.$refs[formName][0];
@@ -254,6 +291,7 @@ export default {
     justify-content: space-between;
     font-size: 14px;
     flex-wrap: wrap;
+    overflow: hidden\0;
   }
   .contain-box .item{
     background: #F7F7F7;
@@ -263,6 +301,9 @@ export default {
     width: 230px;
     box-sizing:border-box;
     margin-bottom: 20px;
+    margin: 0 15px 20px 0\0;
+    min-height: 500px\0;
+    float: left;
   }
   .contain-box .item.active{
     /*border-color: #fb683c;*/
@@ -315,7 +356,7 @@ export default {
   }
   .el-form-item{
     width: 314px;
-    margin-right: 30px;
+    margin-right: 20px;
   }
 
   .form .btn-sub{

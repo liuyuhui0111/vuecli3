@@ -12,11 +12,20 @@
         class="list-box">
             <li v-for="(item,index) in commonCenterData.videoList"
             :key="index">
-                <img @click="routerGo(item)" :src="item.bannerUrl"
-                :alt="item.title">
-                <span @click="routerGo(item)" class="icon-add">
+            <div @click="routerGo(item)" class="img pointer">
+            <baseImg
+            :width="219"
+            :height="130"
+            :src="item.bannerUrl">
+            </baseImg>
+            </div>
+                <router-link
+                v-if="commonCenterData.videoList.length<2"
+                tag="span"
+                to="/online-class"
+                class="icon-add">
                     去学习
-                </span>
+                </router-link >
             </li>
         </ul>
         <div class="empty" v-else>
@@ -31,9 +40,18 @@
                 </li>
             </ul>
         </div>
-        <div v-if="commonCenterData.classNum" class="classNum">{{commonCenterData.classNum}}</div>
+        <div v-if="commonCenterData.classNum>=0"
+        class="classNum">{{commonCenterData.classNum}}
+        </div>
         </div>
     </div>
+
+    <div v-if="commonCenterData && commonCenterData.tips=='0'" class="center-tips">
+        <p>请注意！<br>
+        您未参加已购买的线下课，本次权益已退回到您的账户。下次购买线下课可直接消耗。 </p>
+    </div>
+
+
     <div class="btns">
         <Title title="我的权益"></Title>
         <div
@@ -50,11 +68,13 @@
                     <img :src="item.pictureUrl" :alt="item.name">
                 </span>
                 <span class="name ellipsis" :title="item.name">{{item.name}}</span>
-                <span v-if="item.type==1" class="free">
+                <span v-if="item.type==2" class="free">
                     {{item.value == 0 ? '全部免费' : '剩余'+item.value+'次'}}
                 </span>
-                <span v-if="item.type==0"
+                <span v-if="item.type==1 && item.value == 0"
                 class="free">尚未开通</span>
+                <!-- <span v-if="item.type==1 && item.value == 1"
+                class="free">全部免费</span> -->
             </div >
         </div>
          <div v-else>
@@ -76,6 +96,7 @@ export default {
       classNum: 0, // 总看课数
       btnList: [],
       studyList: [],
+      isShowTips: false,
     };
   },
   mounted() {
@@ -88,14 +109,28 @@ export default {
 
     },
     routerGo(item) {
-      this.$router.push({ path: '/online-detail', query: { id: item.id } });
+      if (item.isCanPlay) {
+        this.$message({
+          message: 'sorry！你访问的课程已下架',
+          type: 'warning',
+        });
+        return;
+      }
+      this.$router.push({ path: '/online-detail', query: { cid: item.courseId } });
     },
   },
 };
 </script>
 <style scoped>
+.center-tips{
+    display: block;
+    width: 100%;
+    background: #fffbe6;
+    padding: 10px 20px;
+    box-sizing:border-box;
+}
 .empty{
-    padding-bottom: 20px;
+    /*padding-bottom: 20px;*/
 }
 .box,
 .nav{
@@ -106,10 +141,15 @@ export default {
     font-size: 14px;
     margin-bottom: 10px;
     padding-right:20px;
+    overflow: hidden\0;
 }
 .classNum{
     width: 150px;
     text-align: center;
+    float: right\0;
+}
+.box .classNum{
+    line-height: 77px\0;
 }
 .box{
     padding: 20px 20px 0 20px;
@@ -117,14 +157,15 @@ export default {
     background: #F7F7F7;
 border: 1px solid #D4D4D4;
 }
-.box img{
-    width: 131px;
+.box .img{
+    width: 130px;
     margin-right: 40px;
     float: left;
 }
 .box li {
     overflow: hidden;
     margin-bottom: 20px;
+    float: left;
 }
 .icon-add{
     display: block;
@@ -142,7 +183,7 @@ border: 1px solid #D4D4D4;
     padding-left: 64px;
     text-align: center;
     display: flex;
-    justify-content: space-around;
+    justify-content: flex-start;
     flex-wrap: wrap;
     overflow: hidden\0;
 }
@@ -156,11 +197,17 @@ border: 1px solid #D4D4D4;
 .btn-list .item{
     min-width: 25%;
     float: left\0;
+    margin-bottom: 20px;
 }
 .btn-list .name{
     font-weight: bold;
     display: block;
     font-size: 16px;
     margin: 10px 0;
+}
+.list-box{
+    overflow: hidden\0;
+    width: 400px\0;
+    float: left\0;
 }
 </style>

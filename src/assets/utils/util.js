@@ -51,6 +51,7 @@ function setScrollTop(top) {
   // 设置当前滚动条高度
   if (document.documentElement) {
     document.documentElement.scrollTop = top;
+    document.body.scrollTop = top;
   } else {
     document.body.scrollTop = top;
   }
@@ -151,6 +152,7 @@ function setTokenFn(token) {
 function transferString(content) {
   // 替换回车
   let string = content;
+  if (!string) return null;
   try {
     string = string.replace(/\r\n/g, '<br>');
     string = string.replace(/\n/g, '<br>');

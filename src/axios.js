@@ -74,8 +74,9 @@ axios.interceptors.response.use(
               
             }
             // console.log('token::::::::',store.getters.token,'code::::::::',response.data.code)
-            if(response.data.code === '0002' && store.getters.token != ''){
+            if(response.data.code === '0002' && store.getters.token){
               // 登录过期
+
               Vue.prototype.$message({
                 message: '登录状态过期，请重新登录',
                 type: 'warning'

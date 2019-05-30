@@ -14,6 +14,7 @@ import {
   loginout,
 } from '@/api/apis';
 import { replaceCode, getUrlParam } from '@/assets/utils/util';
+import baseImg from '@/views/web/components/base/img.vue';
 
 export default {
   install(Vue) {
@@ -22,18 +23,29 @@ export default {
         return {
           // token: '',
           COMMON_COMP_DATA: { // 公司主体信息
-            qq: `//wpa.qq.com/msgrd?v=3&uin=${888888}&site=在线客服&menu=yes`, // 客服qq
+            // qq: '//wpa.qq.com/pa?p=2:800013811:42',
+            qq: `//wpa.qq.com/msgrd?v=3&uin=${1530192656}&site=qq&menu=yes`, // 客服qq
             tel: '0574-87352489', // 客服电话
             time: '7*24h', // 客服服务时间
-            address: `浙江省宁波市高新区光华路299弄研发园C14幢9楼<br>
-              &copy;Copyright 2014-2019宁波爱信诺航天信息有限公司<br>
-              All Rights Reserved`, // 公司地址
+            address: `宁波爱信诺航天信息有限公司与<br>大象慧云信息技术有限公司联合出品
+              `, // 公司地址&copy;Copyright 2014-2019宁波爱信诺航天信息有限公司<br>
+            // All Rights Reserved
           },
           publicPath: process.env.BASE_URL,
         };
       },
       mounted() {
       },
+      components: {
+        baseImg,
+      },
+      // watch:{
+      //   'token':function(val){
+      //     if(val){
+      //       this.getUserInfoFn();
+      //     }
+      //   }
+      // },
 
       computed: {
         ...mapGetters([
@@ -45,9 +57,9 @@ export default {
       },
       methods: {
 
-        login() {
+        login(type) {
           // 去登录
-          goLogin();
+          goLogin(type);
         },
         loginout() {
           // 退出登录，清空cookie
@@ -100,7 +112,7 @@ export default {
               // console.log('user===================',res);
               if (res.data.code === '0000') {
                 let user = res.data.leaguerList;
-                if (!user) {
+                if (!user || !user.userName) {
                   this.setToken('');
                   this.$message({
                     message: '获取个人信息失败，请重新登录',

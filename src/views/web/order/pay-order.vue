@@ -6,14 +6,15 @@
           <Step :stepList="stepList" :active="stepIndex"></Step>
         </div>
     </div>
-
     <div v-if="!isSuccess" class="contain">
-      <div class="order-box">
-        <p>课程订单: {{orderId}} (订单ID)</p>
+      <div v-show="type!=''" class="order-box">
+        <p v-if="type!='' && type==3">会员订单: {{order.orderCode}}</p>
+        <p v-else>课程订单: {{order.orderCode}}</p>
         <p v-if="order.paymoney != ''">支付金额: <span class="money">￥{{order.paymoney}} </span>
-        <p v-if="order.title != ''">课程名称: {{order.title}}</p>
+        <p v-if="type!='' && type==3">会员类型: {{order.title}}</p>
+        <p v-else>课程名称: {{order.title}}</p>
       </div>
-      <div v-if="isShowPayList" class="payTitle">支付类型</div>
+      <div v-if="isShowPayList" class="payTitle">支付方式</div>
       <div v-if="isShowPayList" class="paylist">
         <div v-for="(item,index) in paylist"
         class="item"
@@ -49,11 +50,16 @@
         听课前请通过听课凭借码签到，入场听课~
       </div>
       <div class="btns">
-        <span v-if="type === 1"
-        @click="routerGo('/online-detail',{id:courseId})">返回学习课程</span>
-        <span v-if="type === 3"
+        <span v-if="type == 1"
+        @click="routerGo('/online-detail',{cid:courseId})">返回学习课程</span>
+        <span v-if="type == 3"
         @click="routerGo('/index',{})">返回首页</span>
-        <span @click="routerGo('/center/detail',{orderId:orderId})">查看我的订单</span>
+        <span v-show="type!='' && type!=3"
+        @click="routerGo('/center/detail',{orderId:orderId})"
+        >查看我的订单</span>
+        <span v-show="type!='' && type==3"
+        @click="routerGo('/center/myorder',{})"
+        >查看我的订单</span>
       </div>
     </div>
 
@@ -80,6 +86,7 @@ export default {
       isShowPament: 0,
       paylist: [],
       isShowPayList: false,
+      goodsType: 3,
       stepIndex: 1, // 0
       stepList: [
         {
@@ -104,6 +111,7 @@ export default {
         paymoney: '',
         title: '',
         payUrl: '',
+        orderCode: '',
       },
       payParamList: null,
       payParam: {
@@ -113,7 +121,7 @@ export default {
       payChannelType: '', // 支付类型
       payChannelTypeName: '', // 支付名称
       timer: null,
-      endTime: 1, // 5分钟没支付弹出提示框
+      endTime: 5, // 5分钟没支付弹出提示框
       ewmUpdateTimes: null,
       expireTime: 0, // 存储当前选中支付类型的数据
       courseId: '',
@@ -139,8 +147,10 @@ export default {
     init() {
       this.orderId = this.$route.query.orderId;
       this.courseId = this.$route.query.courseId;
+
       this.isSuccess = this.$route.query.success || false;
       this.code = this.$route.query.tkm || '';
+      // this.startGetPayType()
       // 查询订单详情
       this.getOrderInfoFn();
       if (!this.isSuccess) {
@@ -173,7 +183,13 @@ export default {
           this.type = res.data.data.goodsType;
           this.order.title = res.data.data.goodsName;
           this.order.paymoney = res.data.data.amount;
+          this.order.orderCode = res.data.data.orderCode;
           this.courseId = res.data.goodsId;
+        } else {
+          this.$message({
+            message: '订单获取失败，请稍后再试',
+            type: 'warning',
+          });
         }
       }).catch((err) => {
         console.log(err);
@@ -207,6 +223,11 @@ export default {
           // this.isShowPayList = true;
           this.payFn();
           // this.isShowPayList = true;
+        } else {
+          this.$message({
+            message: '支付方式获取失败，请稍后再试',
+            type: 'warning',
+          });
         }
       }).catch((err) => {
         console.log(err);
@@ -236,7 +257,7 @@ export default {
           this.startGetPayType();
 
           // 生成二维码成功 开启定时器更新二维码
-          this.startTimes();
+          // this.startTimes();
         } else {
           this.$message({
             message: '统一下单失败，请稍后再试',
@@ -266,18 +287,19 @@ export default {
     },
     startGetPayType() {
       // 开启轮询 查询是否支付成功
-      let nums = this.endTime * 60; //
-      let curnum = 0;
+      // let nums = this.endTime * 60; //
+      // let curnum = 0;
       clearInterval(this.timer);
       this.timer = setInterval(() => {
+        // curnum += 1;
         if (this.isSuccess) {
           clearInterval(this.timer);
-        } else if (curnum > nums) {
-          this.open();
         } else {
           this.getPayStatusFn();
         }
-        console.log(curnum);
+        // else if (curnum > nums) {
+        // this.open();
+        // }
       }, 1000);
     },
     getPayStatusFn() {
@@ -292,7 +314,7 @@ export default {
           clearInterval(this.ewmUpdateTimes);
         }
       }).catch((err) => {
-        this.open();
+        // this.open();
         console.log(err);
       });
     },
@@ -358,6 +380,7 @@ export default {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    margin-top: 20px;
   }
   .payment .item{
     width: 225px;
@@ -431,8 +454,12 @@ export default {
     font-size: 16px;
     color: #FB683C;
     margin-bottom: 170px;
+    overflow: hidden\0;
+    text-align: center\0;
   }
   .btns span{
     cursor: pointer;
+    margin-right: 80px\0;
+    display: inline-block\0;
   }
 </style>

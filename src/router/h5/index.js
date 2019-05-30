@@ -1,6 +1,6 @@
 // h5相关页面
 const h5Routes = [{
-  title: '财税课堂',
+  title: '优税学院',
   name: 'h5-index',
   path: '/h5/index',
   view: () => import(/* webpackChunkName: "group-h5" */ '@/views/h5/index.vue'),

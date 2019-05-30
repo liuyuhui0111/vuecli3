@@ -10,11 +10,20 @@
     @click="routerGo(item)"
     v-for="(item,index) in queryMycollectionListList"
     :key="index">
-      <img :src="item.pic || item.bannerUrl" :alt="item.title">
+        <baseImg
+        :width="219"
+        :height="130"
+        :src="item.pic || item.bannerUrl"
+        :alt="item.title">
+        </baseImg>
+      <!-- <img :src="item.pic || item.bannerUrl" :alt="item.title"> -->
       <p class="title">{{item.title}}</p>
       <p class="teacher">
         <span class="name">{{item.teacherName}}</span>
-        <span class="num">{{item.signUpManNum}}</span>
+        <span class="num"
+        v-if="queryMycollectionListParam.onOffType === '1'"
+        >{{item.learnNum}}人已学</span>
+        <span class="num" v-else>{{item.learnNum}}人报名</span>
       </p>
     </div >
   </div>
@@ -82,10 +91,10 @@ export default {
     routerGo(item) {
       if (this.queryMycollectionListParam.onOffType === '0') {
         // 线下课
-        this.$router.push({ path: '/detail', query: { id: item.courseId } });
+        this.$router.push({ path: '/detail', query: { cid: item.courseId } });
       } else {
         // 线上课
-        this.$router.push({ path: '/online-detail', query: { id: item.courseId } });
+        this.$router.push({ path: '/online-detail', query: { cid: item.courseId } });
       }
     },
     navclick(item) {
@@ -101,6 +110,7 @@ export default {
       if (t === 'init') {
         this.queryMycollectionListParam.pageNum = 1;
       }
+      this.queryMycollectionListList = [];
       queryMycollectionList(this.queryMycollectionListParam).then((res) => {
         this.isShowPage = true;
         if (res.data.code === '0000') {
@@ -121,9 +131,17 @@ export default {
 };
 </script>
 <style scoped>
+.empty{
+  display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 18px;
+    height: 100%;
+    line-height: 400px;
+}
   .collist-box{
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: flex-start;
     text-align: left;
     font-size: 16px;
@@ -132,32 +150,31 @@ export default {
     padding-top: 20px;
     overflow: hidden\0;
     flex-wrap: wrap;
-    width: 102%;
+    width: 786px;
+
   }
   .title{
     font-weight: bold;
   }
   .collist-box .item{
-    width: 23%;
+    width: 219px;
     margin-bottom: 20px;
-    margin-right: 2%;
+    margin-right: 43px;
     cursor: pointer;
     float: left\0;
     box-sizing:border-box;
   }
-  .collist-box .item img{
-    display: block;
-    width: 100%;
-    height: auto;
-    margin-bottom: 10px;
+  .collist-box .item .title{
+    margin-top: 10px;
   }
+
   .collist-box .teacher{
     font-size: 14px;
 color: #868686;
 display: flex;
 justify-content: space-between;
 align-items: center;
-margin-bottom: 10px;
+margin: 10px 0;
 overflow: hidden\0;
   }
   .num{

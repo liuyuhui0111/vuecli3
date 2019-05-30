@@ -92,7 +92,7 @@
   margin-left: -498px;
 }
 .common-layout-nav.el-popper[x-placement^=bottom] .popper__arrow{
-  left: 39%;
+  left: 41%;
 }
 
 /*分页样式*/
@@ -193,6 +193,11 @@ body .el-pager li:hover{
   position: absolute;
   right: 3px;
 }
+.common-open-class-detail-form .el-form-item.is-required:not(.is-no-asterisk)>.el-form-item__label:before{
+  position: relative;
+  right: 6px;
+  float: right;
+}
 .common-web-order .el-form-item.is-required:not(.is-no-asterisk)>.el-form-item__label:before
 {
   display: none;
@@ -233,3 +238,11 @@ letter-spacing: 0;
 .el-progress-bar__outer{
   background-color: #c0c0c0;
 }
+
+.el-message--success>p,
+.el-message--warning>p{
+display: inline-block\0;
+}
+.el-message{
+    min-width: 200px;
+  }

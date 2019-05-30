@@ -68,14 +68,18 @@ export default {
   .contain-box{
     display: flex;
     padding: 20px 0 0 0;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     overflow: hidden;
-    width: 104%\0;
+    width: 100%\0;
   }
   .contain-box .item{
-    width: 25%\0;
+    width: 219px\0;
     float: left\0;
+    margin-right: 34px\0;
+  }
+  .contain-box .item:nth-last-child(1){
+    margin-right: 0\0;
   }
   .contain-box .empty{
     min-width: 219px;

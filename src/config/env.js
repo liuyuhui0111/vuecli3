@@ -14,7 +14,8 @@ if (process.env.NODE_ENV === 'production') {
   
 } else if (process.env.NODE_ENV === 'test') {
 	// 测试环境
-	COMMON_ENV.SSO_URL = 'http://apptest.5ifapiao.com';
+	// COMMON_ENV.SSO_URL = 'http://apptest.5ifapiao.com';
+	COMMON_ENV.SSO_URL = 'http://test.5ifapiao.com:8888';
 }
 
 export default COMMON_ENV;

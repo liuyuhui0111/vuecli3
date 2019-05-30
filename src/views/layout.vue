@@ -3,7 +3,9 @@
     class="layout common-web-layout">
      <el-container>
      <!-- 页面头部 -->
+     <!-- <compHeader v-if="false"></compHeader> -->
      <el-header height="60px">
+
           <div class="header">
             <div class="common-container-width">
               <div class="logo-box">
@@ -35,9 +37,13 @@
                   <div slot="reference" class="slot-online">
                     <div v-for="(item,index) in navlist"
                     class="item"
+
                     @click="changeNav(item,index)"
                     v-show="item.name == '在线学习'"
-                    :class="{active:index==navIndex}"
+                    :class="[
+                    {active:index==navIndex},
+                    {online:item.name == '在线学习'},
+                    ]"
                     :key="index">
                     {{item.name}}</div>
                   </div>
@@ -78,6 +84,53 @@
                 </el-popover>
 
 
+              </div>
+
+
+              <!-- 用户信息 未登录 -->
+              <div class="user-box"
+              v-if="!token || !commonUserData
+              || !commonUserData.userName">
+                <span class="register" @click="login('reg')">注册</span>
+                <span class="nologin" @click="login">登录</span>
+              </div>
+              <!-- 用户信息 登录成功 -->
+              <div v-if="token
+              && commonUserData
+              && commonUserData.userName" class="user-box">
+                <el-popover
+                  placement="bottom"
+                  trigger="hover"
+                  width="190"
+                  v-model="showUserBox">
+                  <div class="name-btn" slot="reference">
+                    <span @click="routerGo('/center/preson')"
+                    :title="commonUserData.userName"
+                    class="name pointer ellipsis">Hi,{{commonUserData.userName}}</span>
+                    <span class="icon-triangle"></span>
+                  </div>
+                  <!-- 用户详情 start -->
+                  <div class="user-container">
+                    <span class="name ellipsis"
+                    :title="commonUserData.userName">Hi,{{commonUserData.userName}}</span>
+                    <span class="level pointer"
+                    @click="routerGo('/interests')">{{commonUserData.leaguerLevelName}}</span>
+                    <ul class="user-nav">
+                      <li
+                      v-for="(item,index) in userNav"
+                      @click="routerGo(item.href)"
+                      :key="index">
+                        {{item.text}}
+                      </li >
+                    </ul>
+                    <span @click="loginoutFn" class="loginout">退出</span>
+                  </div>
+                 <!-- 用户详情 end -->
+                </el-popover>
+                <!-- 用户等级 -->
+                <span
+                @click="routerGo('/interests')"
+                class="level pointer">{{commonUserData.leaguerLevelName}}</span>
               </div>
 
 
@@ -150,47 +203,6 @@
 
               </el-popover>
               </div>
-              <!-- 用户信息 未登录 -->
-              <div class="user-box"
-              v-if="!token">
-                <span class="register" @click="login">注册</span>
-                <span class="nologin" @click="login">登录</span>
-              </div>
-              <!-- 用户信息 登录成功 -->
-              <div v-if="token
-              && commonUserData
-              && commonUserData.userName" class="user-box">
-                <el-popover
-                  placement="bottom"
-                  trigger="hover"
-                  width="190"
-                  v-model="showUserBox">
-                  <div class="name-btn" slot="reference">
-                    <span @click="routerGo('/center/preson')"
-                    :title="commonUserData.userName"
-                    class="name pointer ellipsis">Hi,{{commonUserData.userName}}</span>
-                    <span class="icon-triangle"></span>
-                  </div>
-                  <!-- 用户详情 start -->
-                  <div class="user-container">
-                    <span class="name ellipsis"
-                    :title="commonUserData.userName">Hi,{{commonUserData.userName}}</span>
-                    <span class="level">{{commonUserData.leaguerLevelName}}</span>
-                    <ul class="user-nav">
-                      <li
-                      v-for="(item,index) in userNav"
-                      @click="routerGo(item.href)"
-                      :key="index">
-                        {{item.text}}
-                      </li >
-                    </ul>
-                    <span @click="loginoutFn" class="loginout">退出</span>
-                  </div>
-                 <!-- 用户详情 end -->
-                </el-popover>
-                <!-- 用户等级 -->
-                <span class="level">{{commonUserData.leaguerLevelName}}</span>
-              </div>
 
 
             </div>
@@ -240,50 +252,24 @@
           class="icon-backtop"></span>
        </div>
      </div>
-
-
-      <!-- 页面主体 -->
-      <div class="main">
-      <el-main><slot>main</slot></el-main>
-      </div>
-
-
       <!-- 首次进入页面提示测评弹框 -->
       <div class="mask" v-if="isShowTips">
         <div @click.stop class="cptip-dialog">
           <span @click="closeTips" class="el-icon-close"></span>
 
           <img src="./imgs/layouttips.png" alt="">
-          <span  @click="closeTips" class="btn-sub">测评</span>
+          <span  @click="showEva(true)" class="btn-sub">测评</span>
         </div>
+      </div>
+
+      <!-- 页面主体 -->
+      <div class="main">
+      <el-main><slot>main</slot></el-main>
       </div>
 
       <!-- 页面底部 -->
       <el-footer height="176px">
-
-        <div class="footer">
-          <div class="common-container-width">
-            <div class="item">
-              <span class="product">
-                <img :src="publicPath+'logo.png'" alt="优税学院">
-                <!-- <i>{{footer.productIntro}}</i> -->
-              </span>
-            </div>
-            <div class="item">
-              客服电话：{{footer.customTel}}  <br>
-              客服工作时间：{{footer.customTime}}
-            </div>
-            <div class="item w40" v-html="COMMON_COMP_DATA.address">
-            </div>
-            <div class="item w10">
-              <img class="qrcode" src="./imgs/qrcode.jpg" alt="二维码">
-            </div>
-          </div>
-        </div>
-
-
-        <!-- 获取token登录form表单  兼容ie9 -->
-        <form action=""></form>
+        <compFooter></compFooter>
       </el-footer>
     </el-container>
   </div>
@@ -294,9 +280,11 @@ import {
   getSearchList,
   getCategoryList,
   getReviewUrl,
+  noPassLogin,
 } from '@/api/apis';
 
-const qrcode = require('./imgs/qrcode.jpg');
+import compFooter from '@/views/web/layout/footer.vue';
+// import compHeader from '@/views/web/layout/header.vue';
 
 export default {
   data() {
@@ -307,7 +295,8 @@ export default {
         { name: '财税公开课', href: '/open-class' },
         { name: '在线学习', href: '/online-class' },
       ],
-      isShowTips: localStorage.getItem('isShowTips') !== 'hide',
+      // isShowTips: false,
+      isShowTips: window.localStorage.getItem('isShowTips') !== 'hide',
       navIndex: 0, // 默认顶部导航选中index
       offset: 100,
       isShowEvaluation: false, // 是否显示测评
@@ -387,14 +376,6 @@ export default {
         scrollY: 200, // 展示返回顶部按钮的阈值
       },
 
-      footer: {
-        productName: '产品名称',
-        productIntro: '法规与咨询聚合平台',
-        customTel: '',
-        customTime: '',
-        qrcodeUrl: qrcode,
-      },
-
       timer: null,
       searchTimer: null,
       backToptimer: null,
@@ -429,7 +410,7 @@ export default {
         },
         'token':function(){
           if(this.token){
-            this.initUserInfo();
+            // this.initUserInfo();
             this.initReview();
           }
         },
@@ -439,8 +420,6 @@ export default {
 
     init() {
       this.aside.qq = this.COMMON_COMP_DATA.qq;
-      this.footer.customTel = this.COMMON_COMP_DATA.tel;
-      this.footer.customTime = this.COMMON_COMP_DATA.time;
       // 初始化用户信息
       this.initUserInfo();
       // 初始化导航位置
@@ -454,6 +433,21 @@ export default {
       // 初始化测评相关
       this.initReview();
     },
+    noPassLoginFn() {
+      // 免密登录
+      let params = {
+        username: '19931303211',
+        isOnce: 1,
+        taxNo: '12345678901234567890',
+        entName: '哈哈哈公司',
+      };
+      noPassLogin(params).then((res) => {
+        console.log(res);
+        // this.setToken(res.data.accessToken);
+      }).catch((err) => {
+        console.log(err);
+      });
+    },
     closeTips() {
       this.isShowTips = false;
       localStorage.setItem('isShowTips', 'hide');
@@ -461,9 +455,9 @@ export default {
     goDetail(item) {
       this.showSearchBox = false;
       if (this.searchResultType === 'online') {
-        this.$router.push({ path: '/online-detail', query: { id: item.id } });
+        this.$router.push({ path: '/online-detail', query: { cid: item.id } });
       } else {
-        this.$router.push({ path: '/detail', query: { id: item.id } });
+        this.$router.push({ path: '/detail', query: { cid: item.id } });
       }
     },
     getSearchTime(item) {
@@ -483,8 +477,9 @@ export default {
       if (this.searchResultType === 'online') {
         return `${item.learnNum}人在学`;
       }
-      let price = item.price ? `${item.price}元` : '免费';
-      return price;
+      // let price = item.price ? `${item.price}元` : '免费';
+      let city = item.address + item.city;
+      return city;
     },
     changeSearchTab(index, type) {
       this.searchTabIndex = index;
@@ -501,9 +496,15 @@ export default {
         this.getReviewUrlFn();
       }
     },
-    showEva() {
+    showEva(type) {
+      if (!this.token && type) {
+        // 直接去登录不提示
+        this.login();
+        return;
+      }
       if (this.token && this.evurl) {
         // 如果token存在且跳转地址存在 去测评
+        this.closeTips();
         window.open(this.evurl);
       } else if (!this.token) {
         // 否则 登录失效 去登录
@@ -549,8 +550,7 @@ export default {
     initUserInfo() {
       // 获取用户信息
       const code = getUrlParam('code');
-      if (this.token
-              && (!this.commonUserData || !this.commonUserData.userName)) {
+      if (this.token) {
         this.getUserInfoFn();
         return;
       }
@@ -767,8 +767,10 @@ export default {
       this.showUserBox = false;
       this.loginout();
     },
-
-
+  },
+  components: {
+    compFooter,
+    // compHeader,
   },
 };
 </script>
@@ -802,7 +804,8 @@ border-radius: 8px;
     font-size: 20px;
 }
 .cptip-dialog img{
-  width: 280px;
+  width: 270px;
+  height: 260px;
   display: block;
   margin: 30px auto 0 auto;
 }
@@ -818,6 +821,9 @@ border-radius: 8px;
   .register{
     margin-left: 0;
   }
+
+
+  /*开始迁移*/
   .logo-box{
     float: left;
     margin-top: 7px;
@@ -859,6 +865,12 @@ border-radius: 8px;
     box-sizing: border-box;
     cursor: pointer;
   }
+  .nav .item.online:hover{
+    color: #FFA489;
+  }
+  .nav .item.active{
+    color: #FB683C;
+  }
   .nav .slot-online{
     display: inline-block;
   }
@@ -875,7 +887,7 @@ border-radius: 8px;
   }
   .search-box-contain{
     max-width: 302px;
-    float: left;
+    float: right;
     margin-left: 10px;
   }
   .online-box{
@@ -942,27 +954,35 @@ border-radius: 8px;
 
   .online-nav-right-list li{
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: flex-start;
     flex-wrap: wrap;
     width: 820px;
-    margin-bottom: 20px;
+    /*margin-bottom: 20px;*/
     font-size: 14px;
     color: #868686;
-   min-height: 22px;
+   min-height: 42px;
     line-height: 22px;
     /*margin-top: 10px;*/
+    overflow: hidden\0;
+    box-sizing:border-box;
+    padding-left: 20%;
+    position: relative;
   }
   .online-nav-right-list li span{
     display: block;
-    width: 20%;
+    width: 25%;
     text-align: left;
     cursor: pointer;
     float: left\0;
+    margin-bottom: 20px;
   }
   .online-nav-right-list li .title{
     color: #444;
     font-weight: bold;
+    position: absolute;
+    width: 20%;
+    left: 0;
   }
 .el-icon-close{
   color: #fff;
@@ -1018,6 +1038,7 @@ border-radius: 8px;
   }
   .search-result-box{
     max-height: 412px;
+    padding: 5px;
     overflow-y: auto;
   }
   .search-result-box .tab{
@@ -1311,55 +1332,4 @@ border-radius: 8px;
       transform: rotateZ(45deg);
   }
 
-
-  /*页面底部*/
-  .footer{
-    height: 176px;
-  }
-  .footer .common-container-width{
-    height: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    overflow: hidden;
-  }
-  .footer .common-container-width>.item{
-    padding-top:50px\0;
-    float: left\0;
-    margin-right:3%\0;
-    width: 17%\0;
-  }
-  .footer .common-container-width>.w40{
-    width: 38%\0;
-  }
-  .footer .common-container-width>.w10{
-    width: 10%\0;
-    padding-top: 20px\0;
-  }
-  .footer .common-container-width>.item a{
-    margin-top: 50px\0;
-  }
-  img.qrcode{
-    width: 116px;
-    height: 116px;
-  }
-  .product{
-    line-height: 20px;
-    font-weight: bold;
-    font-size: 16px;
-    float: left\0;
-    box-sizing:border-box;
-    position: relative;
-  }
-  .product img{
-    /*position: absolute;*/
-    width: 80%;
-    height: auto;
-    display: block;
-  }
-  .product i{
-    font-style: normal;
-    font-size: 14px;
-    font-weight: normal;
-  }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="detailData" class="h5page">
+  <div v-if="detailData" class="common-h5-index h5page">
     <img class="banner" :src="detailData.pic" alt="detailData.title">
     <div class="nav">
       <span v-for="(item,index) in navlist"
@@ -28,7 +28,9 @@
         <div class="item" v-html="detailData.outline"></div>
         <div id="kcjh" class="title">课程计划</div>
         <div class="item" v-html="detailData.outline"></div>
-        <span @click="goSignUp" class="btn-sub">在线报名</span>
+        <span @click="goSignUp"
+        :class="{gray:detailData.state==1||detailData.state==2}"
+        class="btn-sub">在线报名</span>
     </div>
   </div>
 </template>
@@ -37,7 +39,7 @@ import {
   findOfflineCourseById,
 } from '@/api/apis';
 import { formatDate } from '@/assets/utils/timefn';
-import { setScrollTop } from '@/assets/utils/util';
+import { setScrollTop, getUrlParam } from '@/assets/utils/util';
 
 export default {
   name: 'h5page',
@@ -75,7 +77,9 @@ export default {
   },
   computed: {
     getDay() {
-      return this.detailData.endTime - this.detailData.startTime;
+      let day = (this.detailData.endTime - this.detailData.startTime) / (24 * 60 * 60 * 1000);
+
+      return parseInt(day, 10) + 1;
     },
     getTime() {
       return `${formatDate(this.detailData.startTime)}~${formatDate(this.detailData.endTime)}`;
@@ -83,15 +87,28 @@ export default {
   },
   methods: {
     init() {
-      this.courseId = parseInt(this.$route.query.id, 10);
+      this.courseId = parseInt(this.$route.query.cid, 10);
+      const code = getUrlParam('code');
+      if (code) {
+        this.getTokenByCode();
+      }
       // 初始化二维码
       // 获取详情内容
       this.findOfflineCourseByIdFn();
     },
     goSignUp() {
+      const code = getUrlParam('code');
       // 在线报名
+      if (this.detailData.state === '1' || this.detailData.state === '2') {
+        return;
+      }
+
+      if (!code || !this.token) {
+        this.login();
+        return;
+      }
       if (this.courseId) {
-        this.$router.push({ path: '/h5/signup', query: { id: this.courseId } });
+        this.$router.push({ path: '/h5/signup', query: { cid: this.courseId } });
       }
     },
     changeTab(index, item) {
@@ -112,6 +129,11 @@ export default {
         findOfflineCourseById({ id: this.courseId }).then((res) => {
           if (res.data.code === '0000') {
             this.detailData = res.data.data;
+          } else {
+            this.$message({
+              message: '公开课详情获取失败，请稍后再试',
+              type: 'warning',
+            });
           }
         }).catch((err) => {
           console.log(err);
@@ -125,16 +147,19 @@ export default {
   },
 };
 </script>
+
 <style scoped>
   .h5page{
     display: block;
     width: 100%;
     padding-bottom: 70px;
     position: relative;
+
   }
   .banner{
     display: block;
     width: 100%;
+    max-height: 177px;
   }
   .nav{
     border-bottom: 1px solid #d4d4d4;
@@ -220,7 +245,17 @@ export default {
     left: 50%;
     margin-left: -96px;
   }
+  .item{
+    width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    padding-right: 15px;
+  }
   .item img{
     width: 100%;
+    height: auto;
+  }
+  .gray{
+    background: #ccc;
   }
 </style>

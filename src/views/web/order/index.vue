@@ -34,14 +34,19 @@
     </BaseTitle>
     <div class="invoice">
       <span v-if="isSaveInviceForm">
-      {{invoiceForm.createType == '0' ? '电票' : '纸票'}}
-      {{invoiceTypes[invoiceForm.invoiceType].text}}</span>
-      <span v-else>
-        未保存发票信息
+      {{invoiceTypes[invoiceForm.invoiceType].text}}<!--
+       -->（{{invoiceForm.createType == '0' ? '电子发票' : '纸质发票'}}）
+      &ensp;&ensp;&ensp;&ensp;&ensp;
+      {{invoiceForm.titleType=='0'? '个人' : '公司'}}
+      &ensp;&ensp;&ensp;&ensp;&ensp;
+      {{invoiceForm.content}}
       </span>
-      <span v-if="invoiceForm.title!=''">{{invoiceForm.titleType=='0'?'个人':'公司'}}</span>
-      <span v-if="invoiceForm.title!=''">{{invoiceForm.content}}</span>
-      <span class="btn-edit" @click="isShowInvoice=true">修改</span>
+      <span v-else>
+        本次不开具发票
+      </span>
+      <!-- <span v-if="invoiceForm.title!=''">{{invoiceForm.titleType=='0'?'个人':'公司'}}</span>
+      <span v-if="invoiceForm.title!=''">{{invoiceForm.content}}</span> -->
+      <span class="btn-edit" @click="isShowInvoiceFn(true)">修改</span>
     </div>
 
     <div class="btns">
@@ -50,13 +55,15 @@
         <div class="order-type"
         v-if="ordertype == 0 && order.discount>0">
         订单金额 = 原价(￥{{order.oldmoney}})- 优惠(￥{{order.discount}})</div>
+        <template v-if="ordertype == 1 && orderTypeList.length>0">
         <el-popover
           placement="bottom"
           width="283"
-          trigger="hover">
+          v-model.trim="visible"
+          trigger="click">
           <div class="order-type type1 reference"
           slot="reference"
-          v-if="ordertype == 1 && orderTypeList.length>0">
+          >
               <span>{{orderTypeList[orderTypeIndex].text}}</span>
               <span class="icon-triangle"></span>
           </div>
@@ -69,6 +76,7 @@
             </li >
           </ul>
         </el-popover>
+        </template>
         <span @click="createOrderInfoFn()" class="btn-sub">提交订单</span>
       </div>
     </div>
@@ -78,7 +86,7 @@
     <div class="mask" v-show="isShowInvoice"></div>
     <div class="dialog-invoice" v-show="isShowInvoice">
       <span class="el-icon-close"
-      @click="isShowInvoice=false"></span>
+      @click="isShowInvoiceFn(false)"></span>
       <h4>发票信息</h4>
       <div class="type-btns">
         <span class="pointer"
@@ -100,16 +108,37 @@
       class="invoice-form">
         <div v-if="invoiceForm.invoiceType==0" class="card-type">
         <el-form-item label="抬头类型">
-          <el-radio v-model="invoiceForm.titleType" label="0">个人</el-radio>
-          <el-radio v-model="invoiceForm.titleType" label="1">公司</el-radio>
+          <el-radio v-model.trim="invoiceForm.titleType" label="0">个人</el-radio>
+          <el-radio v-model.trim="invoiceForm.titleType" label="1">公司</el-radio>
         </el-form-item>
         </div>
-        <el-form-item :label="label" prop="title">
+        <el-form-item v-if="invoiceForm.invoiceType == 0"
+        :label="label" prop="title">
         <div class="form-item">
-          <el-input type="text"
+          <input type="text"
+          v-model.trim="invoiceForm.title"
+          @blur="validateFieldFn('title')"
+          autocomplete="off"
           placeholder="请填写发票抬头"
-          v-model="invoiceForm.title">
-          </el-input>
+          class="el-input__inner">
+          <div class="iebug"></div>
+        </div>
+         </el-form-item>
+         <el-form-item
+         v-else
+        :label="label" prop="title1">
+        <div class="form-item">
+<!--           <el-input type="text"
+          placeholder="请填写公司名称"
+          v-model.trim="invoiceForm.title1">
+          </el-input> -->
+           <input type="text"
+          v-model.trim="invoiceForm.title1"
+          @blur="validateFieldFn('title1')"
+          autocomplete="off"
+          placeholder="请填写公司名称"
+          class="el-input__inner">
+          <div class="iebug"></div>
         </div>
          </el-form-item>
 
@@ -117,51 +146,86 @@
          <el-form-item v-if="invoiceForm.titleType == '1'"
          label="纳税人识别号" prop="taxNo">
          <div class="form-item">
-              <el-input type="text"
+             <!--  <el-input type="text"
               placeholder="请填写纳税人识别号"
-              v-model="invoiceForm.taxNo">
-              </el-input>
+              v-model.trim="invoiceForm.taxNo">
+              </el-input> -->
+                <input type="text"
+          v-model.trim="invoiceForm.taxNo"
+          @blur="validateFieldFn('taxNo')"
+          autocomplete="off"
+          placeholder="请填写纳税人识别号"
+          class="el-input__inner">
+              <div class="iebug"></div>
           </div>
         </el-form-item>
 
         <el-form-item v-if="invoiceForm.invoiceType === '1'"
          label="注册地址" prop="address">
          <div class="form-item">
-              <el-input type="text"
+              <!-- <el-input type="text"
               placeholder="请填写注册地址"
-              v-model="invoiceForm.address">
-              </el-input>
+              v-model.trim="invoiceForm.address">
+              </el-input> -->
+              <input type="text"
+          v-model.trim="invoiceForm.address"
+          @blur="validateFieldFn('address')"
+          autocomplete="off"
+          placeholder="请填写注册地址"
+          class="el-input__inner">
+              <div class="iebug"></div>
           </div>
         </el-form-item>
 
         <el-form-item v-if="invoiceForm.invoiceType === '1'"
          label="注册电话" prop="phone">
          <div class="form-item">
-              <el-input type="text"
+              <!-- <el-input type="text"
               placeholder="请填写注册电话"
-              v-model="invoiceForm.phone">
-              </el-input>
+              v-model.trim="invoiceForm.phone">
+              </el-input> -->
+              <input type="text"
+          v-model.trim="invoiceForm.phone"
+          @blur="validateFieldFn('phone')"
+          autocomplete="off"
+          placeholder="请填写注册电话"
+          class="el-input__inner">
+              <div class="iebug"></div>
           </div>
         </el-form-item>
 
         <el-form-item v-if="invoiceForm.invoiceType === '1'"
          label="开户银行" prop="bankName">
          <div class="form-item">
-              <el-input type="text"
+              <!-- <el-input type="text"
               placeholder="请填写开户银行"
-              v-model="invoiceForm.bankName">
-              </el-input>
+              v-model.trim="invoiceForm.bankName">
+              </el-input> -->
+              <input type="text"
+          v-model.trim="invoiceForm.bankName"
+          @blur="validateFieldFn('bankName')"
+          autocomplete="off"
+          placeholder="请填写开户银行"
+          class="el-input__inner">
+              <div class="iebug"></div>
           </div>
         </el-form-item>
 
 
         <el-form-item v-if="invoiceForm.invoiceType === '1'"
-         label="开户账户" prop="bankNo">
+         label="银行账户" prop="bankNo">
          <div class="form-item">
-              <el-input type="text"
-              placeholder="请填写开户账户"
-              v-model="invoiceForm.bankNo">
-              </el-input>
+             <!--  <el-input type="text"
+              placeholder="请填写银行账户"
+              v-model.trim="invoiceForm.bankNo">
+              </el-input> -->
+              <input type="text"
+          v-model.trim="invoiceForm.bankNo"
+          @blur="validateFieldFn('bankNo')"
+          autocomplete="off"
+          placeholder="请填写银行账户"
+          class="el-input__inner">
+              <div class="iebug"></div>
           </div>
         </el-form-item>
 
@@ -180,32 +244,66 @@
           发票内容将显示本单课程所属类别及价格信息
         </div>
 
-        <el-form-item label="收票人手机" prop="userPhone">
+        <div class="pd100 card-type">
+          <el-radio
+          v-show="invoiceForm.invoiceType === '0'"
+          v-model.trim="invoiceForm.createType"
+          label="0">电子发票</el-radio>
+          <el-radio v-model.trim="invoiceForm.createType" label="1">纸质发票</el-radio>
+          <span>(满300包邮)</span>
+        </div>
+
+        <el-form-item
+        v-if="invoiceForm.createType === '1'"
+        label="收票人姓名"
+        prop="contactName">
         <div class="form-item">
-          <el-input type="text"
+         <!--  <el-input type="text"
+          placeholder="请填写收票人姓名"
+          v-model.trim="invoiceForm.contactName">
+          </el-input> -->
+           <input type="text"
+          v-model.trim="invoiceForm.contactName"
+          @blur="validateFieldFn('contactName')"
+          autocomplete="off"
+          placeholder="请填写收票人姓名"
+          class="el-input__inner">
+          <div class="iebug"></div>
+      </div>
+        </el-form-item>
+
+        <el-form-item label="收票人手机" prop="mobile">
+        <div class="form-item">
+          <!-- <el-input type="text"
           placeholder="请填写收票人手机号"
-          v-model="invoiceForm.userPhone">
-          </el-input>
+          v-model.trim="invoiceForm.mobile">
+          </el-input> -->
+          <input type="text"
+          v-model.trim="invoiceForm.mobile"
+          @blur="validateFieldFn('mobile')"
+          autocomplete="off"
+          placeholder="请填写收票人手机号"
+          class="el-input__inner">
+          <div class="iebug"></div>
       </div>
         </el-form-item>
 
         <el-form-item v-if="invoiceForm.createType == '0'" label="收票人邮箱" prop="email">
         <div class="form-item">
-          <el-input type="text"
+          <!-- <el-input type="text"
           placeholder="请填写收票人邮箱"
-          v-model="invoiceForm.email">
-          </el-input>
+          v-model.trim="invoiceForm.email">
+          </el-input> -->
+            <input type="text"
+          v-model.trim="invoiceForm.email"
+          @blur="validateFieldFn('email')"
+          autocomplete="off"
+          placeholder="请填写收票人邮箱"
+          class="el-input__inner">
+          <div class="iebug"></div>
       </div>
         </el-form-item>
 
-        <div class="pd100 card-type">
-          <el-radio
-          v-show="invoiceForm.invoiceType === '0'"
-          v-model="invoiceForm.createType"
-          label="0">电票</el-radio>
-          <el-radio v-model="invoiceForm.createType" label="1">纸票</el-radio>
-          <span>(满300包邮)</span>
-        </div>
 
         <div
         v-if="invoiceForm.createType === '1' && options.length>0"
@@ -214,7 +312,7 @@
           <div class="form-item">
             <el-cascader
               :options="options"
-              v-model="selectedOptions"
+              v-model.trim="selectedOptions"
             ></el-cascader>
           </div>
         </div>
@@ -222,13 +320,21 @@
         <el-form-item
         v-if="invoiceForm.createType === '1' ||
          invoiceForm.invoiceType === '1'"
-        label="详细地址" prop="userAddress">
+        label="详细地址" prop="contactAddress">
         <div class="form-item">
-          <el-input type="textarea"
+          <textarea
+          v-model.trim="invoiceForm.contactAddress"
+          @blur="validateFieldFn('contactAddress')"
+          autocomplete="off"
+          placeholder="请填写收票人详细地址"
+          class="el-textarea__inner"
+          style="resize: none; min-height: 33px;">
+          </textarea>
+         <!--  <el-input type="textarea"
           resize="none"
           placeholder="请填写收票人详细地址"
-          v-model="invoiceForm.userAddress">
-          </el-input>
+          v-model.trim="invoiceForm.contactAddress">
+          </el-input> -->
         </div>
         </el-form-item>
         </div>
@@ -255,6 +361,7 @@ import {
   validByEmail,
   validByTel,
   validByBankNo,
+  validByPersonNo,
 } from '@/assets/utils/validator';
 
 export default {
@@ -264,6 +371,7 @@ export default {
       name: 'order',
       pageType: 'classOrder',
       label: '发票抬头',
+      visible: false,
       payIndex: 0,
       courseId: 1,
       type: 1, // 1线上视频课 2线下课 3线上专题课
@@ -312,29 +420,50 @@ export default {
       ],
       invoiceForm: {
         titleType: '0', // 0个人 1单位
+
         title: '', // 抬头
-        company: '', // 单位名称
         invoiceType: '0', // 发票类型 0.普票 1.专票
         content: '课程明细',
         taxNo: '', // 纳税人识别号
         classType: '',
-        userPhone: '',
+        mobile: '',
         email: '',
         createType: '0', // 开票方式 0.电子 1.纸票
-        userAddress: '',
-        prov: '',
-        city: '',
-        area: '',
+        contactAddress: '',
+        contactProvince: '',
+        contactCity: '',
+        contactCounty: '',
         bankNo: '', // 开户账户
         address: '', // 注册地址
         phone: '', // 注册电话
         bankName: '', // 开户行
+        contactName: '', // 收票人姓名
       },
+      invoiceFormBak: null, // 备份invoiceForm数据
       rules: {
         title: [
           {
             required: true,
             message: '请填写发票抬头',
+            trigger: 'blur',
+          },
+          {
+            min: 2,
+            max: 50,
+            message: '发票抬头请控制在2-50字内',
+            trigger: 'blur',
+          },
+        ],
+        title1: [
+          {
+            required: true,
+            message: '请填写公司名称',
+            trigger: 'blur',
+          },
+          {
+            min: 2,
+            max: 50,
+            message: '公司名称请控制在2-50字内',
             trigger: 'blur',
           },
         ],
@@ -344,27 +473,44 @@ export default {
             message: '请填写纳税人识别号',
             trigger: 'blur',
           },
-        ],
-        bankNo: [
-          {
-            required: true,
-            message: '请填写开户账户',
-            trigger: 'blur',
-          },
           {
             validator: (rule, value, callback) => {
-              if (value && !validByBankNo(value)) {
-                callback(new Error('开户账户格式有误'));
+              if (!validByPersonNo(value)) {
+                callback(new Error('纳税人识别号格式错误，请重新填写'));
               } else {
                 callback();
               }
             },
+            trigger: 'blur',
+          },
+        ],
+        bankNo: [
+          {
+            required: true,
+            message: '请填写银行账户',
+            trigger: 'blur',
+          },
+          {
+            validator: (rule, value, callback) => {
+              if (!validByBankNo(value)) {
+                callback(new Error('银行卡格式错误，请重新填写'));
+              } else {
+                callback();
+              }
+            },
+            trigger: 'blur',
           },
         ],
         address: [
           {
             required: true,
             message: '请填写注册地址',
+            trigger: 'blur',
+          },
+          {
+            min: 1,
+            max: 50,
+            message: '地址过长，请控制在50字内',
             trigger: 'blur',
           },
         ],
@@ -377,11 +523,25 @@ export default {
           {
             validator: (rule, value, callback) => {
               if (value && !validByTel(value) && this.invoiceForm.titleType === '1') {
-                callback(new Error('注册电话格式有错'));
+                callback(new Error('电话格式错误，请重新填写'));
               } else {
                 callback();
               }
             },
+            trigger: 'blur',
+          },
+        ],
+        contactName: [
+          {
+            required: true,
+            message: '请填写收票人姓名',
+            trigger: 'blur',
+          },
+          {
+            min: 2,
+            max: 20,
+            message: '收票人姓名控制在2-20个字',
+            trigger: 'blur',
           },
         ],
         bankName: [
@@ -391,7 +551,7 @@ export default {
             trigger: 'blur',
           },
         ],
-        userPhone: [
+        mobile: [
           {
             required: true,
             message: '请填写收票人手机号',
@@ -400,7 +560,7 @@ export default {
           {
             min: 11,
             max: 11,
-            message: '长度等于11个字符',
+            message: '手机号格式错误，请重新填写',
             trigger: 'blur',
           },
           {
@@ -411,7 +571,8 @@ export default {
                 callback();
               }
             },
-            message: '手机号格式不对',
+            trigger: 'blur',
+            message: '手机号格式错误，请重新填写',
           },
         ],
         email: [
@@ -424,17 +585,24 @@ export default {
             validator: (rule, value, callback) => {
               if (value && !validByEmail(value)
                             && this.invoiceForm.createType === '0') {
-                callback(new Error('收票人邮箱格式有误'));
+                callback(new Error('邮箱格式错误，请重新填写'));
               } else {
                 callback();
               }
             },
+            trigger: 'blur',
           },
         ],
-        userAddress: [
+        contactAddress: [
           {
             required: true,
             message: '请填写收票人详细地址',
+            trigger: 'blur',
+          },
+          {
+            min: 1,
+            max: 50,
+            message: '地址过长，请控制在50字内',
             trigger: 'blur',
           },
         ],
@@ -472,7 +640,7 @@ export default {
           title: '课程信息',
           dataName: 'classData',
           styleObj: {
-            width: '40%',
+            width: '47%',
           },
         },
         {
@@ -480,7 +648,7 @@ export default {
           title: '数量',
           dataName: 'num',
           styleObj: {
-            width: '20%',
+            width: '16%',
           },
         },
         {
@@ -488,7 +656,7 @@ export default {
           title: '金额',
           dataName: 'money',
           styleObj: {
-            width: '20%',
+            width: '16%',
           },
         },
         {
@@ -525,14 +693,30 @@ export default {
   mounted() {
     this.init();
   },
+  watch: {
+    'invoiceForm.titleType': {
+      handler() {
+        console.log('切换titleType');
+        this.initFormValidate();
+      },
+      deep: true,
+    },
+    'invoiceForm.createType': {
+      handler() {
+        console.log('切换createType');
+        this.initFormValidate();
+      },
+      deep: true,
+    },
+  },
   methods: {
     init() {
       // 初始化参数 课程id 课程类型 vip相关 报名id
       this.pageType = this.$route.query.ptype || 'classOrder';
       this.vip.level = this.$route.query.level || '';
-      this.vip.money = this.$route.query.money || '';
-      this.courseId = this.$route.query.id
-        ? parseInt(this.$route.query.id, 10) : '';
+      this.vip.money = this.$route.query.money || 0;
+      this.courseId = this.$route.query.cid
+        ? parseInt(this.$route.query.cid, 10) : '';
       this.type = this.$route.query.type
         ? parseInt(this.$route.query.type, 10) : '';
       this.sid = this.$route.query.sid
@@ -553,6 +737,14 @@ export default {
       this.locationsFn();
       // 获取权益信息
       this.queryEquityFn();
+    },
+    isShowInvoiceFn(type) {
+      this.isShowInvoice = type;
+      if (type) {
+        this.invoiceFormBak = JSON.parse(JSON.stringify(this.invoiceForm));
+      } else {
+        this.invoiceForm = JSON.parse(JSON.stringify(this.invoiceFormBak));
+      }
     },
     queryEquityFn() {
       // 获取权益 '0  线上   1 线下
@@ -578,6 +770,7 @@ export default {
                 : '使用权益无限次数',
               value: '1',
             };
+            console.log(this.orderTypeList);
           }
         } else {
           this.ordertype = 0;
@@ -594,6 +787,7 @@ export default {
     checkInvoiceType(index) {
       // 增值税发票， 普通发票
       this.invoiceForm.invoiceType = `${index}`;
+      this.initFormValidate();
       if (index === 1) {
         this.label = '公司名称';
         this.invoiceForm.createType = '1';
@@ -601,6 +795,19 @@ export default {
       } else {
         this.label = '发票抬头';
       }
+    },
+    validateFieldFn(prop) {
+      let curForm = this.$refs.invoiceForm.validate
+        ? this.$refs.invoiceForm
+        : this.$refs.invoiceForm[0];
+      curForm.validateField([prop]);
+    },
+    initFormValidate() {
+      let curForm = this.$refs.invoiceForm.validate
+        ? this.$refs.invoiceForm
+        : this.$refs.invoiceForm[0];
+
+      curForm.clearValidate();
     },
 
     initVipOrder() {
@@ -635,19 +842,56 @@ export default {
         });
       }
     },
+    getCityByVal() {
+      let arr = this.options;
+      let provVal = this.selectedOptions[0];
+      let cityVal = this.selectedOptions[1];
+      let countyVal = this.selectedOptions[2];
+      let obj = {
+        contactProvince: '',
+        contactCity: '',
+        contactCounty: '',
+      };
+      arr.forEach((item) => {
+        if (item.value === provVal) {
+          obj.contactProvince = item.label;
+          let citys = item.children;
+          citys.forEach((city) => {
+            if (city.value === cityVal) {
+              obj.contactCity = city.label;
+              let countys = city.children;
+              countys.forEach((county) => {
+                if (county.value === countyVal) {
+                  obj.contactCounty = county.label;
+                }
+              });
+            }
+          });
+        }
+      });
+
+      console.log(obj);
+      return obj;
+    },
     createOrderInfoFn() {
       // 生成订单
       this.createOrderInfoParam.goodsType = this.type;
       this.createOrderInfoParam.id = this.sid;
       this.createOrderInfoParam.ids = [{ id: this.courseId }];
       this.createOrderInfoParam.right = this.orderTypeIndex > 0 ? 1 : 0;
+      if (this.invoiceForm.invoiceType === '1') {
+        this.invoiceForm.title = this.invoiceForm.title1;
+      }
       if (this.isSaveInviceForm) {
+        console.log(this.getCityByVal());
         this.createOrderInfoParam.invoiceInfo = {
           ...this.invoiceForm,
+          ...this.getCityByVal(),
         };
       } else {
         this.createOrderInfoParam.invoiceInfo = {};
       }
+
 
       createOrderInfo(this.createOrderInfoParam).then((res) => {
         console.log(res);
@@ -655,6 +899,16 @@ export default {
           this.goPayOrder(res.data.data);
         } else if (res.data.code === '0008') {
           this.goPayOrder(res.data.orderId, true, res.data.tkm);
+        } else if (res.data.code === '0002') {
+          this.$message({
+            message: '因账号缓存被清除，请重新登录',
+            type: 'warning',
+          });
+        } else {
+          this.$message({
+            message: '生成订单出错，请稍后再试',
+            type: 'warning',
+          });
         }
       }).catch((err) => {
         console.log(err);
@@ -693,6 +947,7 @@ export default {
     },
     checkOrderList(index) {
       this.orderTypeIndex = index;
+      this.visible = false;
     },
     goPayOrder(orderId, success, tkm) {
       if (success) {
@@ -778,12 +1033,15 @@ export default {
           console.log('提交成功');
           this.isShowInvoice = false;
           this.isSaveInviceForm = true;
+          this.invoiceFormBak = JSON.parse(JSON.stringify(this.invoiceForm));
           if (type === 1) {
             this.createOrderInfoFn();
           }
         }
       });
     },
+
+    /* eslint-enable */
   },
   components: {
     Step,
@@ -850,10 +1108,16 @@ export default {
     align-items: center;
     justify-content: space-between;
     overflow: hidden\0;
+    margin-bottom: 10px;
+  }
+  .top-step .title{
+    position: relative;
+    top: -3px;
   }
   .step-box{
     float: right\0;
     width: 340px;
+
   }
   .title{
     font-size: 16px;
@@ -968,6 +1232,7 @@ export default {
   }
   .form-item{
     width: 286px;
+    position: relative\0;
   }
   .dialog-invoice h4{
   letter-spacing: -0.39px;
@@ -1011,6 +1276,9 @@ margin-bottom: 20px;
   }
   .pd100{
     padding-left: 110px;
+  }
+  .card-type{
+    margin-bottom: 20px;
   }
   .card-type span{
     color: #868686;

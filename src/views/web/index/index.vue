@@ -130,11 +130,11 @@ export default {
         // 去线下详情页
         this.$router.push({
           path: '/detail',
-          query: { id: item.courseOfflineEntity.id },
+          query: { cid: item.courseOfflineEntity.id },
         });
       } else if (type === 'online') {
         // 线上课详情页
-        this.$router.push({ path: '/online-detail', query: { id: item.id } });
+        this.$router.push({ path: '/online-detail', query: { cid: item.id } });
       }
     },
 

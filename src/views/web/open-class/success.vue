@@ -25,7 +25,7 @@ export default {
   },
   methods: {
     init() {
-      this.id = this.$route.query.id || '';
+      this.id = this.$route.query.cid || '';
       this.sid = this.$route.query.sid || '';
       this.type = this.$route.query.type || '';
     },
@@ -37,7 +37,7 @@ export default {
         this.$router.push({
           path: '/order',
           query: {
-            id: this.id,
+            cid: this.id,
             type: this.type,
             sid: this.sid,
           },
@@ -76,6 +76,7 @@ letter-spacing: -0.68px;
 }
 .btns{
   width: 300px;
+  width: 280px\0;
   margin: 20px auto;
   display: flex;
   justify-content: space-between;
@@ -83,10 +84,10 @@ letter-spacing: -0.68px;
 }
 .btns span{
   cursor: pointer;
-  float: left\0;
+  float: right\0;
 }
 .btns .gray{
   background: #ccc;
-  float: right;
+  float: left\0;
 }
 </style>

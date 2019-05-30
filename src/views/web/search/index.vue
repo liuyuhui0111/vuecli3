@@ -171,14 +171,14 @@ export default {
       console.log(item);
       if (this.tabindex === 1) {
         // 公开课
-        this.$router.push({ path: '/detail', query: { id: item.id } });
+        this.$router.push({ path: '/detail', query: { cid: item.id } });
       } else {
         // 线上课
-        this.$router.push({ path: '/online-detail', query: { id: item.id } });
+        this.$router.push({ path: '/online-detail', query: { cid: item.id } });
       }
     },
     routerGoOnline(item) {
-      this.$router.push({ path: '/online-detail', query: { id: item.id } });
+      this.$router.push({ path: '/online-detail', query: { cid: item.id } });
     },
     getCourseListFn() {
       // 查询最新课程列表

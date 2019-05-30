@@ -87,13 +87,28 @@ export default {
   },
   methods: {
     init() {
-      this.courseId = this.$route.query.id;
+      this.courseId = this.$route.query.cid;
     },
     submitForm() {
+      if (!this.token) {
+        this.$message({
+          message: '登录状态过期，请重新登录',
+          type: 'warning',
+          duration: 2000,
+        });
+        return;
+      }
       if (!this.onlineForm.name) {
         this.$message({
-          showClose: true,
           message: '请输入称呼',
+          type: 'warning',
+          duration: 2000,
+        });
+        return;
+      }
+      if (this.onlineForm.name.length < 2 || this.onlineForm.name.length > 4) {
+        this.$message({
+          message: '姓名长度请控制在2~4个字内',
           type: 'warning',
           duration: 2000,
         });
@@ -123,17 +138,28 @@ export default {
         });
         return;
       }
-      if (!this.onlineForm.work) {
+      if (this.onlineForm.comp.length > 50) {
         this.$message({
-          message: '请输入职位',
+          message: '公司名称过长，请控制在50字内',
           type: 'warning',
           duration: 2000,
         });
         return;
       }
-      if (!this.onlineForm.message) {
+      if (this.onlineForm.work.length > 10) {
         this.$message({
-          message: '请输入您要咨询的问题',
+          message: '职位名字过长，请控制在10字内',
+          type: 'warning',
+          duration: 2000,
+        });
+        return;
+      }
+
+      if (this.onlineForm.message
+        && (this.onlineForm.message.length < 2
+          || this.onlineForm.message.length > 50)) {
+        this.$message({
+          message: '咨询内容请控制在2-50字以内',
           type: 'warning',
           duration: 2000,
         });
@@ -160,20 +186,18 @@ export default {
         this.isCanSub = true;
         if (res.data.code === '0000') {
           // this.detailData = res.data.data
-          let oThis = this;
+          this.$router.replace({ path: '/h5/success' });
+        } else {
           this.$message({
-            message: '报名成功',
-            type: 'success',
-            onClose() {
-              oThis.$router.replace({ path: '/h5/success' });
-            },
+            message: '报名失败，请稍后再试',
+            type: 'warning',
           });
         }
       }).catch((err) => {
         this.isCanSub = true;
         console.log(err);
         this.$message({
-          message: '公开课详情获取失败，请稍后再试',
+          message: '报名失败，请稍后再试',
           type: 'warning',
         });
       });
@@ -181,6 +205,11 @@ export default {
   },
 };
 </script>
+<style>
+  .common-h5-signup .el-form-item{
+    margin-bottom: 0;
+  }
+</style>
 <style scoped>
   .form{
     display: block;

@@ -122,13 +122,15 @@ export default {
       line-height: 78px\0;
     }
     .contain .classData .item .img-box{
-
-      width: 50%;
+      width: 60%;
       box-sizing:border-box;
       display: flex;
       align-items: center;
       justify-content: flex-start;
       float: left\0;
+    }
+    .img-box .title{
+      padding-right: 20px;
     }
 
     .contain .classData .item img{
@@ -138,11 +140,11 @@ export default {
       float: left\0;
     }
     .contain .num{
-      width: 25%;
+      width: 20%;
       float: left\0;
     }
     .contain .money{
-      width: 25%;
+      width: 20%;
        float: left\0;
     }
     .contain .money span{
