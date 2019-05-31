@@ -8,7 +8,14 @@
               :key="index">
                 <div class="teacher-box pointer">
                     <div class="photo">
-                        <img :src="item.headPic" :alt="item.name">
+                        <!-- <img :src="item.headPic" :alt="item.name"> -->
+                        <baseImg
+                        :width="130"
+                        :height="130"
+                        :defaultSrc="defaultUrl"
+                        :src="item.headPic"
+                        :alt="item.name">
+                        </baseImg>
                     </div>
                     <p class="name">{{item.name}}</p>
                     <p class="intro" v-html="item.individualResume"></p>
@@ -28,11 +35,13 @@
 </template>
 <script>
 require('@/plugins/swiper/swiper.min');
+const defaultPhotoUrl = require('@/views/imgs/default.png');
 
 export default {
   data() {
     return {
       name: 'teacher-swiper',
+      defaultUrl: defaultPhotoUrl, // 默认头像
       swiperOption: {
         slidesPerView: 3,
         slidesPerGroup: 3,

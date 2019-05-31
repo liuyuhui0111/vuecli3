@@ -241,7 +241,7 @@
           </span >
         </div>
         <div class="invoice-tip pd100">
-          发票内容将显示本单课程所属类别及价格信息
+          发票内容将显示本单课程{{invoiceForm.content}}及价格信息
         </div>
 
         <div class="pd100 card-type">

@@ -13,7 +13,7 @@
       :key="index">
         <template v-if="item != null">
         <h3 class="level">{{item.name}}会员</h3>
-        <p class="intro ellipsis2">{{item.remark}}</p>
+        <p class="intro ellipsis2">{{item.introduce}}</p>
         <ul v-if="item.equityDtoList" class="list">
           <li v-for="(list,index) in item.equityDtoList"
           :class="{active:list.tickType == '1'}"

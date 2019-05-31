@@ -47,8 +47,7 @@
     </div>
 
     <div v-if="commonCenterData && commonCenterData.tips=='0'" class="center-tips">
-        <p>请注意！<br>
-        您未参加已购买的线下课，本次权益已退回到您的账户。下次购买线下课可直接消耗。 </p>
+        <p>请注意！您购买的课程权益已退回，下次购买课程可直接消耗。 </p>
     </div>
 
 

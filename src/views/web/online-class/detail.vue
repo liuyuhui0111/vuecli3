@@ -150,7 +150,7 @@
              收藏
            </span>
           <span @click="showDialog(0)"
-          class="icon-mes">评论</span>
+          class="icon-mes">评价</span>
         </div>
       </div>
 

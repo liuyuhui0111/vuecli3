@@ -1,5 +1,5 @@
 let baseProxyUrl = '';
-let publicPath = '/course/'; // 生产环境发布路径
+let publicPath = process.env.NODE_ENV === 'development' ? '/' : '/course/'; // 生产环境发布路径
 /*eslint-disable*/
 // 线下课相关接口
 // let apiOffline = ['/offline', 'offlineUnLogin', '/orderUnLogin', '/orderInfo', '/orderId'];
@@ -34,10 +34,13 @@ Object.keys(proxyData).forEach((key) => {
     });
 });
 
+console.log('publicPath=============',publicPath)
+console.log('VUE_APP_ENV=============',process.env.VUE_APP_ENV)
+console.log('NODE_ENV=============',process.env.NODE_ENV)
 
 module.exports = {
     // 基本路径
-    publicPath: process.env.NODE_ENV === 'development' ? '/' : publicPath,
+    publicPath: publicPath,
     lintOnSave: process.env.NODE_ENV !== 'production',
     devServer: {
         proxy,

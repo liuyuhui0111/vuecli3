@@ -449,7 +449,7 @@ export default {
       return parseInt(day, 10) + 1;
     },
     getTime() {
-      return `${formatDate(this.detailData.startTime)}~${formatDate(this.detailData.endTime)}`;
+      return `${formatDate(this.detailData.startTime, 'true')} ~ ${formatDate(this.detailData.endTime, 'true')}`;
     },
   },
   methods: {
@@ -716,7 +716,7 @@ export default {
   display: block;
   width: 100%;
   position: relative;
-  padding-left: 99px;
+  padding-left: 109px;
   min-height: 130px;
   box-sizing:border-box;
   word-break: break-all;
@@ -724,7 +724,7 @@ export default {
 }
 .teacher-box .img-box{
   position: absolute;
-  width: 89px;
+  width: 109px;
   left: 0;
   top: 0;
   text-align: center;
@@ -733,12 +733,14 @@ export default {
   font-size: 14px;
   display: inline-block;
   line-height: 16px;
+  padding-left: 20px;
 }
 .teacher-box .img-box .img{
   width: 89px;
   height: 89px;
   border-radius: 100%;
   overflow: hidden;
+  margin: 0 auto;
 }
 .teacher-box .img-box .name{
   margin-top: 10px;

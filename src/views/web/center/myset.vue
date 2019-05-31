@@ -3,9 +3,18 @@
    <Title title="我的设置"
     @navclick="navclick"
     :list="list"></Title>
-    <div v-if="src.length>0" class="iframe-box">
-      <iframe :src="iframeSrc" frameborder="0"></iframe>
-    </div>
+    <template v-if="src.length>0">
+        <div v-for="(item,index) in src"
+        v-show="index == curnav"
+        :key="index"
+        class="iframe-box">
+        <iframe :id="index" :src="item.src" frameborder="0"></iframe>
+        </div >
+    </template>
+
+    <!-- <div v-="src.length>0" class="iframe-box">
+      <iframe id="iframe" :src="iframeSrc" frameborder="0"></iframe>
+    </div> -->
   </div>
 </template>
 <script>
@@ -46,15 +55,28 @@ export default {
       // https://devpassport.ele12.cn/course_authentication/require#/safeSet?token=
       // 修改密码
       // https://devpassport.ele12.cn/course_authentication/require#/cPass?token=
+      /*eslint-disable*/ 
       this.src = [
-        `${window.COMMON_ENV.SSO_URL}/course_authentication/require#/safeSet?token=${this.token}`,
-        `${window.COMMON_ENV.SSO_URL}/course_authentication/require#/cPass?token=${this.token}`,
+        {src:`${window.COMMON_ENV.SSO_URL}/course_authentication/require#/safeSet?token=${this.token}`},
+        {src:`${window.COMMON_ENV.SSO_URL}/course_authentication/require#/cPass?token=${this.token}`},
       ];
+
       this.iframeSrc = this.src[this.curnav];
+      setTimeout(()=>{
+        let iframes = document.getElementsByTagName("iframe");
+        for(var i=0;i<iframes.length;i++){
+          iframes[i].contentWindow.location.reload(true);
+        }
+      }, 30);
+       /* eslint-enable */
     },
     navclick(item, index) {
+      console.log(item);
       this.curnav = index;
       this.iframeSrc = this.src[this.curnav];
+      // setTimeout(() => {
+      //   document.getElementById('iframe').contentWindow.location.reload(true);
+      // }, 30);
     },
   },
 };

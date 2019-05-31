@@ -898,7 +898,7 @@ border-radius: 8px;
     padding: 20px 10px;
     text-align: left;
     overflow: hidden\0;
-    max-height: 500px;
+    max-height: 400px;
     overflow-y: auto;
   }
   .online-box>div{
@@ -916,7 +916,7 @@ border-radius: 8px;
     width: 98px;
   }
   .user-container .name{
-    max-width: 115px;
+    max-width: 105px;
     overflow: hidden;
     display: inline-block;
     top: 7px;
@@ -976,6 +976,10 @@ border-radius: 8px;
     cursor: pointer;
     float: left\0;
     margin-bottom: 20px;
+  }
+  .user-nav li:hover,
+  .online-nav-right-list li span:hover{
+    color: #FB683C;
   }
   .online-nav-right-list li .title{
     color: #444;

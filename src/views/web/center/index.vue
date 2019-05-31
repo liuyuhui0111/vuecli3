@@ -39,7 +39,7 @@ export default {
   data() {
     return {
       name: 'center',
-      isShowPage: false,
+      isShowPage: false, // false
       user: {
         name: '',
         level: '', // 会员等级
