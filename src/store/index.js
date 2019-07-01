@@ -13,6 +13,8 @@ export default new Vuex.Store({
 		isShowLoading: false,		//全局loading
 		keepAliveComponetScrolls: {},		//keepAlive 组件记录滚动条 path:scrolly
 		token:getTokenFn() ? getTokenFn() : '',		//token
+		COMMON_COMP_DATA:{
+		},
 	},
 	getters: {},
 	actions: {},
@@ -20,8 +22,8 @@ export default new Vuex.Store({
 		setShowLoading(state, { isShowLoading }) {
 	    state.isShowLoading = isShowLoading;
 	  },
-	  loginout(state,loginout){
-
+	  setCopData(state,data){
+	  	state.COMMON_COMP_DATA = JSON.parse(JSON.stringify(data));
 	  },
 	  setToken(state,token) {
 	  	// 设置token  同步到cookie 有效期默认7天

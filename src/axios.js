@@ -20,6 +20,9 @@ axios.interceptors.request.use(
     (config) => {
         config.headers.Authorization = store.getters.token ? store.getters.token : '-1';
         config.headers.httpHost = window.location.host || '';
+        if(process.env.NODE_ENV === 'development'){
+          config.headers.httpHost = "test.5ifapiao.com:8888";
+        }
         if(!config.isHideLoading){
           // 如果不为true 请求提示loadding
           requestList.push(config.url);
@@ -76,7 +79,6 @@ axios.interceptors.response.use(
             // console.log('token::::::::',store.getters.token,'code::::::::',response.data.code)
             if(response.data.code === '0002' && store.getters.token){
               // 登录过期
-
               Vue.prototype.$message({
                 message: '登录状态过期，请重新登录',
                 type: 'warning'
@@ -99,9 +101,11 @@ axios.interceptors.response.use(
               }
             }
         if (process.env.NODE_ENV === 'development') {
-            return Promise.reject(error);
+          return Promise.reject(error);
+        }else{
+          return Promise.reject('请求出错，请稍后再试');
         }
-        return Promise.reject('请求出错，请稍后再试');
+        
     },
 );
 /* eslint-enable */

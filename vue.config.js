@@ -1,4 +1,4 @@
-let baseProxyUrl = '';
+let baseProxyUrl = 'http://test.5ifapiao.com:8888';
 let publicPath = process.env.NODE_ENV === 'development' ? '/' : '/course/'; // 生产环境发布路径
 /*eslint-disable*/
 // 线下课相关接口
@@ -9,9 +9,10 @@ let publicPath = process.env.NODE_ENV === 'development' ? '/' : '/course/'; // �
 // let apiOnline = ['/course-web', '/courseUnlogin-web', '/category-web', '/searchword-web', '/searchword-web', '/evaluate', '/review'];
 let proxyData = {
 
-    'http://wxkf.5ifapiao.com': ['/course_authentication', '/course_api-gateway'],  //开发环境登录
-    // 'http://ysxy.5ifapiao.com': ['/fatscourse'],
-    'http://10.1.29.53:9983': ['/fatscourse'],
+    // 'http://wxkf.5ifapiao.com': ['/course_authentication', '/course_api-gateway'],  //开发环境登录
+    'http://test.5ifapiao.com:8888': ['/fatscourse','/course_authentication', '/course_api-gateway'],  //开发环境登录
+    // 'http://test.5ifapiao.com:8888': ['/fatscourse'],
+    // 'http://10.1.29.53:9983': ['/fatscourse'],
     // 'http://10.1.28.167:9983': ['/fatscourse'],
 };
 

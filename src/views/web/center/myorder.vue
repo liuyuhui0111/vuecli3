@@ -91,11 +91,13 @@
 
     <template v-if="curNav !== 0">
         <div class="theader">
-            <span class="item w43">订单信息</span>
+            <span v-if="curNav!=2" class="item w43">订单信息</span>
+            <span v-if="curNav==2" class="item w30">订单信息</span>
+            <span v-if="curNav==2" class="item w16">听课码</span>
             <span class="item w16">订单金额</span>
             <div @click="isShowTypeList = !isShowTypeList"
             :class="{active:isShowTypeList}"
-             class="item w20 pointer">{{typelist[typeIndex].text}}
+             class="item w16 pointer">{{typelist[typeIndex].text}}
               <span class="icon-triangle"></span>
               <div class="list" v-show="isShowTypeList">
                 <span v-for="(item,index) in typelist"
@@ -117,7 +119,7 @@
             @imgClick="goDetail"
             @goStudy="goStudy"
             @buy="goBuy"
-            @cancel="updateOrderByIdFn"
+            @cancel="confirmCancel"
             :goodstype="queryOrderListParam.goods_type"
             :index="index"
             :item="item"></classItem>
@@ -167,15 +169,6 @@ export default {
         time: '',
       },
       curTypeListIndex: 0,
-      statusType: {
-        1: '等待付款',
-        2: '等待付款',
-        3: '交易成功',
-        4: '退款中',
-        5: '已退款',
-        6: '订单已取消',
-        7: '交易成功',
-      },
       typelist: [
         {
           value: '',
@@ -189,11 +182,6 @@ export default {
           value: '2',
           text: '等待付款',
         },
-        // {
-        //   value: '2',
-        //   text: '付款中',
-        // },
-
         // {
         //   value: '4',
         //   text: '退款中',
@@ -299,6 +287,20 @@ export default {
       this.aside.tel = this.COMMON_COMP_DATA.tel;
       this.aside.time = this.COMMON_COMP_DATA.time;
       this.queryOrderListFn('init');
+    },
+    confirmCancel(item, index) {
+      this.$confirm('确认取消该订单吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        customClass: 'common-conifrm-box',
+        confirmButtonClass: 'common-confirm-sub',
+        cancelButtonClass: 'common-confirm-cancel',
+        type: 'warning',
+      }).then(() => {
+        this.updateOrderByIdFn(item, index);
+      }).catch(() => {
+        console.log('取消');
+      });
     },
     updateOrderByIdFn(item, index) {
       console.log(index);
@@ -472,6 +474,7 @@ export default {
     text-align: center;
     position: relative;
 }
+
 .theader .item .icon-triangle{
   position: relative;
   display: inline-block;
@@ -504,13 +507,17 @@ export default {
   line-height: 30px;
 }
 .w43{
-    width: 43.4%;
+    width: 50%;
+}
+.theader .item.w30{
+  width: 35%;
+  text-align: left;
 }
 .theader .w43{
     text-align: left;
 }
 .w16{
-    width: 16.6%;
+    width: 15%;
 }
 .w20{
     width: 20%;

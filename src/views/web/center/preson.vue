@@ -53,6 +53,10 @@
 
     <div class="btns">
         <Title title="我的权益"></Title>
+        <div v-if="commonCenterData.leaguerList.effective==0">
+            <router-link tag="span" class="pointer"
+             to="/interests">您的会员已到期，去续费</router-link>
+        </div>
         <div
         v-if="commonCenterData &&
         commonCenterData.leaguerList &&
@@ -62,18 +66,37 @@
             <div
             class="item"
             v-for="(item,index) in commonCenterData.leaguerList.leaguerRightList"
+            :class="{gray:commonCenterData.leaguerList.effective==0}"
             :key="index">
                 <span class="icon">
                     <img :src="item.pictureUrl" :alt="item.name">
                 </span>
                 <span class="name ellipsis" :title="item.name">{{item.name}}</span>
                 <span v-if="item.type==2" class="free">
-                    {{item.value == 0 ? '全部免费' : '剩余'+item.value+'次'}}
+                    {{item.value == -1 ? '全部免费' : '剩余'+item.value+'次'}}
                 </span>
                 <span v-if="item.type==1 && item.value == 0"
                 class="free">尚未开通</span>
-                <!-- <span v-if="item.type==1 && item.value == 1"
-                class="free">全部免费</span> -->
+
+                <span v-if="item.type==3" class="free">
+                    {{item.value == -1 ? '全部公开课' : '剩余'+item.value+'次'}}
+                </span>
+                <span v-if="item.type==4"
+                class="free">全部公开课</span>
+
+                <span v-if="item.type==6" class="free">
+                    {{'可观看'+item.value+'门'}}
+                </span>
+                <span v-if="item.type==7"
+                class="free">{{'剩余'+item.value+'次'}}</span>
+                <!-- 2.本地财税公开课
+                    设置次数：剩余X次；
+                    全部：全部公开课
+                    线下课  type 3 设置次数  4 全部
+                    1.精品网络课程
+                    设置门数：剩余X次’
+                    指定课程：可观看X门；
+                     线上课  6 指定课程  7 设置门数 -->
             </div >
         </div>
          <div v-else>
@@ -208,5 +231,15 @@ border: 1px solid #D4D4D4;
     overflow: hidden\0;
     width: 400px\0;
     float: left\0;
+}
+.gray{
+    -webkit-filter: grayscale(100%);
+    -moz-filter: grayscale(100%);
+    -ms-filter: grayscale(100%);
+    -o-filter: grayscale(100%);
+
+    filter: grayscale(100%);
+
+    filter: gray;
 }
 </style>

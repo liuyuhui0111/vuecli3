@@ -91,10 +91,12 @@ export default {
     routerGo(item) {
       if (this.queryMycollectionListParam.onOffType === '0') {
         // 线下课
-        this.$router.push({ path: '/detail', query: { cid: item.courseId } });
+        // this.$router.push({ path: '/detail', query: { cid: item.courseId } });
+        this.openBlank('/detail', { cid: item.courseId });
       } else {
         // 线上课
-        this.$router.push({ path: '/online-detail', query: { cid: item.courseId } });
+        // this.$router.push({ path: '/online-detail', query: { cid: item.courseId } });
+        this.openBlank('/online-detail', { cid: item.courseId });
       }
     },
     navclick(item) {

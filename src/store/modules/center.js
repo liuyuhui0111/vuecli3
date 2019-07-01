@@ -16,7 +16,7 @@ const mutations = {
 
     setCenterData(state, data) {
         console.log(data);
-        state.commonCenterData = data;
+        state.commonCenterData = JSON.parse(JSON.stringify(data));
     },
 };
 

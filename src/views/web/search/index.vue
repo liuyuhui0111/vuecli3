@@ -23,18 +23,34 @@
           <div v-if="getSearchListData[searchResultType].list.length<1 && isShowPage" class="empty">
             天了噜，0个“{{searchVal}}”相关的结果。
           </div>
-          <div v-if="getSearchListData[searchResultType].list.length>0" class="search-list-box">
-              <ul class="list-box">
-                <li v-for="(item,index) in getSearchListData[searchResultType].list"
+          <div v-show="searchResultType == 'online'" class="search-list-box">
+              <ul v-if="getSearchListData.online.list.length>0 &&
+              searchResultType == 'online'"
+              class="list-box">
+                <li v-for="(item,index) in getSearchListData.online.list"
                 :key="index">
                   <Card v-if="item != null" :type="cardType"
                   @classClick="classClick"
+                  :searchVal="searchVal"
                   :titleStyle="titleStyle"
                   :classData="item"></Card>
                 </li>
               </ul>
           </div>
-
+          <div v-show="searchResultType == 'offline'" class="search-list-box">
+              <ul v-if="getSearchListData.offline.list.length>0 &&
+              searchResultType == 'offline'"
+              class="list-box">
+                <li v-for="(item,index) in getSearchListData.offline.list"
+                :key="index">
+                  <Card v-if="item != null" :type="cardType"
+                  @classClick="classClick"
+                  :searchVal="searchVal"
+                  :titleStyle="titleStyle"
+                  :classData="item"></Card>
+                </li>
+              </ul>
+          </div>
         <el-pagination
           v-if="getSearchListData[searchResultType].list.length>0
           && getSearchListData[searchResultType].total>pageSize"
@@ -67,7 +83,7 @@
         <div class="hot-word">
           <p class="title">热门搜索词</p>
           <span v-for="(item,index) in hotWordList"
-          @click="routerGo(item.word)"
+          @click="routerGo(item.word,1)"
           :key="index">{{item.word}}</span>
         </div>
         <!-- 热门搜索 -->
@@ -75,7 +91,7 @@
           <p class="title">热门搜索</p>
           <ul class="hot-search-list">
             <li v-for="(item,index) in hotSearchList"
-            @click="routerGo(item.title)"
+            @click="routerGo(item)"
             :key="index">
               <span class="rank">{{index+1}}</span>
               <p>{{item.title}}</p>
@@ -164,8 +180,16 @@ export default {
       // 初始化热门搜索排名
       // this.initHotSearchList();
     },
-    routerGo(item) {
-      this.$router.push({ path: '/search', query: { val: item } });
+    routerGo(item, type) {
+      if (type === 1) {
+        this.$router.push({ path: '/search', query: { val: item } });
+      } else if (item.type === 1) {
+        // 线上课程
+        this.$router.push({ path: '/online-detail', query: { cid: item.id } });
+      } else {
+        // 线下课程
+        this.$router.push({ path: '/detail', query: { cid: item.id } });
+      }
     },
     classClick(item) {
       console.log(item);

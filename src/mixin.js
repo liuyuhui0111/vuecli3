@@ -13,7 +13,7 @@ import {
   goLogin,
   loginout,
 } from '@/api/apis';
-import { replaceCode, getUrlParam } from '@/assets/utils/util';
+import { getUrlParam } from '@/assets/utils/util';
 import baseImg from '@/views/web/components/base/img.vue';
 
 export default {
@@ -22,30 +22,38 @@ export default {
       data() {
         return {
           // token: '',
-          COMMON_COMP_DATA: { // 公司主体信息
-            // qq: '//wpa.qq.com/pa?p=2:800013811:42',
-            qq: `//wpa.qq.com/msgrd?v=3&uin=${1530192656}&site=qq&menu=yes`, // 客服qq
-            tel: '0574-87352489', // 客服电话
-            time: '7*24h', // 客服服务时间
-            address: `宁波爱信诺航天信息有限公司与<br>大象慧云信息技术有限公司联合出品
-              `, // 公司地址&copy;Copyright 2014-2019宁波爱信诺航天信息有限公司<br>
-            // All Rights Reserved
-          },
           publicPath: process.env.BASE_URL,
+          isCanRequest: true,
         };
-      },
-      mounted() {
       },
       components: {
         baseImg,
       },
-      // watch:{
-      //   'token':function(val){
-      //     if(val){
-      //       this.getUserInfoFn();
-      //     }
-      //   }
-      // },
+      beforeRouteEnter(to, from, next) {
+        if (to.meta.isNeedLogin) {
+          // 是否需要登录
+          next((vm) => {
+            console.log(vm);
+            if (vm.name === 'default' || vm.name === 'layout') {
+              // layout 直接退出
+              return;
+            }
+            if (!vm.token && !getUrlParam('code')) {
+              if (to.meta.loginBackPath) {
+                // 如果配置了登录回退页，跳转到该页面 否则去登录页
+                vm.$router.replace({ path: to.meta.loginBackPath });
+              } else {
+                vm.login();
+              }
+            } else if (!vm.token && getUrlParam('code')) {
+              // 获取token  下一周期 执行init
+              vm.getTokenByCode(vm.init);
+            }
+          });
+        } else {
+          next();
+        }
+      },
 
       computed: {
         ...mapGetters([
@@ -53,6 +61,7 @@ export default {
           'isShowLoading', // 是否显示全局Loading
           'token', // 是否显示全局Loading
           'commonUserData', // 用户相关信息
+          'COMMON_COMP_DATA',
         ]),
       },
       methods: {
@@ -61,16 +70,49 @@ export default {
           // 去登录
           goLogin(type);
         },
+
+        openBlank(path, query) {
+          // 在新标签页打开
+          let routeUrl = this.$router.resolve(
+            { path, query },
+          );
+          window.open(routeUrl.href, '_blank');
+        },
+
+        searchValToHtml(str, val) {
+          /*eslint-disable*/ 
+          // 搜索内容标红
+          if(!val){
+            return str;
+          }
+          var newstr = str.replace(new RegExp(val,"ig"), '<font style="color:#FB683C;">$&</font>');
+          return newstr;
+        },
+
         loginout() {
           // 退出登录，清空cookie
           if (this.token) {
             this.setToken('');
             window.localStorage.removeItem('REDIRECT_URI');
-            window.location.replace(replaceCode());
             this.$nextTick(() => {
               loginout();
             });
           }
+        },
+        confirm(message) {
+          let m = message || '您还没有登录，去登录?';
+          this.$confirm(m, '提示', {
+            confirmButtonText: '登录',
+            cancelButtonText: '取消',
+            customClass: 'common-conifrm-box',
+            confirmButtonClass: 'common-confirm-sub',
+            cancelButtonClass: 'common-confirm-cancel',
+            type: 'warning',
+          }).then(() => {
+            this.login();
+          }).catch(() => {
+            console.log('取消');
+          });
         },
         getTokenByCode(fn) {
           // return;
@@ -81,19 +123,19 @@ export default {
             getToken({ code }).then((res) => {
               // 设置token
               /* eslint-disable */
-                            if(res.data.code === 0){
-                                let token = res.data.data['access_token']
-                                this.setToken(token)
-                                this.getUserInfoFn()
-                                typeof (fn) === 'function' && fn();
-                            }else{
-                                this.$message({
-                                    message: '登录失败,请重新登录',
-                                    type: 'warning',
-                                });
-                            }
+                if(res.data.code === 0){
+                    let token = res.data.data['access_token']
+                    this.setToken(token)
+                    this.getUserInfoFn()
+                    typeof (fn) === 'function' && fn();
+                }else{
+                    this.$message({
+                        message: '登录失败,请重新登录',
+                        type: 'warning',
+                    });
+                }
                             
-                            /* eslint-enable */
+                /* eslint-enable */
             }).catch((err) => {
               console.log(err);
               // 获取token 失败  退出登录 提示重新登录
@@ -138,6 +180,7 @@ export default {
 
         ...mapMutations([
           'setToken',
+          'setCopData',
         ]),
         ...mapMutations('user', [
           'setUsers',

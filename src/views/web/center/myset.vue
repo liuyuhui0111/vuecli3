@@ -57,8 +57,8 @@ export default {
       // https://devpassport.ele12.cn/course_authentication/require#/cPass?token=
       /*eslint-disable*/ 
       this.src = [
-        {src:`${window.COMMON_ENV.SSO_URL}/course_authentication/require#/safeSet?token=${this.token}`},
-        {src:`${window.COMMON_ENV.SSO_URL}/course_authentication/require#/cPass?token=${this.token}`},
+        {src:`${window.COMMON_ENV.SSO_URL}/course_authentication/require#/safeSet?token=${this.token}&productId=ac5463eec58f4fca80d1a00802581ddc`},
+        {src:`${window.COMMON_ENV.SSO_URL}/course_authentication/require#/cPass?token=${this.token}&productId=ac5463eec58f4fca80d1a00802581ddc`},
       ];
 
       this.iframeSrc = this.src[this.curnav];

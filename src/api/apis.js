@@ -350,3 +350,15 @@ export function getOrderInfo(params) {
   const url = `${BASE_URL}/orderInfo/getOrderInfo`;
   return post(url, params || {});
 }
+
+export function getSourceData(params) {
+  // 查询主体信息
+  const url = `${BASE_URL}/source-web/getSourceData`;
+  return post(url, params || {});
+}
+
+export function downloadPower(params) {
+  // 下载权限接口
+  const url = `${BASE_URL}/classpower-web/downloadPower`;
+  return post(url, params || {});
+}

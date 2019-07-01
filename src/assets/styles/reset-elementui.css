@@ -49,15 +49,29 @@
   line-height: 32px;
   color: #444;
 }
+body .el-pagination button, body .el-pagination span:not([class*=suffix]),
+body .el-pagination .btn-next:after, body .el-pagination .btn-prev:after{
+  line-height: 30px;
+}
+
+.el-message-box__btns button:nth-child(2),
+.common-conifrm-box .el-button--primary.is-active, 
+.common-conifrm-box .el-button--primary:active,
 .el-cascader .el-input.is-focus .el-input__inner,
 .el-radio__input.is-checked .el-radio__inner,
 .el-radio__inner:hover,
 .el-input.is-active .el-input__inner, .el-input__inner:focus{
   border-color: #FB683C;
 }
+
+.common-conifrm-box .el-button--primary,
+.common-conifrm-box .el-button--primary:hover,
+.common-conifrm-box .el-button--primary.is-active, 
+.common-conifrm-box .el-button--primary:active,
 .el-radio__input.is-checked .el-radio__inner{
   background: #FB683C;
 }
+.el-message-box__status.el-icon-warning,
 .el-cascader-menu__item.is-active,
 .el-radio__input.is-checked+.el-radio__label{
   color: #FB683C;

@@ -107,10 +107,21 @@
       label-width="110px"
       class="invoice-form">
         <div v-if="invoiceForm.invoiceType==0" class="card-type">
-        <el-form-item label="抬头类型">
-          <el-radio v-model.trim="invoiceForm.titleType" label="0">个人</el-radio>
-          <el-radio v-model.trim="invoiceForm.titleType" label="1">公司</el-radio>
-        </el-form-item>
+        <div class="radio-btns">
+          <span class="label">抬头类型</span>
+          <div @click="invoiceForm.titleType = '0'"
+          class="radio">
+            <span :class="{active:invoiceForm.titleType == 0}"
+            class="icon-radio"></span>
+            个人
+          </div>
+          <div @click="invoiceForm.titleType = '1'"
+          class="radio">
+            <span :class="{active:invoiceForm.titleType == 1}"
+            class="icon-radio"></span>
+            公司
+          </div>
+        </div>
         </div>
         <el-form-item v-if="invoiceForm.invoiceType == 0"
         :label="label" prop="title">
@@ -245,12 +256,22 @@
         </div>
 
         <div class="pd100 card-type">
-          <el-radio
-          v-show="invoiceForm.invoiceType === '0'"
-          v-model.trim="invoiceForm.createType"
-          label="0">电子发票</el-radio>
-          <el-radio v-model.trim="invoiceForm.createType" label="1">纸质发票</el-radio>
-          <span>(满300包邮)</span>
+         <div class="fptype radio-btns">
+          <div @click="invoiceForm.createType = '0'"
+           v-show="invoiceForm.invoiceType == '0'"
+          class="radio">
+            <span :class="{active:invoiceForm.createType == 0}"
+            class="icon-radio"></span>
+            电子发票
+          </div>
+          <div @click="invoiceForm.createType = '1'"
+          class="radio">
+            <span :class="{active:invoiceForm.createType == 1}"
+            class="icon-radio"></span>
+            纸质发票<span>(满300包邮)</span>
+          </div>
+        </div>
+
         </div>
 
         <el-form-item
@@ -904,6 +925,11 @@ export default {
             message: '因账号缓存被清除，请重新登录',
             type: 'warning',
           });
+        } else if (res.data.code === '0013') {
+          this.$message({
+            message: '该报名信息已经提交过订单，不能重复提交',
+            type: 'warning',
+          });
         } else {
           this.$message({
             message: '生成订单出错，请稍后再试',
@@ -1051,6 +1077,60 @@ export default {
 };
 </script>
 <style scoped>
+  .radio-btns{
+    display: block;
+    position: relative;
+    padding-left: 110px;
+    overflow: hidden;
+    font-size: 14px;
+    color: #444;
+  }
+  .fptype.radio-btns{
+    padding-left: 0;
+  }
+  .fptype.radio-btns span{
+    left: 2px;
+  }
+  .radio-btns .label{
+    position: absolute;
+    left: 0;
+    font-size: 14px;
+    color: #444;
+  }
+  .radio-btns .radio{
+    float: left;
+    position: relative;
+    padding-left: 20px;
+    line-height: 20px;
+    height: 20px;
+    margin-right: 20px;
+    cursor: pointer;
+  }
+  .radio-btns .radio .icon-radio{
+    display: block;
+    width: 14px;
+    height: 14px;
+    position: absolute;
+    top: 2px;
+    left: 0;
+    border:1px solid #ccc;
+    border-radius: 100%;
+  }
+  .radio-btns .radio .icon-radio:after{
+    content:"";
+    display: block;
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #fff;
+    left: 5px;
+    top: 5px;
+    border-radius: 100%;
+  }
+  .radio-btns .radio .icon-radio.active{
+    border-color: #FB683C;
+    background: #FB683C;
+  }
   /*支付类型*/
   .paylist{
     display: flex;

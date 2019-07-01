@@ -2,45 +2,11 @@
   <div class="online-class common-container-width">
 
     <div class="contain">
-      <!-- 类目展开框 -->
-      <div class="onlineNavList-box common-scroll-bar"
-      v-if="onlineNavList.length>0">
-      <div class="online-box"
-      v-for="(item,index) in onlineNavList"
-      :key="index">
-
-        <div class="online-nav-left">
-          <div class="item">
-            {{onlineNavListTypes[index].name}}
-          </div >
-        </div>
-
-        <div id="navBox" ref="navBox" class="online-nav-right">
-          <ul class="online-nav-right-list" v-if="item.length>0">
-          <li ref="navParent">
-            <span class="all"
-              @click="checkAll(index)"
-              :class="{active:index==onlineNavListTypesIndex || isAll}">
-              全部</span>
-               <div ref="navChild" class="show-nav-box">
-
-                <span v-for="(nav,navindex) in item"
-                @click="navClick(nav.id,false)"
-                :class="{active:navCurId == nav.id&&!isAll}"
-                :key="navindex">
-                  {{nav.name}}
-                </span>
-              </div>
-              <div ref="iconTri" class="icon-trin-box">
-                <span class="icon-triangle"></span>
-              </div>
-         </li>
-          </ul>
-
-        </div>
-      </div>
-    </div>
-
+    <!-- 顶部导航 -->
+      <OnlineNav @changeNav="changeNav"
+      v-if="onlineNavListData.length>0"
+      :id="navCurId"
+      :list="onlineNavListData"></OnlineNav>
 
       <div class="nav-list">
       <div class="group">
@@ -56,11 +22,12 @@
       <div class="group">
 
         <div class="item"
-        :class="{active:item.value===navlist.payType}"
+        :class="{active:item.value==navlist.payType}"
         @click="navlist.payType = item.value"
         v-for="(item,index) in navlist.freelist"
         :key="index">
           <el-radio v-model="navlist.freeindex"
+
           @change="radioChange"
           :label="item.value">{{item.name}}</el-radio>
         </div>
@@ -99,6 +66,7 @@
       </template>
 
     </div>
+      <div class="box">
       <ul v-if="list.length>0" class="list-box">
           <li v-for="(item,index) in list"
           :class="{liEmpty:item==null}"
@@ -111,9 +79,10 @@
             :classData="item"></Card>
           </li>
       </ul>
-
+    </div>
+    <template v-show="list.length>0">
       <el-pagination
-        v-if="total>list.length"
+        v-if="total>list.length && isShowPagation"
         @current-change="handleCurrentChange"
         layout="prev, pager, next"
         :pager-count="pagerCount"
@@ -122,11 +91,13 @@
         :page-size="pageSize"
         :total="total">
       </el-pagination>
+      </template>
     </div>
   </div>
 </template>
 <script>
 import Card from '@/views/web/components/card/card.vue';
+import OnlineNav from '@/views/web/online-class/online-nav.vue';
 import { initList } from '@/assets/utils/util';
 import {
   getCourseList,
@@ -141,19 +112,11 @@ export default {
       cardType: 'online-list',
       navCurId: '', // 当前选中的id
       isShowPage: false,
-      isAll: true,
+      isShowPagation: false,
       titleStyle: {
         color: '#444',
         fontSize: '16px',
       },
-      onlineNavListTypesIndex: -1,
-      onlineNavListTypes: [
-        { name: '方向' },
-        { name: '专业' },
-        { name: '分类' },
-      ],
-      onlineNavIndex: 0, // 当前选中的在线课程分类
-      onlineNavList: [],
       pageSize: 12, // 一页最多展示的条数
       pagerCount: 11, // 11页以上显示...
       total: 0,
@@ -170,6 +133,7 @@ export default {
           // },
         ],
         payType: '',
+        freeindex: '',
         freelist: [
           {
             name: '全部课程',
@@ -213,6 +177,8 @@ export default {
       },
       list: [],
       allCount: 0,
+      onlineNavListData: [], // 导航数据
+
     };
   },
   mounted() {
@@ -232,99 +198,37 @@ export default {
   methods: {
     init() {
       // this.list = initList(this.list, 4);
-      this.navCurId = this.$route.query.nid || '';
-      if (this.navCurId) {
-        this.isAll = false;
-      }
+      this.navCurId = parseInt(this.$route.query.nid, 10) || -1;
+
       this.navlist.boolean = this.$route.query.boolean || 0;
       // 获取线上课程列表
       this.getCourseListFn('init');
       // 获取线上课程分类
       this.getCategoryListFn();
     },
-    checkAll(index) {
-      this.onlineNavListTypesIndex = index;
-      this.isAll = true;
-      this.navCurId = '';
-      this.getCourseListFn('init');
-    },
-    navClick(id, isAll) {
-      this.onlineNavListTypesIndex = -1;
-      this.navCurId = id;
-      this.isAll = isAll || false;
-      this.getCourseListFn('init');
-    },
-    initNavList(list) {
-      /*eslint-disable*/ 
-      function getChildById(id) {
-        let childs = [];
-        list.forEach((item) => {
-          if (item.pid !== item.id && item.pid === id) {
-            childs.push( item );
-          }
-        });
-        return childs;
+    changeNav(nav) {
+      console.log(nav);
+      if (nav[2].id !== -1) {
+        this.navCurId = nav[2].id;
+      } else if (nav[1].id !== -1) {
+        this.navCurId = nav[1].id;
+      } else if (nav[0].id !== -1) {
+        this.navCurId = nav[0].id;
+      } else {
+        this.navCurId = -1;
       }
-
-      let arr = [[],[],[]];
-      list.forEach((item) => {
-        if (item.id === item.pid) {
-          arr[0].push(item);
-        }
-      });
-      arr[0].forEach((item)=>{
-        arr[1].push(...getChildById(item.id))
-      })
-      arr[1].forEach((item)=>{
-        arr[2].push(...getChildById(item.id))
-      })
-      return arr;
-      /* eslint-enable */
-    },
-    initNavHeight() {
-      // 计算分类高度，是否显示展开收起效果
-      let anavParents = this.$refs.navParent;
-      let anavChilds = this.$refs.navChild;
-      let aiconTris = this.$refs.iconTri;
-      /*eslint-disable*/ 
-            anavParents.forEach((item, index) => {
-                let curActive = item.querySelector('span.active');
-                if (item.clientHeight < anavChilds[index].clientHeight) {
-                // 如果父高度大于子高度 设置openClass
-                    item.className = 'openClass';
-                }
-                if(curActive && !this.isAll){
-                  item.className = 'openClass open';
-                }
-            });
-
-            aiconTris.forEach((item, index) => {
-                item.addEventListener('click', () => {
-                    if (anavParents[index].className === 'openClass') {
-                        anavParents[index].className = 'openClass open';
-                    } else {
-                        anavParents[index].className = 'openClass';
-                    }
-                }, false);
-            });
-            /* eslint-enable */
+      this.getCourseListFn('init');
     },
     getCategoryListFn() {
-      // 获取线下课程导航列表
+      // 获取线上课程导航列表
       this.onlineNavList = [];
       getCategoryList().then((res) => {
         if (res.data.code === '0000') {
-          let { list } = res.data;
-          // id === pid 是一级菜单
-          this.onlineNavList = this.initNavList(list);
-          console.log('onlinelist', this.onlineNavList);
-          this.$nextTick(() => {
-            this.initNavHeight();
-          });
+          this.onlineNavListData = res.data.list;
         }
       }).catch((err) => {
         this.$message({
-          message: '获取线下课程列表失败,请稍后再试',
+          message: '获取线上课导航列表失败,请稍后再试',
           type: 'warning',
         });
         console.log(err);
@@ -337,6 +241,7 @@ export default {
     getCourseListFn(t) {
       if (t === 'init') {
         this.pageNum = 1;
+        this.isShowPagation = false;
       }
       let { pageNum } = this;
       let { pageSize } = this;
@@ -347,7 +252,7 @@ export default {
       // this.total = 0;
       this.isShowPage = false;
       this.list = [];
-      // 获取公开课列表
+      // 获取线上课
       getCourseList({
         pageNum,
         pageSize,
@@ -355,10 +260,11 @@ export default {
         boolean,
         difficult,
         type,
-        categoryId: this.navCurId,
+        categoryId: this.navCurId === -1 ? '' : this.navCurId,
       }).then((res) => {
         if (res.data.code === '0000') {
           this.isShowPage = true;
+          this.isShowPagation = true;
           if (res.data.list.length > 0) {
             this.list = res.data.list;
             this.list = initList(this.list, 4);
@@ -372,7 +278,7 @@ export default {
       }).catch((err) => {
         console.log(err);
         this.$message({
-          message: '公开课列表获取失败，请稍后再试',
+          message: '线上课列表获取失败，请稍后再试',
           type: 'warning',
         });
       });
@@ -389,13 +295,13 @@ export default {
   },
   components: {
     Card,
+    OnlineNav,
   },
 };
 </script>
 <style scoped>
-  .onlineNavList-box{
-    max-height: 305px;
-    overflow: auto;
+  .active{
+    color: #FB683C;
   }
   .tips{
     color: #868686;
@@ -416,13 +322,16 @@ export default {
   .empty span{
     color: #FB683C;
   }
+  .box{
+    min-height: 500px;
+  }
   .list-box{
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     flex-wrap: wrap;
     overflow: hidden;
-    min-height: 500px;
+
     width: 100%\0;
   }
   .list-box li{
@@ -471,124 +380,6 @@ export default {
 
   .nav-list .group .mr0:nth-last-child(1){
     margin-right: 0;
-  }
-
-  /*类目列表*/
-  .online-box{
-    /*height: 360px;*/
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 0px 10px;
-    text-align: left;
-    overflow: hidden\0;
-  }
-  .online-box .online-nav-right,
-  .online-box .online-nav-left{
-    /*max-width: 980px;*/
-    width: 100%;
-    height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    display: block;
-    position: relative;
-    flex-grow:1;
-    float: left\0;
-  }
-  .online-box .online-nav-left{
-    width: 98px;
-    flex-grow:0;
-    width: 10%\0;
-  }
-  .online-box .online-nav-right{
-    width: 90%\0;
-  }
-
-  .online-box .online-nav-left .item{
-    display: flex;
-    font-size: 14px;
-    color: #444444;
-    letter-spacing: 0;
-    min-height: 40px;
-    line-height: 20px;
-    line-height: 40px\0;
-    /*cursor: pointer;*/
-    align-items: center;
-    border: none;
-    padding-top: 10px;
-  }
-  .active,
-  /*.online-nav-left .item:hover,*/
-  .online-nav-right-list span:hover,
-  .contain .online-box .active{
-    color: #FB683C;
-  }
-
-  .online-nav-right-list li{
-    font-size: 14px;
-    color: #868686;
-    height: 60px;
-    line-height: 20px;
-     border-bottom: 1px dashed #d4d4d4;
-    padding: 20px 50px 0px 88px;
-    position: relative;
-    overflow: hidden;
-    box-sizing:border-box;
-    /*margin-top: 10px;*/
-  }
-  .icon-trin-box{
-    position: absolute;
-    width: 40px;
-    height: 60px;
-    right: 0;
-    top: 0;
-    cursor: pointer;
-  }
-  .online-nav-right-list li .icon-triangle{
-    position: absolute;
-    right: 20px;
-    z-index: 11;
-    top: 30px;
-    width: 0;
-    height: 0px;
-    padding: 0;
-    margin: 0;
-    border-width: 8px;
-    /*border-color: #d4d4d4;*/
-    transition: transform 0.3s;
-    transform: rotate(0deg);
-    display: none;
-  }
-  .online-nav-right-list li.open{
-    height: auto;
-  }
-  .online-nav-right-list li.open .icon-triangle{
-    transform: rotate(180deg);
-    transform: rotate(0deg)\0;
-    display: inline-block;
-    border-left: 8px solid transparent\0;
-    border-right: 8px solid transparent\0;
-    border-top: 0px solid #868686\0;
-    border-bottom: 8px solid #868686\0;
-  }
-  .online-nav-right-list li.openClass .icon-triangle{
-    display: block;
-  }
-  .online-nav-right-list li .show-nav-box{
-    overflow: hidden;
-  }
-  .online-nav-right-list li span{
-    display: block;
-    float: left;
-    text-align: left;
-    cursor: pointer;
-    padding-right: 30px;
-    margin-bottom: 20px;
-  }
-
-  .online-nav-right-list li .all{
-    position: absolute;
-    left: 0;
   }
 
 

@@ -89,7 +89,7 @@ export default {
             message: '您已签到成功，无需重复签到哦~',
             type: 'warning',
           });
-        } else {
+        } else if (res.data.code !== '0002') {
           this.$message({
             message: '签到失败，请检查您的听课凭借码是否正确',
             type: 'warning',

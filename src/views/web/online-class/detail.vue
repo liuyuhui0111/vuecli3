@@ -31,6 +31,8 @@
             <!-- 评价 购买弹层 -->
             <div v-show="(isShowDialogToBuy ||
              isShowDialogTomes ||
+             isShowDialogCode == 1002 ||
+             isShowDialogCode == 1004 ||
              isShowDialogToIn) && !isShowIframe"
              class="dialog">
               <span class="el-icon-close"
@@ -48,6 +50,46 @@
                       取消
                     </span>
                     <span @click="continueShow" class="btn-sub">继续观看</span>
+                  </div>
+              </div>
+
+              <div v-show="isShowDialogCode == 1002" class="dialog-buy">
+                  <div class="title">
+                    VIP会员专享课程
+                    <p>可尊享更多特权与服务</p>
+                  </div>
+                  <p>还有{{
+                  detail.courseVideoEntity[0].isTry === 1 ?
+                   detail.courseVideoEntity.length - 1 :
+                   detail.courseVideoEntity.length
+                   }}个章节未学习</p>
+                  <p>您已购的观看次数已经消耗完</p>
+                  <div class="btns">
+                    <span @click="goFree('/order')" class="btn-buy">
+                      ￥{{detail.price}}购买课程
+                    </span>
+                    <span @click="goFree('/interests')" class="btn-sub">会员续费
+
+                    </span>
+                  </div>
+              </div>
+
+              <div v-show="isShowDialogCode == 1004" class="dialog-buy">
+                  <div class="title">
+                    VIP会员专享课程
+                    <p>可尊享更多特权与服务</p>
+                  </div>
+                  <p>还有{{
+                  detail.courseVideoEntity[0].isTry === 1 ?
+                   detail.courseVideoEntity.length - 1 :
+                   detail.courseVideoEntity.length
+                   }}个章节未学习</p>
+                  <p></p>
+                  <div class="btns">
+                    <span @click="goFree('/order')" class="btn-buy">
+                      ￥{{detail.price}}购买课程
+                    </span>
+
                   </div>
               </div>
 
@@ -167,8 +209,8 @@
         <template v-if="curTabIndex == 0">
           <h3>课名： {{detail.title}}</h3>
 
-          <baseTitle title="课程简介"></baseTitle>
-          <div class="item" v-html="transferStringFn(detail.teacherBrief)"></div>
+          <baseTitle v-if="detail.courseBrief" title="课程简介"></baseTitle>
+          <div class="item" v-html="transferStringFn(detail.courseBrief)"></div>
 
           <baseTitle title="课程大纲"></baseTitle>
           <div class="item" v-html="transferStringFn(detail.courseOutline)"></div>
@@ -220,7 +262,7 @@
                   {{(item.fileSize/1024).toFixed(1)}}M
                   <a
                   @click="download(item.downloadUrl)"
-                  :class="{gray:!(commonUserData && commonUserData.leaguerLevelId)}"
+                  :class="{gray:!(isCanDownLoad || detail.payType != '1')}"
                   class="btn-sub">下载</a>
                 </div>
               </div>
@@ -314,6 +356,7 @@ import {
   saveMyCollection,
   equityConsume,
   videorights,
+  downloadPower,
 } from '@/api/apis';
 import baseTitle from '@/views/web/components/base/base-title.vue';
 import { transferString } from '@/assets/utils/util';
@@ -400,6 +443,8 @@ export default {
       teacherCourse: [],
       isCanRequest: true,
       consumeNum: '',
+      isCanDownLoad: false, // 是否能下载资料
+      isShowDialogCode: '',
     };
   },
   beforeRouteLeave(to, from, next) {
@@ -408,14 +453,19 @@ export default {
     });
     next();
   },
+  watch: {
+    $route() {
+      this.init();
+    },
+    token() {
+      if (this.token) {
+        this.downloadPowerFn();
+      }
+    },
+  },
 
   mounted() {
     this.init();
-  },
-  watch: {
-    $route() {
-      this.initNavListIndex();
-    },
   },
   computed: {
     goodDeg() {
@@ -436,6 +486,22 @@ export default {
       this.getGoodEvaluateCountFn();
       // 已经播放时间
       this.sec = this.$route.query.sec || 0;
+      // 获取文件下载权限
+      this.downloadPowerFn();
+    },
+    downloadPowerFn() {
+      if (!this.token) {
+        return;
+      }
+      downloadPower({ courseId: this.courseId }).then((res) => {
+        if (res.data.code === '2001') {
+          this.isCanDownLoad = true;
+        } else {
+          this.isCanDownLoad = false;
+        }
+      }).catch((err) => {
+        console.log(err);
+      });
     },
     routerBack() {
       this.$router.go(-1);
@@ -444,23 +510,20 @@ export default {
       return transferString(str) || '';
     },
     getMinite(min) {
-      let hour = parseInt(min / 60, 10) > 10 ? parseInt(min / 60, 10)
+      let hour = parseInt(min / 60, 10) > 9 ? parseInt(min / 60, 10)
         : `0${parseInt(min / 60, 10)}`;
-      let minite = min % 60 > 10 ? (min % 60) : `0${min % 60}`;
+      let minite = min % 60 > 9 ? (min % 60) : `0${min % 60}`;
       return `${hour}:${minite}:00`;
     },
     download(url) {
       if (!this.token) {
-        this.$message({
-          message: '您还没有登录，请先登录',
-          type: 'warning',
-        });
-      } else if (url && this.commonUserData && this.commonUserData.leaguerLevelId) {
-        // 有连接 且是会员的可以下载
+        this.confirm();
+      } else if (this.detail.payType !== '1' || (url && this.isCanDownLoad)) {
+        // 可以下载 或者是免费课程
         window.open(url);
       } else {
         this.$message({
-          message: '该课件只对会员用户专享',
+          message: '请先购买课程，再下载材料哦！',
           type: 'warning',
         });
       }
@@ -477,7 +540,7 @@ export default {
         if (res.data.code === '0000') {
           this.isShowDialogToIn = false;
           this.startPlay();
-        } else {
+        } else if (res.data.code !== '0002') {
           this.$message({
             message: '消耗权益失败，请重试',
             type: 'warning',
@@ -498,19 +561,17 @@ export default {
         this.$router.push({ path: '/online-class', query });
       } else {
         // 在新标签页打开
-        let routeUrl = this.$router.resolve(
-          { path, query: { cid: item.id } },
-        );
-        window.open(routeUrl.href, '_blank');
+        this.openBlank(path, { cid: item.id });
       }
     },
     goFree(path) {
       // 免费学  立即购买
       if (!this.token) {
-        this.$message({
-          message: '您还没有登录，请先登录',
-          type: 'warning',
-        });
+        this.confirm();
+        // this.$message({
+        //   message: '您还没有登录，请先登录',
+        //   type: 'warning',
+        // });
         return;
       }
       this.$router.push({
@@ -529,18 +590,26 @@ export default {
     saveMyCollectionFn() {
       // 收藏 如果未登录  提示去登陆
       if (!this.token) {
-        this.$message({
-          message: '您还没有登录，请先登录',
-          type: 'warning',
-        });
+        this.confirm();
+        // this.$message({
+        //   message: '您还没有登录，请先登录',
+        //   type: 'warning',
+        // });
+        return;
+      }
+      if (this.isCanRequest) {
+        this.isCanRequest = false;
+      } else {
         return;
       }
 
       saveMyCollection(this.saveMyCollectionParam).then((res) => {
+        this.isCanRequest = true;
         if (res.data.code === '0000') {
           this.detail.isColl = !this.detail.isColl;
         }
       }).catch((err) => {
+        this.isCanRequest = true;
         console.log(err);
         this.$message({
           message: '服务器错误，请稍后再试',
@@ -630,19 +699,17 @@ export default {
         this.startPlay();
       } else {
         // 未登录
-        this.$message({
-          message: '该章节需要登录才可以继续观看',
-          type: 'warning',
-        });
+        this.confirm('该章节需要登录才可以继续观看');
+        // this.$message({
+        //   message: '该章节需要登录才可以继续观看',
+        //   type: 'warning',
+        // });
       }
     },
     checkUserIsCanPlay() {
       // 判断用户是否登录
       if (!this.token) {
-        this.$message({
-          message: '该章节需要登录才可以继续观看',
-          type: 'warning',
-        });
+        this.confirm('该章节需要登录才可以继续观看');
         return;
       }
       if (this.token) {
@@ -653,13 +720,17 @@ export default {
           if (res.data.code === '1000') {
             // 可以观看
             this.startPlay();
-          } else if (res.data.code === '1001'
-                    || res.data.code === '1002') {
+          } else if (res.data.code === '1001') {
             this.showDialog(2);
           } else if (res.data.code === '1003') {
             // 消耗权益
             this.showDialog(1);
             this.consumeNum = res.data.consumeNum || 0;
+          } else if (res.data.code === '1002') {
+            //
+            this.showDialog(3);
+          } else if (res.data.code === '1004') {
+            this.showDialog(4);
           }
         }).catch((err) => {
           console.log(err);
@@ -672,10 +743,7 @@ export default {
     },
     showDialog(type) {
       if (!this.token) {
-        this.$message({
-          message: '您还没有登录，请先登录',
-          type: 'warning',
-        });
+        this.confirm();
         return;
       }
       this.isShowIframe = false;
@@ -683,6 +751,7 @@ export default {
       this.isShowDialogTomes = false;
       this.isShowDialogToBuy = false;
       this.isShowDialogToIn = false;
+      this.isShowDialogCode = '';
       if (type === 0) {
         // 展示评论
         this.isShowDialogTomes = true;
@@ -692,6 +761,12 @@ export default {
       } else if (type === 2) {
         // 展示购买
         this.isShowDialogToBuy = true;
+      } else if (type === 3) {
+        // 展示购买
+        this.isShowDialogCode = '1002';
+      } else if (type === 4) {
+        // 展示购买
+        this.isShowDialogCode = '1004';
       }
     },
     play(type) {
@@ -928,8 +1003,10 @@ export default {
 }
 .previewIframe{
   display: block;
-  width: 1100px;
+  width: 1040px;
   height: 700px;
+  transform: scale(0.85);
+  transform-origin: 0 0;
 }
 .downLoadIframe{
   width: 100%;

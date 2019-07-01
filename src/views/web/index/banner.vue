@@ -82,7 +82,7 @@ export default {
     return {
       name: 'banner',
       lazy: false,
-      defaultUrl: `${window.location.origin}/banner.png`,
+      defaultUrl: '',
       swiperOption: {
         autoplay: {
           delay: 3000,
@@ -127,6 +127,7 @@ export default {
     init() {
       // console.log(this.list);
       /*eslint-disable*/ 
+        this.defaultUrl = this.publicPath+'banner.png';
             if(navigator.appName == "Microsoft Internet Explorer"&&parseInt(navigator.appVersion.split(";")[1].replace(/[ ]/g, "").replace("MSIE",""))==9){
                 this.isIe9 = true;
                 this.$nextTick(()=>{
@@ -144,7 +145,8 @@ export default {
     swiperClick(swiperItem) {
       if (swiperItem.url) {
         // 如果存在href 跳转
-        window.location.href = swiperItem.url;
+        // window.location.href = swiperItem.url;
+        window.open(swiperItem.url);
       }
     },
     initBannerByIe() {

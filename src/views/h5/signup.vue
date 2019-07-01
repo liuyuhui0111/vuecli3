@@ -91,11 +91,7 @@ export default {
     },
     submitForm() {
       if (!this.token) {
-        this.$message({
-          message: '登录状态过期，请重新登录',
-          type: 'warning',
-          duration: 2000,
-        });
+        this.confirm();
         return;
       }
       if (!this.onlineForm.name) {
@@ -187,7 +183,7 @@ export default {
         if (res.data.code === '0000') {
           // this.detailData = res.data.data
           this.$router.replace({ path: '/h5/success' });
-        } else {
+        } else if (res.data.code !== '0002') {
           this.$message({
             message: '报名失败，请稍后再试',
             type: 'warning',

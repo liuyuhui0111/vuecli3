@@ -54,7 +54,7 @@
                 <template v-else>
                   <p>请在{{buyEndTime}}内完成支付，逾期将取消订单</p>
                   <span @click="goBuy()" class="btn-sub">立即支付</span>
-                  <p @click="updateOrderByIdFn" class="cancel pointer">取消订单</p>
+                  <p @click="confirmCancel" class="cancel pointer">取消订单</p>
                 </template>
             </template>
             <template v-else>
@@ -66,7 +66,7 @@
         <div class="theader">
             <span class="w43">课程信息</span>
             <span class="w16">数量</span>
-            <span class="w20">小计（元）</span>
+            <span class="w16">小计（元）</span>
             <span class="w20">有效期</span>
         </div>
         <classItem :item="orderInfo">
@@ -105,15 +105,6 @@ export default {
       buyEndTime: '', // 最后付款时间
       sTime: '', // 生效时间
       eTime: '', // 到期时间
-      statusType: {
-        1: '等待付款',
-        2: '等待付款',
-        3: '交易成功',
-        4: '退款中',
-        5: '已退款',
-        6: '订单已取消',
-        7: '交易成功',
-      },
     };
   },
 
@@ -138,13 +129,27 @@ export default {
       }
       this.$router.push({ path: '/pay-order', query: { orderId: this.orderId } });
     },
+    confirmCancel() {
+      this.$confirm('确认取消该订单吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        customClass: 'common-conifrm-box',
+        confirmButtonClass: 'common-confirm-sub',
+        cancelButtonClass: 'common-confirm-cancel',
+        type: 'warning',
+      }).then(() => {
+        this.updateOrderByIdFn();
+      }).catch(() => {
+        console.log('取消');
+      });
+    },
     updateOrderByIdFn() {
       // 取消订单
       updateOrderById({ id: this.orderId }).then((res) => {
         if (res.data.code === '0000') {
           console.log(res);
           this.type = 6;
-        } else {
+        } else if (res.data.code !== '0002') {
           this.$message({
             message: '取消订单失败，请稍后再试',
             type: 'warning',
@@ -241,13 +246,13 @@ export default {
     text-align: center;
 }
 .w43{
-    width: 43.4%;
+    width: 50%;
 }
 .theader .w43{
     text-align: left;
 }
 .w16{
-    width: 16.6%;
+    width: 15%;
 }
 .w20{
     width: 20%;

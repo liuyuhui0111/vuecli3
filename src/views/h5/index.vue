@@ -129,7 +129,7 @@ export default {
         findOfflineCourseById({ id: this.courseId }).then((res) => {
           if (res.data.code === '0000') {
             this.detailData = res.data.data;
-          } else {
+          } else if (res.data.code !== '0002') {
             this.$message({
               message: '公开课详情获取失败，请稍后再试',
               type: 'warning',

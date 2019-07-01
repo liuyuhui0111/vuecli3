@@ -9,8 +9,9 @@
     <title>优税学院</title>
     <script>
     	window.COMMON_DOWNLOAD_URL = {
-          ie: 'https://ysxydx-pre.ele-cloud.com/group1/M00/00/00/rBABDFzviI-AegC3AQe5XuLCdNA189.zip',
-          chrome: 'https://ysxydx-pre.ele-cloud.com/group1/M00/00/00/rBABDFzviIaAP3FnBpAycQx8Ah0920.zip',
+          ie: 'https://efats.ele-cloud.com/group1/M00/00/00/wKgIFVzw8A6AQVYLAQe5XuLCdNA014.zip',
+          chrome: 'https://efats.ele-cloud.com/group1/M00/00/00/wKgIFVzw8ACAX_68BpAycQx8Ah0902.zip',
+          // logo:'',    //logo url地址
 		};
     </script>
     <style>
@@ -74,10 +75,10 @@
     </noscript>
     <div id="errApp">
     		<div class="logo">
-		    	<img src="./logo.png" alt="">
+		    	<img id="logo" src="./logo.png" alt="">
 		    </div>
         <img class="update" src="./error-update.png">
-        <p>您正在使用的IE8浏览器，版本过低将不能正常浏览和使用财税课堂 <br>
+        <p>您正在使用的IE浏览器，版本过低将不能正常浏览和使用 <br>
       为了华丽丽的体验，快快更新浏览器吧！</p>
       <div class="btns">
         <div class="ie">
@@ -104,6 +105,7 @@
         // window.location.href = '/index';
         var oIe = document.getElementById('ie');
         var oChrome = document.getElementById('chrome');
+        // var oLogo = document.getElementById("logo");
         oIe.href = window.COMMON_DOWNLOAD_URL.ie;
         oChrome.href = window.COMMON_DOWNLOAD_URL.chrome;
     }

@@ -61,6 +61,7 @@
             <a v-for="(item,index) in tablist"
             @click="changeTab(index,item)"
             :class="{active:index == tabindex}"
+            v-show="detailData[item.key]"
             :key="index">
                 {{item.text}}
             </a>
@@ -89,8 +90,9 @@
                 <p class="intro" v-html="detailData.teacherIntroduction"></p>
               </div>
             </template>
-            <div :id="item.id" class="title">
+            <div v-if="detailData[item.key]" :id="item.id" class="title">
               <baseTitle :title="item.text"></baseTitle>
+
             </div>
             <!-- 课程信息 -->
             <template v-if="item.text === '课程信息'">
@@ -336,11 +338,11 @@ export default {
       defaultUrl: defaultPhotoUrl, // 默认头像
       tabindex: 0, // 当前选中tab index
       tablist: [ // tab列表
-        { text: '课程信息', id: '1', key: '' },
+        { text: '课程信息', id: '1', key: 'title' },
         { text: '课程介绍', id: '2', key: 'introduce' },
         { text: '课程大纲', id: '3', key: 'outline' },
         { text: '课程计划', id: '4', key: 'plan' },
-        { text: '预约报名', id: 'online', key: '' },
+        { text: '预约报名', id: 'online', key: 'title' },
       ],
       labelPosition: 'right',
       onlineForm: { // 在线报名表单
@@ -425,7 +427,6 @@ export default {
         courseId: '', // 课程id
         onOffType: '0', // 线上线下0 : 线下课； 1 线上课
       },
-      isCanSendApi: true,
       isShowFreeBtn: true,
       type: 2, // 1线上视频课 2线下课 3线上专题课
       copyFlag: true, // 复制是否成功
@@ -467,7 +468,10 @@ export default {
         this.isShowFreeBtn = true;
       }
       // 初始化二维码
-      this.copyurl = `${window.location.href.split('#')[0]}#/h5/index?cid=${this.courseId}`;
+      // this.copyurl = `${window.location.href.split('#')[0]}#/h5/index?cid=${this.courseId}`;
+      // h5详情页替换规则 #号分割 替换/course 位mcourse
+      let href = window.location.href.split('#')[0].replace('/course', '/mcourse');
+      this.copyurl = `${href}#/detail?cid=${this.courseId}`;
       // 获取详情内容
       this.findOfflineCourseByIdFn();
       // 获取在线训练营
@@ -484,11 +488,12 @@ export default {
         return;
       }
       if (!this.token) {
-        this.$message({
-          message: '您还没有登录，请先登录',
-          type: 'warning',
-          // duration: 0,
-        });
+        this.confirm();
+        // this.$message({
+        //   message: '您还没有登录，请先登录',
+        //   type: 'warning',
+        //   // duration: 0,
+        // });
         return;
       }
       this.isShowFormDialog = true;
@@ -520,30 +525,32 @@ export default {
     collectFn() {
       // 点击收藏
       this.saveMyCollectionParam.courseId = this.courseId;
-      if (this.isCanSendApi) {
-        this.isCanSendApi = false;
-      } else {
-        return;
-      }
+
       this.saveMyCollectionFn();
     },
     saveMyCollectionFn() {
       // 收藏 如果未登录  提示去登陆
       if (!this.token) {
-        this.$message({
-          message: '您还没有登录，请先登录',
-          type: 'warning',
-        });
+        this.confirm();
+        // this.$message({
+        //   message: '您还没有登录，请先登录',
+        //   type: 'warning',
+        // });
+        return;
+      }
+      if (this.isCanRequest) {
+        this.isCanRequest = false;
+      } else {
         return;
       }
 
       saveMyCollection(this.saveMyCollectionParam).then((res) => {
-        this.isCanSendApi = true;
+        this.isCanRequest = true;
         if (res.data.code === '0000') {
           this.detailData.isColl = !this.detailData.isColl;
         }
       }).catch((err) => {
-        this.isCanSendApi = true;
+        this.isCanRequest = true;
         console.log(err);
         let message = '收藏失败，请稍后再试';
         if (this.detailData.isColl) {
@@ -585,7 +592,7 @@ export default {
               },
             });
           }
-        } else {
+        } else if (res.data.code !== '0002') {
           this.$message({
             message: res.data.message,
             type: 'warning',
@@ -684,10 +691,11 @@ export default {
       }
       console.log(this.token);
       if (!this.token) {
-        this.$message({
-          message: '您还没有登录，请先登录',
-          type: 'warning',
-        });
+        this.confirm();
+        // this.$message({
+        //   message: '您还没有登录，请先登录',
+        //   type: 'warning',
+        // });
         return;
       }
       let curForm = this.$refs[formName].validate

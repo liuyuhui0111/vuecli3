@@ -16,7 +16,7 @@ const mutations = {
 
     setUsers(state, user) {
         window.sessionStorage.setItem('commonUserData',JSON.stringify(user))
-        state.commonUserData = user;
+        state.commonUserData = JSON.parse(JSON.stringify(user));
     },
 };
 

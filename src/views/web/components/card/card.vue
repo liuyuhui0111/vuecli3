@@ -134,8 +134,8 @@
 
             <div class="intro">
                <p class="title ellipsis2"
-               :title="classData.title">{{classData.title}}</p>
-               <p class="time">上课时间：{{getClassTime(classData)}}</p>
+               :title="classData.title" v-html="searchValToHtml(classData.title,searchVal)"></p>
+               <p class="time">上课时间：{{searchVal}}{{getClassTime(classData)}}</p>
                <p class="class-intro ellipsis2">
                 上课地点 {{classData.address + classData.city}}
                </p>
@@ -158,7 +158,8 @@
             </div>
             <div class="intro">
                <p class="title ellipsis2"
-               :title="classData.title">{{classData.title}}</p>
+               :title="classData.title"
+               v-html="searchValToHtml(classData.title,searchVal)"></p>
                <p class="time">
                   {{getTime()}} |
                   {{classData.learnNum}}人已学 |
@@ -252,6 +253,10 @@ export default {
       type: Object,
       default: () => null,
     },
+    searchVal: {
+      type: String,
+      default: () => '',
+    },
 
   },
   mounted() {
@@ -332,6 +337,7 @@ margin-bottom: 10px;
   }
   .offline .title{
     color: #FB683C;
+    height: 50px;
   }
   .offline .time{
     padding: 10px 0;
@@ -403,7 +409,7 @@ margin-bottom: 10px;
     overflow: hidden\0;
   }
   .search-box .item .img{
-    width: 350px;
+    width: 250px;
     float: left\0;
     margin-right: 20px\0;
   }
@@ -412,7 +418,7 @@ margin-bottom: 10px;
     font-size: 14px;
     letter-spacing: 0;
     color: #444;
-    width: 100%;
+    width: 330px;
     overflow-x: hidden;
   }
   .search-box .title{

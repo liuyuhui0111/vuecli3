@@ -1,5 +1,7 @@
 /* eslint-disable */
-
+// 路由尽量与H5端保持一致  没有的新建 H5端有的要保持一致
+// 路由尽量与H5端保持一致  没有的新建 H5端有的要保持一致
+// 路由尽量与H5端保持一致  没有的新建 H5端有的要保持一致
 import Vue from 'vue'
 import Router from 'vue-router'
 import store from '@/store'

@@ -1,38 +1,69 @@
 // 个人中心子页面
+// 路由尽量与H5端保持一致  没有的新建 H5端有的要保持一致
+// 路由尽量与H5端保持一致  没有的新建 H5端有的要保持一致
+// 路由尽量与H5端保持一致  没有的新建 H5端有的要保持一致
 const centerChildrens = [{
   title: '个人中心',
   name: 'center-preson',
   path: '/center/preson',
+  meta: {
+    isNeedLogin: true,
+    loginBackPath: '/index',
+  },
   view: () => import(/* webpackChunkName: "group-center" */ '@/views/web/center/preson.vue'),
 }, {
   title: '我的课程',
   name: 'center-myclass',
   path: '/center/myclass',
+  meta: {
+    isNeedLogin: true,
+    loginBackPath: '/index',
+  },
   view: () => import(/* webpackChunkName: "group-center" */ '@/views/web/center/myclass.vue'),
 }, {
   title: '我的收藏',
   name: 'center-mycol',
   path: '/center/mycol',
+  meta: {
+    isNeedLogin: true,
+    loginBackPath: '/index',
+  },
   view: () => import(/* webpackChunkName: "group-center" */ '@/views/web/center/mycol.vue'),
 }, {
   title: '我的报名',
   name: 'center-signin',
   path: '/center/signin',
+  meta: {
+    isNeedLogin: true,
+    loginBackPath: '/index',
+  },
   view: () => import(/* webpackChunkName: "group-center" */ '@/views/web/center/signin.vue'),
 }, {
   title: '我的订单',
   name: 'center-myorder',
   path: '/center/myorder',
+  meta: {
+    isNeedLogin: true,
+    loginBackPath: '/index',
+  },
   view: () => import(/* webpackChunkName: "group-center" */ '@/views/web/center/myorder.vue'),
 }, {
   title: '我的订单',
   name: 'center-myorder-detail',
   path: '/center/detail',
+  meta: {
+    isNeedLogin: true,
+    loginBackPath: '/index',
+  },
   view: () => import(/* webpackChunkName: "group-center" */ '@/views/web/center/detail.vue'),
 }, {
   title: '个人设置',
   name: 'center-myset',
   path: '/center/myset',
+  meta: {
+    isNeedLogin: true,
+    loginBackPath: '/index',
+  },
   view: () => import(/* webpackChunkName: "group-center" */ '@/views/web/center/myset.vue'),
 }];
 
@@ -40,7 +71,7 @@ const defaultChildrens = [{
   title: '首页',
   name: 'index',
   path: '/index',
-  view: () => import('@/views/web/index/index.vue'),
+  view: () => import(/* webpackChunkName: "group-pc" */ '@/views/web/index/index.vue'),
 }, {
   title: '财税公开课',
   name: 'open-class',
@@ -90,6 +121,9 @@ const defaultChildrens = [{
   title: '支付订单',
   name: 'pay-order',
   path: '/pay-order',
+  meta: {
+    isNeedLogin: true,
+  },
   view: () => import(/* webpackChunkName: "group-order" */ '@/views/web/order/pay-order.vue'),
 }, {
   title: '个人中心',
@@ -102,7 +136,7 @@ const defaultChildrens = [{
   title: '会员权益',
   name: 'interests',
   path: '/interests',
-  view: () => import('@/views/web/center/interests.vue'),
+  view: () => import(/* webpackChunkName: "group-pc" */ '@/views/web/center/interests.vue'),
 },
 ];
 

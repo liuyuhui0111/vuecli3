@@ -3,8 +3,15 @@
      <ul class="list">
          <li>
             <div @click="emit('imgClick',item)" class="imgbox">
+              <div class="fl">
                 <img :src="item.pictureUrl" :alt="item.goodsName">
-                <p class="title">{{item.goodsName}}</p>
+                <p class="title" :class="{online:goodstype == 2}">
+                <span>{{item.goodsName}}</span>
+                </p>
+              </div>
+                <span class="tkm" v-if="goodstype == 2">
+                  {{item.orderItems[0].tkm||'----'}}
+                </span>
             </div>
             <div class="price">
                 <slot :item="item" name="price">
@@ -54,7 +61,7 @@
                     <span @click="emit('goStudy',item)" class="btn-sub">去学习</span>
                     </template>
                     <template v-else>
-                        听课码：{{item.orderItems[0].tkm}}
+                        ----
                     </template>
                   </div>
                   <div v-else>
@@ -70,22 +77,16 @@
 </template>
 <script>
 import { timeStampToHour } from '@/assets/utils/timefn';
+import mixin from './js/mixin';
 
 export default {
   name: 'classItem',
+  mixins: [mixin],
   data() {
     return {
       name: 'base-title',
       navIndex: -1,
-      statusType: {
-        1: '等待付款',
-        2: '等待付款',
-        3: '交易成功',
-        4: '退款中',
-        5: '已退款',
-        6: '订单已取消',
-        7: '交易成功',
-      },
+
     };
   },
   props: {
@@ -134,6 +135,13 @@ export default {
 };
 </script>
 <style scoped>
+.tkm{
+  display: block;
+  float: right;
+  width: 23%;
+  text-align: center;
+  line-height: 78px;
+}
   .class-box{
     display: block;
     width: 100%;
@@ -157,22 +165,25 @@ export default {
     line-height: 20px\0;
   }
   .class-box .imgbox{
-    width: 43.4%;
+    width: 50%;
     float: left;
     padding: 0 20px;
     box-sizing:border-box;
-    flex-grow:0;
-     flex-shrink:0;
-     display: flex;
-    align-items: center;
+    overflow: hidden;
     height: 100%;
     cursor: pointer;
-    line-height: 78px\0;
+    line-height: 78px\0\9;
+  }
+  .class-box .imgbox .fl{
+    width: 77%;
+    float: left;
+    position: relative;
+    line-height: 78px;
   }
   .options,
   .status,
   .price{
-    width: 16.6%;
+    width: 15%;
     padding-top:20px\0;
     text-align: center;
     box-sizing:border-box;
@@ -183,11 +194,8 @@ export default {
     line-height: 78px\0;
     padding-top: 0\0;
   }
-  .options,
-  .status{
-    width: 20%;
-  }
   .options{
+    width: 20%;
     padding-top: 0;
   }
   .class-box .imgbox img{
@@ -196,11 +204,22 @@ export default {
     float: left;
   }
   .class-box .imgbox p{
+    display: block;
+    width: 210px;
     line-height: 20px;
-    padding-left: 20px;
-    padding-top: 20px\0;
-    display: inline-block;
-    max-width: 138px\0;
+    position: absolute;
+    top: 50%;
+    left: 151px;
+    -webkit-transform: translate(0,-50%);
+    -ms-transform: translate(0,-50%);
+    -o-transform:translate(0,-50%);
+    transform:translate(0,-50%);
+  }
+  .class-box .imgbox p.online{
+    width: 110px;
+  }
+  .class-box .imgbox p span{
+    line-height: 20px;
   }
   .btn-sub{
     margin:10px auto;

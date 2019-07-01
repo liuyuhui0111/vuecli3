@@ -11,7 +11,7 @@
               <div class="logo-box">
                 <router-link to="/index" tag="a">
                   <!-- <span class="logo">LOGO</span> -->
-                  <img :src="publicPath+'logo.png'" alt="优税学院">
+                  <img :src="COMMON_COMP_DATA.logo">
                 </router-link>
                 <!-- <h1>法规资讯</h1> -->
               </div>
@@ -186,7 +186,9 @@
                       :key="index">
                         <img :src="item.bannerUrl?item.bannerUrl:item.pic" :alt="item.title">
                         <div class="title-box">
-                          <p class="title ellipsis2">{{item.title}}</p>
+                          <p class="title ellipsis2"
+                          v-html="searchValToHtml(item.title,search.value)">
+                          </p>
                           <p class="time-box">
                             <span>{{getSearchTime(item)}}</span>
                             <span>{{getSearchLearn(item)}}</span>
@@ -244,7 +246,7 @@
         <!-- 返回顶部 QQ -->
        <div class="aside-qq-backtop">
         <span @click="isShowEvaluation = !isShowEvaluation" class="icon-ev"></span>
-        <a :href="aside.qq" target="_blank">
+        <a v-if="COMMON_COMP_DATA.qq" :href="COMMON_COMP_DATA.qq" target="_blank">
          <span class="icon-qq"></span>
         </a>
          <span v-if="aside.scrollTop>=aside.scrollY"
@@ -275,7 +277,7 @@
   </div>
 </template>
 <script>
-import { getScrollTop, setScrollTop, getUrlParam } from '@/assets/utils/util';
+import { getScrollTop, setScrollTop } from '@/assets/utils/util';
 import {
   getSearchList,
   getCategoryList,
@@ -393,24 +395,30 @@ export default {
       searchResultType: 'online',
     };
   },
+  created() {
+    // 初始化用户信息
+  },
   mounted() {
     this.init();
   },
   watch: {
     /*eslint-disable*/
         'search.value': function () {
-          this.getSearchListFn();
+          if(this.search.value){
+            this.getSearchListFn();
+          }
         },
         '$route':function(){
-          // if(this.$route.query.val){
-          //   this.search.value = this.$route.query.val;
-          //   this.showSearchInput = true;
-          // }
           this.initNavListIndex();
+          // 清空搜索值
+          this.initSearchVal();
+          if (!this.$route.meta.isNeedLogin) {
+            this.getTokenByCode();
+          }
+          this.getUserInfoFn();
         },
         'token':function(){
           if(this.token){
-            // this.initUserInfo();
             this.initReview();
           }
         },
@@ -420,8 +428,7 @@ export default {
 
     init() {
       this.aside.qq = this.COMMON_COMP_DATA.qq;
-      // 初始化用户信息
-      this.initUserInfo();
+
       // 初始化导航位置
       this.initNavListIndex();
       // 设置评测环状
@@ -432,6 +439,28 @@ export default {
       this.getCategoryListFn();
       // 初始化测评相关
       this.initReview();
+      // 获取token
+      if (!this.$route.meta.isNeedLogin) {
+        this.getTokenByCode();
+      }
+      // 获取用户信息
+      this.getUserInfoFn();
+    },
+    initSearchVal() {
+      this.search.value = '';
+      this.showSearchBox = false;
+      this.showSearchInput = false;
+      this.isShowSearchLoading = false;
+      this.getSearchListData = JSON.parse(JSON.stringify({
+        online: {
+          total: 0,
+          list: [],
+        },
+        offline: {
+          total: 0,
+          list: [],
+        },
+      }));
     },
     noPassLoginFn() {
       // 免密登录
@@ -499,7 +528,7 @@ export default {
     showEva(type) {
       if (!this.token && type) {
         // 直接去登录不提示
-        this.login();
+        this.confirm();
         return;
       }
       if (this.token && this.evurl) {
@@ -509,7 +538,8 @@ export default {
       } else if (!this.token) {
         // 否则 登录失效 去登录
         // this.loginout();
-        this.$message({ message: '您还没有登录，请先登录', type: 'warning' });
+        this.confirm();
+        // this.$message({ message: '您还没有登录，请先登录', type: 'warning' });
       } else {
         // this.getReviewUrlFn();
         this.$message({ message: '获取评测地址失败，请稍后再试', type: 'warning' });
@@ -530,7 +560,7 @@ export default {
             this.isEvad = false;
           }
           this.evurl = res.data.url;
-        } else {
+        } else if (res.data.code !== '0002') {
           this.isEvad = false;
           // 获取测评地址失败
           this.$message({
@@ -546,22 +576,6 @@ export default {
         });
         console.log(err);
       });
-    },
-    initUserInfo() {
-      // 获取用户信息
-      const code = getUrlParam('code');
-      if (this.token) {
-        this.getUserInfoFn();
-        return;
-      }
-
-
-      if (code) {
-        // 如果code 存在 token不存在
-        if (!this.token) {
-          this.getTokenByCode();
-        }
-      }
     },
     onlineNavClick(item) {
       this.$router.push({ path: '/online-class', query: { nid: item.id } });
@@ -594,6 +608,14 @@ export default {
         }
       });
 
+      arr.sort((a, b) => {
+        let asort = a.sort || 1;
+        let bsort = b.sort || 1;
+        if (asort > bsort) {
+          return 1;
+        }
+        return -1;
+      });
 
       return arr;
     },
@@ -1334,6 +1356,11 @@ border-radius: 8px;
   .isevad .right .after {
       transform-origin: left center;
       transform: rotateZ(45deg);
+  }
+
+  html body .logo-box img {
+    width: 135px;
+    height: 46px;
   }
 
 </style>

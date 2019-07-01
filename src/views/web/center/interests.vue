@@ -222,10 +222,11 @@ export default {
         return;
       }
       if (!this.token) {
-        this.$message({
-          message: '您还没有登录，请先登录',
-          type: 'warning',
-        });
+        this.confirm();
+        // this.$message({
+        //   message: '您还没有登录，请先登录',
+        //   type: 'warning',
+        // });
         return;
       }
       this.$router.push({

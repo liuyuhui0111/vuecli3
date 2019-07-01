@@ -38,7 +38,7 @@ export default {
   mixins: [mixin],
   data() {
     return {
-      name: 'center',
+      name: 'center', // default 组件不执行获取token
       isShowPage: false, // false
       user: {
         name: '',
@@ -94,9 +94,15 @@ export default {
   watch: {
     $route() {
       // 当前路由
+
       this.navindex = this.$route.path;
       if (this.$route.path === '/center/detail') {
         this.navindex = '/center/myorder';
+      }
+    },
+    token() {
+      if (this.token) {
+        this.queryPersonalMapFn();
       }
     },
   },
@@ -115,7 +121,7 @@ export default {
       }
       this.queryPersonalMapFn();
       // if (!this.token) {
-      // this.$router.go(-1);
+      //   this.$router.replace('/index');
       // }
     },
     changeNav(item) {
@@ -148,6 +154,9 @@ export default {
 };
 </script>
 <style scoped>
+.navlist{
+  margin-top: 10px;
+}
 .usertip{
   text-align: center;
   font-size: 14px;

@@ -152,6 +152,10 @@ export default {
       this.code = this.$route.query.tkm || '';
       // this.startGetPayType()
       // 查询订单详情
+      if (!this.token) {
+        return;
+      }
+
       this.getOrderInfoFn();
       if (!this.isSuccess) {
         // 获取支付方式
@@ -185,7 +189,7 @@ export default {
           this.order.paymoney = res.data.data.amount;
           this.order.orderCode = res.data.data.orderCode;
           this.courseId = res.data.goodsId;
-        } else {
+        } else if (res.data.code !== '0002') {
           this.$message({
             message: '订单获取失败，请稍后再试',
             type: 'warning',
@@ -223,7 +227,7 @@ export default {
           // this.isShowPayList = true;
           this.payFn();
           // this.isShowPayList = true;
-        } else {
+        } else if (res.data.code !== '0002') {
           this.$message({
             message: '支付方式获取失败，请稍后再试',
             type: 'warning',
@@ -258,7 +262,7 @@ export default {
 
           // 生成二维码成功 开启定时器更新二维码
           // this.startTimes();
-        } else {
+        } else if (res.data.code !== '0002') {
           this.$message({
             message: '统一下单失败，请稍后再试',
             type: 'warning',
