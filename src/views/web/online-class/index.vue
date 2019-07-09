@@ -101,7 +101,6 @@ import OnlineNav from '@/views/web/online-class/online-nav.vue';
 import { initList } from '@/assets/utils/util';
 import {
   getCourseList,
-  getCategoryList,
 } from '@/api/apis';
 
 export default {
@@ -177,7 +176,6 @@ export default {
       },
       list: [],
       allCount: 0,
-      onlineNavListData: [], // 导航数据
 
     };
   },
@@ -219,21 +217,7 @@ export default {
       }
       this.getCourseListFn('init');
     },
-    getCategoryListFn() {
-      // 获取线上课程导航列表
-      this.onlineNavList = [];
-      getCategoryList().then((res) => {
-        if (res.data.code === '0000') {
-          this.onlineNavListData = res.data.list;
-        }
-      }).catch((err) => {
-        this.$message({
-          message: '获取线上课导航列表失败,请稍后再试',
-          type: 'warning',
-        });
-        console.log(err);
-      });
-    },
+
     handleCurrentChange(val) {
       this.pageNum = val;
       this.getCourseListFn();

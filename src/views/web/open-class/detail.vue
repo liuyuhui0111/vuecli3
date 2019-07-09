@@ -106,7 +106,7 @@
               </div>
             </template>
             <!-- 其他 -->
-            <p v-if="item.key" class="intro"
+            <p v-if="item.key && item.key != 'title'" class="intro"
             v-html="transferStringFn(detailData[item.key])"></p>
 
 
@@ -547,7 +547,8 @@ export default {
       saveMyCollection(this.saveMyCollectionParam).then((res) => {
         this.isCanRequest = true;
         if (res.data.code === '0000') {
-          this.detailData.isColl = !this.detailData.isColl;
+          // res.data.type 0 取消收藏 1 收藏
+          this.detailData.isColl = res.data.type === '1';
         }
       }).catch((err) => {
         this.isCanRequest = true;

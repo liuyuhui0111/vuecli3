@@ -7,7 +7,13 @@ import Router from 'vue-router'
 import store from '@/store'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
-import {COMMON_REPLACE_URL} from '@/assets/utils/util'
+import { COMMON_REPLACE_URL, getUrlParam } from '@/assets/utils/util'
+import {
+  getToken,
+  getUserInfo,
+  goLogin,
+  loginout,
+} from '@/api/apis';
 
 import h5Routes from './h5'
 import defaultChildrens from './pc'
@@ -70,14 +76,66 @@ let router = new Router({
     }
   }
 });
-
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
+  if(getUrlParam(COMMON_REPLACE_URL)){
+    //COMMON
+    replaceFn();
+    return;
+  }
   document.title = to.meta.title || '加载中...'
   NProgress.start();
+  if (getUrlParam('token')) {
+    // 免密登录
+    if(!store.getters.token){
+      // 如果本地token 设置token
+      store.commit('setToken',getUrlParam('token'));
+      let res = await getUserInfo();  //获取用户信息
+      if (res.data.code === '0000') {
+        setUserFn(res);
+      }
+    }
+    next();
+    return;
+  }
+  if (to.meta.isNeedLogin) {
+    // 是否需要登录 登录拦截
+    if (!store.getters.token && !getUrlParam('code')) {
+      // 如果需要登录 且没有code
+      if (to.meta.loginBackPath) {
+        // 如果配置了登录回退页，跳转到该页面 否则去登录页
+        next({ path: to.meta.loginBackPath });
+      } else {
+        goLogin('login',to.fullPath);
+      }
+    } else if (!store.getters.token && getUrlParam('code')) {
+      // 获取token  下一周期 执行init
+      let res = await getToken({code:getUrlParam('code')});
+      if(res.data.code === 0){
+        let token = res.data.data['access_token'];
+        store.commit('setToken',token);
+        let userRes = await getUserInfo();  //获取用户信息
+        if (userRes.data.code === '0000') {
+          setUserFn(userRes);
+          next();
+        }
+      }else{
+        // 获取token失败直接去登录
+        goLogin('login',to.fullPath);
+      }
+    }
+    return;
+  }
+  next();
+})
 
-  if(window.location.href.indexOf(COMMON_REPLACE_URL) !== -1){
+router.afterEach((to, from) => {
+  NProgress.done();
+  // ...
+})
 
-    let href = window.location.href.substring(0, window.location.href.length - 2);
+function replaceFn(){
+  // 登录回跳地址转换成hash路由
+  let href = window.location.href.substring(0, window.location.href.length - 2);
     let host = href.split('?')[0];
     let queryList = href.split('?')[1].split('&');
     let query = '';
@@ -95,30 +153,27 @@ router.beforeEach((to, from, next) => {
         queryList.splice(i,1);
       }
     }
-      query = queryList.join('&');
-      // debugger
-      console.log(host+'#/'+path+'?'+query);
-      
-
-    // let flag = confirm('登录回跳地址：'+host+'#/'+path+'?'+query);
-    // if(!flag){
-    //   return;
-    // }
+    query = queryList.join('&');
+    console.log(host+'#/'+path+'?'+query);
     if(query){
       window.location.href = host+'#/'+path+'?'+query;
     }else{
       window.location.href = host+'#/'+path
     }
-    
-  }else{
-    next()
-  }
-  
-})
+}
 
-router.afterEach((to, from) => {
-  NProgress.done();
-  // ...
-})
+function setUserFn(res){
+  let user = res.data.leaguerList;
+  let userData = {
+    userName: user.userName || '', // 用户名
+    managerUserId: user.managerUserId, // 管理员id
+    userId: user.userId, // 用户id
+    leaguerLevelId: user.leaguerLevelId, // 会员等级
+    source: user.source, // 渠道
+    leaguerLevelName: user.leaguerLevelName || '用户', // 会员等级名称
+  };
+  store.commit('user/setUsers',userData);
+}
+
 
 export default router

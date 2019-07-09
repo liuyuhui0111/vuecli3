@@ -606,7 +606,8 @@ export default {
       saveMyCollection(this.saveMyCollectionParam).then((res) => {
         this.isCanRequest = true;
         if (res.data.code === '0000') {
-          this.detail.isColl = !this.detail.isColl;
+          // res.data.type 0 取消收藏 1收藏
+          this.detail.isColl = res.data.type === '1';
         }
       }).catch((err) => {
         this.isCanRequest = true;

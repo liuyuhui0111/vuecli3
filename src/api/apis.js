@@ -10,11 +10,11 @@ import {
 const { SSO_URL } = COMMON_ENV;
 const CLIENT_ID = 'fatc';
 const BASE_URL = '/fatscourse';
-export function goLogin(type) {
-  const REDIRECT_URI = encodeURIComponent(replaceCode());
+export function goLogin(type, path) {
+  const REDIRECT_URI = encodeURIComponent(replaceCode(path));
   // alert(replaceCode())
   // 去登录页 去登录的时候本地缓存 REDIRECT_URI 获取token传参无需编码，直接存href
-  window.localStorage.setItem('REDIRECT_URI', replaceCode());
+  window.localStorage.setItem('REDIRECT_URI', replaceCode(path));
 
   let url = `/oauth/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${REDIRECT_URI}`;
   // let flag = confirm(`登录REDIRECT_URI地址是${replaceCode()}`);
@@ -227,7 +227,7 @@ export function getReview(params) {
 export function getReviewUrl(params) {
   // 获取跳转测评地址
   const url = `${BASE_URL}/review/getReviewUrl`;
-  return post(url, params || {});
+  return post(url, params || {}, { isHideLoading: true });
 }
 export function queryPersonalMap(params) {
   // 个人中心页面

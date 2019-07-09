@@ -17,9 +17,11 @@
            <p>{{item.name}}</p>
          </li>
        </ul>
-       <span
-       @click="open(0)"
-       v-show="isShowIcon[0]" class="icon-triangle"></span>
+       <div @click="open(0)"
+         v-show="isShowIcon[0]"
+         class="icon-box">
+           <span class="icon-triangle"></span>
+         </div>
      </div>
     </div>
       <div class="nav-box">
@@ -38,9 +40,11 @@
             <p>{{item.name}}</p>
            </li>
          </ul>
-         <span @click="open(1)"
+         <div @click="open(1)"
          v-show="isShowIcon[1]"
-         class="icon-triangle"></span>
+         class="icon-box">
+           <span class="icon-triangle"></span>
+         </div>
        </div>
      </div>
       <div class="nav-box">
@@ -58,9 +62,11 @@
              <p>{{item.name}}</p>
            </li>
          </ul>
-         <span @click="open(2)"
+         <div @click="open(2)"
          v-show="isShowIcon[2]"
-         class="icon-triangle"></span>
+         class="icon-box">
+           <span class="icon-triangle"></span>
+         </div>
        </div>
      </div>
   </div>
@@ -277,12 +283,20 @@ export default {
     line-height: 20px;
     cursor: pointer;
   }
+  .nav-box .list .icon-box{
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 60px;
+    height: 40px;
+    cursor: pointer;
+  }
   .nav-box .list span.icon-triangle{
     position: absolute;
-    right: 20px;
     left: inherit;
     z-index: 11;
     top: 30px;
+    right: 20px;
     width: 0;
     height: 0px;
     min-height: 0;

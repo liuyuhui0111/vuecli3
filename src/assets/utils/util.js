@@ -73,28 +73,29 @@ function setScrollTop(top) {
 // }
 
 // 将url中code=xxx 替换成空字符串
-function replaceCode() {
+function replaceCode(fullPath) {
   /*eslint-disable*/
-    const reg = /code\=\w*(&|$)/;
-    let href = window.location.href;
-    let host = href.split('#')[0];
+  const reg = /code\=\w*(&|$)/;
+  let href = window.location.href;
+  let host = href.split('#')[0];
 
-        // ie9  不支持history模式 hash模式
+      // ie9  不支持history模式 hash模式
+  let hashUrl = fullPath || window.location.hash.replace('#', '');
+  let hashArr = hashUrl.split('?');
+   
+  let path = encodeURIComponent(hashArr[0].substring(1, hashArr[0].length)); // path
+  // 把参数截取成数组[a=1,b=2]
+  // let queryList = hashArr[1]?hashArr[1].split('&'):[];
+  let query = hashArr[1] ? `&${hashArr[1]}` : '';
+  // 取消 #号  拼接成 ?path=path
 
-        let hashArr = window.location.hash.replace('#', '').split('?');
-        let path = encodeURIComponent(hashArr[0].substring(1, hashArr[0].length)); // path
-        // 把参数截取成数组[a=1,b=2]
-        // let queryList = hashArr[1]?hashArr[1].split('&'):[];
-        let query = hashArr[1] ? `&${hashArr[1]}` : '';
-        // 取消 #号  拼接成 ?path=path
+  href = host + `?${COMMON_REPLACE_URL}=${path}${query}`;
 
-        href = host + `?${COMMON_REPLACE_URL}=${path}${query}`;
-
-        href=href.replace(reg, '');
-        if (href.substr(href.length - 1, 1) === '?' || href.substr(href.length - 1, 1) === '&') {
-            // 如果最后一个字符是？
-            href = href.substring(0, href.length - 1);
-        }
+  href=href.replace(reg, '');
+  if (href.substr(href.length - 1, 1) === '?' || href.substr(href.length - 1, 1) === '&') {
+      // 如果最后一个字符是？
+      href = href.substring(0, href.length - 1);
+  }
  /* eslint-enable */
   return href;
 }

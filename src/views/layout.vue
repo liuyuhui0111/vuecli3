@@ -83,7 +83,6 @@
                   </div>
                 </el-popover>
 
-
               </div>
 
 
@@ -417,7 +416,12 @@ export default {
           }
           this.getUserInfoFn();
         },
-        'token':function(){
+        'token':function(newval,oldval){
+          if(oldval && !newval){
+            console.log("0002退出登录")
+            this.loginout();
+            return;
+          }
           if(this.token){
             this.initReview();
           }
@@ -622,10 +626,16 @@ export default {
 
     getCategoryListFn() {
       // 获取线下课程列表
+      // if (this.onlineNavListData.length > 0) {
+      //   this.onlineNavList = this.initNavList(this.onlineNavListData);
+      //   return;
+      // }
       getCategoryList().then((res) => {
         if (res.status === 200) {
           let arr = [];
           let { list } = res.data;
+          // 设置vuex在线导航列表
+          this.setOnlineNavListData(res.data.list);
           // id === pid 是一级菜单
           arr = this.initNavList(list);
           console.log(arr);

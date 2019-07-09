@@ -13,14 +13,17 @@ export default new Vuex.Store({
 		isShowLoading: false,		//全局loading
 		keepAliveComponetScrolls: {},		//keepAlive 组件记录滚动条 path:scrolly
 		token:getTokenFn() ? getTokenFn() : '',		//token
-		COMMON_COMP_DATA:{
-		},
+		COMMON_COMP_DATA:{},		//公司主体信息
+		onlineNavListData:[],		//在线课程导航列表
 	},
 	getters: {},
 	actions: {},
 	mutations: {
 		setShowLoading(state, { isShowLoading }) {
 	    state.isShowLoading = isShowLoading;
+	  },
+	  setOnlineNavListData(state,data){
+	  	state.onlineNavListData = data;
 	  },
 	  setCopData(state,data){
 	  	state.COMMON_COMP_DATA = JSON.parse(JSON.stringify(data));

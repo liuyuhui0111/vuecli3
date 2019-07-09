@@ -3,6 +3,7 @@ const getters = {
     token: state => state.token,
     commonUserData: state => state.user.commonUserData,
     COMMON_COMP_DATA: state => state.COMMON_COMP_DATA,
+    onlineNavListData: state => state.onlineNavListData,
     commonCenterData: state => state.center.commonCenterData,
 
     isShowLoading: state => state.isShowLoading,

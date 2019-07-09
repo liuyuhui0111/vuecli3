@@ -29,32 +29,6 @@ export default {
       components: {
         baseImg,
       },
-      beforeRouteEnter(to, from, next) {
-        if (to.meta.isNeedLogin) {
-          // 是否需要登录
-          next((vm) => {
-            console.log(vm);
-            if (vm.name === 'default' || vm.name === 'layout') {
-              // layout 直接退出
-              return;
-            }
-            if (!vm.token && !getUrlParam('code')) {
-              if (to.meta.loginBackPath) {
-                // 如果配置了登录回退页，跳转到该页面 否则去登录页
-                vm.$router.replace({ path: to.meta.loginBackPath });
-              } else {
-                vm.login();
-              }
-            } else if (!vm.token && getUrlParam('code')) {
-              // 获取token  下一周期 执行init
-              vm.getTokenByCode(vm.init);
-            }
-          });
-        } else {
-          next();
-        }
-      },
-
       computed: {
         ...mapGetters([
           // 映射 this.count 为 store.state.count
@@ -62,6 +36,7 @@ export default {
           'token', // 是否显示全局Loading
           'commonUserData', // 用户相关信息
           'COMMON_COMP_DATA',
+          'onlineNavListData', // 在线课程导航列表
         ]),
       },
       methods: {
@@ -91,13 +66,11 @@ export default {
 
         loginout() {
           // 退出登录，清空cookie
-          if (this.token) {
             this.setToken('');
             window.localStorage.removeItem('REDIRECT_URI');
             this.$nextTick(() => {
               loginout();
             });
-          }
         },
         confirm(message) {
           let m = message || '您还没有登录，去登录?';
@@ -127,7 +100,9 @@ export default {
                     let token = res.data.data['access_token']
                     this.setToken(token)
                     this.getUserInfoFn()
-                    typeof (fn) === 'function' && fn();
+                    this.$nextTick(()=>{
+                      typeof (fn) === 'function' && fn();
+                    })
                 }else{
                     this.$message({
                         message: '登录失败,请重新登录',
@@ -154,14 +129,6 @@ export default {
               // console.log('user===================',res);
               if (res.data.code === '0000') {
                 let user = res.data.leaguerList;
-                if (!user || !user.userName) {
-                  this.setToken('');
-                  this.$message({
-                    message: '获取个人信息失败，请重新登录',
-                    type: 'warning',
-                  });
-                  return;
-                }
                 let userData = {
                   userName: user.userName || '', // 用户名
                   managerUserId: user.managerUserId, // 管理员id
@@ -181,6 +148,7 @@ export default {
         ...mapMutations([
           'setToken',
           'setCopData',
+          'setOnlineNavListData',
         ]),
         ...mapMutations('user', [
           'setUsers',

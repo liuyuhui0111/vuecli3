@@ -65,7 +65,7 @@
               <span v-if="classData.state == 2">已结束</span>
             </div>
           </div>
-            <p class="title ellipsis"
+            <p class="title ellipsis2"
             :style="titleStyle"
             :title="classData.title">{{classData.courseOfflineEntity.title}}</p>
         </div>
