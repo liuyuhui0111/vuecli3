@@ -68,7 +68,12 @@
                       </div>
                       <div v-else>
                           <p>剩余：{{getTime(scope.row.expireDate)}}</p>
-                          <span class="pointer btn-sub" @click="goBuy(scope.row)">立即支付</span>
+                          <span 
+                            v-show="scope.row.payChannelType != 'JSAPI'
+                              &&
+                             scope.row.payChannelType != 'MWEB'"
+                            class="pointer btn-sub" 
+                            @click="goBuy(scope.row)">立即支付</span>
                       </div>
                     </div>
                     <div v-else>
@@ -81,11 +86,11 @@
 
             </div>
              <!-- eslint-enable -->
-            <div class="foot">
+            <!-- <div class="foot">
             <p>客服QQ：<a :href="aside.qq" target="_blank">QQ交谈</a></p>
             <p>客服热线：{{aside.tel}}</p>
             <p>服务时间：{{aside.time}}</p>
-            </div>
+            </div> -->
         </div>
     </template>
 

@@ -4,7 +4,7 @@
     <div class="aside">
       <img class="photo" :src="user.src" alt="头像">
       <p class="name">{{user.name}}</p>
-      <p class="level" @click="routerGo('/interests')">{{user.level}}</p>
+      <p class="level" @click="routerGo('/interests')">{{subString(user.level) || "用户"}}</p>
       <p v-if="user.dueTime" class="time">{{user.dueTime}}</p>
       <p class="usertip" v-if="user.effective==0">您的会员已到期</p>
       <ul class="navlist">

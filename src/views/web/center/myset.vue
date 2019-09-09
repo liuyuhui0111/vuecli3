@@ -3,7 +3,7 @@
    <Title title="我的设置"
     @navclick="navclick"
     :list="list"></Title>
-    <template v-if="src.length>0">
+    <template>
         <div v-for="(item,index) in src"
         v-show="index == curnav"
         :key="index"
@@ -56,24 +56,18 @@ export default {
       // 修改密码
       // https://devpassport.ele12.cn/course_authentication/require#/cPass?token=
       /*eslint-disable*/ 
+
+      let time = new Date().getTime()
       this.src = [
-        {src:`${window.COMMON_ENV.SSO_URL}/course_authentication/require#/safeSet?token=${this.token}&productId=ac5463eec58f4fca80d1a00802581ddc`},
-        {src:`${window.COMMON_ENV.SSO_URL}/course_authentication/require#/cPass?token=${this.token}&productId=ac5463eec58f4fca80d1a00802581ddc`},
+        {src:`${window.COMMON_ENV.SSO_URL}/course_authentication/require#/safeSet?token=${this.token}&productId=ac5463eec58f4fca80d1a00802581ddc&t=${time}`},
+        {src:`${window.COMMON_ENV.SSO_URL}/course_authentication/require#/cPass?token=${this.token}&productId=ac5463eec58f4fca80d1a00802581ddc&t=${time}`},
       ];
 
-      this.iframeSrc = this.src[this.curnav];
-      setTimeout(()=>{
-        let iframes = document.getElementsByTagName("iframe");
-        for(var i=0;i<iframes.length;i++){
-          iframes[i].contentWindow.location.reload(true);
-        }
-      }, 30);
        /* eslint-enable */
     },
     navclick(item, index) {
       console.log(item);
       this.curnav = index;
-      this.iframeSrc = this.src[this.curnav];
       // setTimeout(() => {
       //   document.getElementById('iframe').contentWindow.location.reload(true);
       // }, 30);

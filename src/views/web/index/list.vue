@@ -1,18 +1,25 @@
 <template>
-    <div class="list">
+  <div class="list">
     <baseTitle @moreClick="moreClick" :title="title" :more="more"></baseTitle>
-      <slot>
-        <div v-if="list.length>0" class="contain-box">
-          <div v-for="(item,index) in list" :key="index"
+    <slot>
+      <div v-if="list.length>0" class="contain-box">
+        <div
+          v-for="(item,index) in list"
+          @click="getIndex(item,index)"
+          :key="index"
           :class="{empty:item==null}"
-          class="item">
-            <Card v-if="item != null"
+          class="item"
+        >
+          <Card
+            v-if="item != null"
             @classClick="classClick"
-            :type="cardType" :classData="item"></Card>
-          </div>
+            :type="cardType"
+            :classData="item">
+          </Card>
         </div>
-      </slot>
-    </div>
+      </div>
+    </slot>
+  </div>
 </template>
 <script>
 import Card from '@/views/web/components/card/card.vue';
@@ -34,7 +41,8 @@ export default {
       type: String,
       default: () => '',
     },
-    cardType: { // 卡片类型 online 线上课程 offline 线下公开课
+    cardType: {
+      // 卡片类型 online 线上课程 offline 线下公开课
       type: String,
       default: () => '',
     },
@@ -47,11 +55,12 @@ export default {
     this.init();
   },
   methods: {
-    init() {
-
-    },
+    init() {},
     moreClick() {
       this.$emit('moreClick');
+    },
+    getIndex(item, index) {
+      this.$emit('getIndex', item, this.cardType, index);
     },
     classClick(item, type) {
       this.$emit('classClick', item, type);
@@ -64,24 +73,23 @@ export default {
 };
 </script>
 <style scoped>
-
-  .contain-box{
-    display: flex;
-    padding: 20px 0 0 0;
-    align-items: flex-start;
-    justify-content: space-between;
-    overflow: hidden;
-    width: 100%\0;
-  }
-  .contain-box .item{
-    width: 219px\0;
-    float: left\0;
-    margin-right: 34px\0;
-  }
-  .contain-box .item:nth-last-child(1){
-    margin-right: 0\0;
-  }
-  .contain-box .empty{
-    min-width: 219px;
-  }
+.contain-box {
+  display: flex;
+  padding: 20px 0 0 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  overflow: hidden;
+  width: 100%\0;
+}
+.contain-box .item {
+  width: 219px\0;
+  float: left\0;
+  margin-right: 34px\0;
+}
+.contain-box .item:nth-last-child(1) {
+  margin-right: 0\0;
+}
+.contain-box .empty {
+  min-width: 219px;
+}
 </style>

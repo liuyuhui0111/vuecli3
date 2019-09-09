@@ -47,7 +47,10 @@
                       <div v-if="getTime(item.expireDate) != ''">
                         <p class="time">剩余：
                         {{getTime(item.expireDate)}}</p>
-                        <span v-if="item.status===1||item.status === 2" @click="emit('buy',item)"
+                        <span  v-show="item.payChannelType != 'JSAPI'
+                              &&
+                             item.payChannelType != 'MWEB'"
+                             v-if="item.status===1||item.status === 2" @click="emit('buy',item)"
                         class="btn-sub">立即支付</span>
                         <span @click="emit('cancel',item)"
                         class="cancel pointer">取消订单</span>

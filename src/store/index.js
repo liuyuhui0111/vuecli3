@@ -15,10 +15,14 @@ export default new Vuex.Store({
 		token:getTokenFn() ? getTokenFn() : '',		//token
 		COMMON_COMP_DATA:{},		//公司主体信息
 		onlineNavListData:[],		//在线课程导航列表
+		fromRoute:'',			//来源路由path
+		isqimoChatClickFlag:false,		//在线客服加载完成
 	},
-	getters: {},
 	actions: {},
 	mutations: {
+		setIsqimoChatClickFlag(state, flag) {
+	    state.isqimoChatClickFlag = flag;
+	  },
 		setShowLoading(state, { isShowLoading }) {
 	    state.isShowLoading = isShowLoading;
 	  },
@@ -40,10 +44,13 @@ export default new Vuex.Store({
     	}
         state.keepAliveComponetScrolls[path] = scrollY;
     },
+    setFromRoute(state,path){
+	  	state.fromRoute = encodeURIComponent(path || '');
+	  },
 	},
-    modules: {
-        user,
-        center
-    },
-    getters
+  modules: {
+      user,
+      center
+  },
+  getters
 });

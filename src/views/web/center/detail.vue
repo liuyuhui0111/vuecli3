@@ -6,7 +6,7 @@
         <div class="item">
             <p>下单时间：{{orderInfo.createTime}}</p>
             <p>订单编号：{{orderInfo.orderCode}}</p>
-            <p>订单金额：¥{{orderInfo.amount}}</p>
+            <p>订单金额：¥{{amount}}</p>
             <!-- <p>优惠信息：无</p> -->
             <div v-if="orderInfo.goodsType == '1'">
             <p v-if="sTime">生效时间：{{sTime}}</p>
@@ -53,7 +53,12 @@
                 </template>
                 <template v-else>
                   <p>请在{{buyEndTime}}内完成支付，逾期将取消订单</p>
-                  <span @click="goBuy()" class="btn-sub">立即支付</span>
+                  <span
+                    v-show="
+                      orderInfo.payChannelType != 'JSAPI'
+                      &&
+                      orderInfo.payChannelType != 'MWEB'"
+                    @click="goBuy()" class="btn-sub">立即支付</span>
                   <p @click="confirmCancel" class="cancel pointer">取消订单</p>
                 </template>
             </template>
@@ -105,6 +110,7 @@ export default {
       buyEndTime: '', // 最后付款时间
       sTime: '', // 生效时间
       eTime: '', // 到期时间
+      amount: '', // 订单金额
     };
   },
 
@@ -171,6 +177,7 @@ export default {
       queryOrderById({ orderId: this.orderId }).then((res) => {
         if (res.data.code === '0000' && res.data.list.length > 0) {
           this.orderInfo = res.data.list[0] || {};
+          this.amount = res.data.amount;
           /*eslint-disable*/ 
           if (this.orderInfo.termOfValidity) {
             // 计算生效时间   过期时间

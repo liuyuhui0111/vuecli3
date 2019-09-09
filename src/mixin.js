@@ -37,6 +37,8 @@ export default {
           'commonUserData', // 用户相关信息
           'COMMON_COMP_DATA',
           'onlineNavListData', // 在线课程导航列表
+          'fromRoute',
+          'isqimoChatClickFlag',
         ]),
       },
       methods: {
@@ -45,6 +47,7 @@ export default {
           // 去登录
           goLogin(type);
         },
+
 
         openBlank(path, query) {
           // 在新标签页打开
@@ -62,6 +65,12 @@ export default {
           }
           var newstr = str.replace(new RegExp(val,"ig"), '<font style="color:#FB683C;">$&</font>');
           return newstr;
+        },
+
+        subString(str,len){
+          let l = len || 3;
+          if(!str) return '';
+          return str.length>l ? str.substr(0,4)+'...' : str
         },
 
         loginout() {
@@ -135,8 +144,10 @@ export default {
                   userId: user.userId, // 用户id
                   leaguerLevelId: user.leaguerLevelId, // 会员等级
                   source: user.source, // 渠道
-                  leaguerLevelName: user.leaguerLevelName || '用户', // 会员等级名称
+                  leaguerLevelName: user.leaguerLevelName, // 会员等级名称
+                  ...res.data.leaguerList,
                 };
+                userData.leaguerLevelName = userData.leaguerLevelName || '用户';
                 this.setUsers(userData);
               }
             }).catch((err) => {
@@ -149,6 +160,7 @@ export default {
           'setToken',
           'setCopData',
           'setOnlineNavListData',
+          'setIsqimoChatClickFlag',
         ]),
         ...mapMutations('user', [
           'setUsers',

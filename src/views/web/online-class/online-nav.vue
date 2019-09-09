@@ -92,8 +92,13 @@ export default {
       default: () => [],
     },
     id: {
-      type: Number,
-      default: () => -1,
+      type: [Number, String],
+      default: (val) => {
+        if (val === '') {
+          return -1;
+        }
+        return parseInt(val, 10);
+      },
     },
   },
   mounted() {
@@ -162,7 +167,7 @@ export default {
     },
     initShowList(curid) {
       // 没有id  全部
-      let id = curid;
+      let id = curid===''?-1:curid;
       this.curNav = [-1, -1, -1];
       this.firstList = this.childList;
       this.secondList = [];

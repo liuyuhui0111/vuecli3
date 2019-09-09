@@ -72,6 +72,7 @@ export default {
       if (type === 'init') {
         this.pageNum = 1;
       }
+      this.isShowPage = false;
       this.list = [];
       let { pageNum } = this;
       let { pageSize } = this;

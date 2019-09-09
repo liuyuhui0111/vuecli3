@@ -44,8 +44,6 @@
       <span v-else>
         本次不开具发票
       </span>
-      <!-- <span v-if="invoiceForm.title!=''">{{invoiceForm.titleType=='0'?'个人':'公司'}}</span>
-      <span v-if="invoiceForm.title!=''">{{invoiceForm.content}}</span> -->
       <span class="btn-edit" @click="isShowInvoiceFn(true)">修改</span>
     </div>
 

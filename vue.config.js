@@ -12,7 +12,8 @@ let proxyData = {
     // 'http://wxkf.5ifapiao.com': ['/course_authentication', '/course_api-gateway'],  //开发环境登录
     'http://test.5ifapiao.com:8888': ['/fatscourse','/course_authentication', '/course_api-gateway'],  //开发环境登录
     // 'http://test.5ifapiao.com:8888': ['/fatscourse'],
-    // 'http://10.1.29.53:9983': ['/fatscourse'],
+    'http://10.1.29.53:8102': ['/fatsapi'],
+    'http://10.1.28.168:8105': ['/expert'],
     // 'http://10.1.28.167:9983': ['/fatscourse'],
 };
 
@@ -35,9 +36,7 @@ Object.keys(proxyData).forEach((key) => {
     });
 });
 
-console.log('publicPath=============',publicPath)
-console.log('VUE_APP_ENV=============',process.env.VUE_APP_ENV)
-console.log('NODE_ENV=============',process.env.NODE_ENV)
+// console.log('proxy=============',proxy)
 
 module.exports = {
     // 基本路径

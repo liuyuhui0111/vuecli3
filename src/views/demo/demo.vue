@@ -11,33 +11,33 @@
 import { setCookie, getCookie, delCookie } from '@/assets/utils/util';
 
 export default {
-    data() {
-        return {
-            name: 'page',
-            res: {},
-            id: '',
-            href: 'http://wpa.qq.com/msgrd?v=3&uin=84964308&site=在线客服&menu=yes',
-        };
-    },
-    mounted() {
-        this.id = getCookie('id');
-        this.init();
-    },
-    methods: {
-        init() {
+  data() {
+    return {
+      name: 'page',
+      res: {},
+      id: '',
+      href: 'http://wpa.qq.com/msgrd?v=3&uin=84964308&site=在线客服&menu=yes',
+    };
+  },
+  mounted() {
+    this.id = getCookie('id');
+    this.init();
+  },
+  methods: {
+    init() {
 
-        },
-        loading() {
-            setCookie('id', '123');
-            const loading = this.$loading();
-            setTimeout(() => {
-                loading.close();
-            }, 2000);
-        },
-        delCookieFn() {
-            delCookie('id');
-        },
     },
+    loading() {
+      setCookie('id', '123');
+      const loading = this.$loading();
+      setTimeout(() => {
+        loading.close();
+      }, 2000);
+    },
+    delCookieFn() {
+      delCookie('id');
+    },
+  },
 };
 </script>
 <style scoped>

@@ -1,12 +1,13 @@
 <template>
   <div class="open-class common-container-width common-open-class-detail">
     <div v-if="detailData" class="contain-box">
+      <div style="display:none;" id="detailTitle">{{detailData.title}}</div>
       <div class="contain">
         <!-- 详情图片 分享 收藏 在线报名 免费学 -->
         <div class="img-box">
             <baseImg
-            :width="675"
-            :height="312"
+            :width="219"
+            :height="130"
             :src="detailData.pic"
             :alt="detailData.title">
             </baseImg>
@@ -18,7 +19,8 @@
                   trigger="click"
                   width="158"
                   v-model="showShare">
-              <span slot="reference" class="icon-share"></span>
+              <span slot="reference"
+              @click="shareFn()" class="icon-share"></span>
               <div class="share-box">
                 <div @click="copyFn" class="copy">
                   <textarea id="copy" v-model="copyurl"></textarea>
@@ -471,11 +473,23 @@ export default {
       // this.copyurl = `${window.location.href.split('#')[0]}#/h5/index?cid=${this.courseId}`;
       // h5详情页替换规则 #号分割 替换/course 位mcourse
       let href = window.location.href.split('#')[0].replace('/course', '/mcourse');
-      this.copyurl = `${href}#/detail?cid=${this.courseId}`;
+      this.copyurl = `${href}#/detail?cid=${this.courseId}&fromRoute=share`;
       // 获取详情内容
       this.findOfflineCourseByIdFn();
       // 获取在线训练营
       this.showCourseOfflineFn();
+    },
+    shareFn() {
+      // 分享埋点
+      if (!this.showShare) {
+        this.ysxy_shareClick({
+          contentTitle: this.detailData.title,
+          contentId: this.detailData.id,
+          contentKind: '线下',
+          contentType: this.detailData.price === '0' ? '免费' : '收费',
+          contentPrice: this.detailData.price,
+        });
+      }
     },
     validateFieldFn(prop, formname) {
       let curForm = this.$refs[formname].validate
@@ -483,6 +497,7 @@ export default {
         : this.$refs[formname][0];
       curForm.validateField([prop]);
     },
+
     onlineSignFn() {
       if (this.detailData.state !== '0') {
         return;
@@ -549,6 +564,15 @@ export default {
         if (res.data.code === '0000') {
           // res.data.type 0 取消收藏 1 收藏
           this.detailData.isColl = res.data.type === '1';
+          if (this.detailData.isColl) {
+            this.ysxy_collect({
+              contentTitle: this.detailData.title,
+              contentId: this.detailData.id,
+              contentKind: '线下',
+              contentType: this.detailData.price === '0' ? '免费' : '收费',
+              contentPrice: this.detailData.price,
+            });
+          }
         }
       }).catch((err) => {
         this.isCanRequest = true;
@@ -582,6 +606,12 @@ export default {
       offlineCourseSignUp(params).then((res) => {
         if (res.data.code === '0000') {
           // this.detailData = res.data.data
+          this.ysxy_signUp({
+            name: this.onlineForm.name,
+            phone: this.onlineForm.tel,
+            company: this.onlineForm.comp,
+            position: this.onlineForm.work,
+          });
           if (res.data.id) {
             // 跳转报名成功页
             this.$router.push({
@@ -631,6 +661,14 @@ export default {
           if (res.data.code === '0000' && res.data.data) {
             res.data.data.isColl = res.data.isFavorite && res.data.isFavorite.code === '8888';
             this.detailData = res.data.data;
+            this.ysxy_detailView({
+              contentTitle: this.detailData.title,
+              contentId: this.detailData.id,
+              mainTeacher: this.detailData.teacherName,
+              contentKind: '线下',
+              contentType: this.detailData.price === '0' ? '免费' : '收费',
+              contentPrice: this.detailData.price,
+            });
           }
         }).catch((err) => {
           console.log(err);
@@ -827,8 +865,6 @@ export default {
     position: relative;
     display: block;
     width: 100%;
-    min-height: 200px;
-    max-height: 320px;
     overflow: hidden;
     margin-bottom: 20px;
   }

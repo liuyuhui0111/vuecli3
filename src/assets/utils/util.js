@@ -76,11 +76,13 @@ function setScrollTop(top) {
 function replaceCode(fullPath) {
   /*eslint-disable*/
   const reg = /code\=\w*(&|$)/;
+   
+  const reg1 = /token\=[\w|\.|\-|\_]*(&|$)/;
   let href = window.location.href;
   let host = href.split('#')[0];
-
+  let hash = href.split('#')[1];
       // ie9  不支持history模式 hash模式
-  let hashUrl = fullPath || window.location.hash.replace('#', '');
+  let hashUrl = fullPath || hash.replace('#', '');
   let hashArr = hashUrl.split('?');
    
   let path = encodeURIComponent(hashArr[0].substring(1, hashArr[0].length)); // path
@@ -91,7 +93,8 @@ function replaceCode(fullPath) {
 
   href = host + `?${COMMON_REPLACE_URL}=${path}${query}`;
 
-  href=href.replace(reg, '');
+  href=href.replace(reg, '').replace(reg1, '');
+
   if (href.substr(href.length - 1, 1) === '?' || href.substr(href.length - 1, 1) === '&') {
       // 如果最后一个字符是？
       href = href.substring(0, href.length - 1);
@@ -163,6 +166,11 @@ function transferString(content) {
   return string;
 }
 
+function isMobile() {
+  // 检测是否是移动端
+  return window.navigator.userAgent.indexOf('Mobi') === -1;
+}
+
 export {
   COMMON_REPLACE_URL,
   setTokenFn,
@@ -176,4 +184,5 @@ export {
   getUrlParam,
   initList,
   transferString,
+  isMobile,
 };

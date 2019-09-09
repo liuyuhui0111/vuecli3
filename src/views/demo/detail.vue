@@ -3,19 +3,19 @@
 </template>
 <script>
 export default {
-    data() {
-        return {
-            name: 'detail',
-        };
-    },
-    mounted() {
-        this.init();
-    },
-    methods: {
-        init() {
+  data() {
+    return {
+      name: 'detail',
+    };
+  },
+  mounted() {
+    this.init();
+  },
+  methods: {
+    init() {
 
-        },
     },
+  },
 };
 </script>
 <style scoped>

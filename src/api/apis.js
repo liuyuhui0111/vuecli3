@@ -81,7 +81,7 @@ export function getToken(params) {
 
 export function getUserInfo(params) {
   // 获取用户信息
-  const url = `${BASE_URL}/personal-web/queryPersonal`;
+  const url = `${BASE_URL}/personal-web/userInformation`;
   return post(url, params || {});
 }
 
@@ -361,4 +361,19 @@ export function downloadPower(params) {
   // 下载权限接口
   const url = `${BASE_URL}/classpower-web/downloadPower`;
   return post(url, params || {});
+}
+
+export function getProductStatusByProductId(params) {
+  // 下载权限接口
+  const url = '/fatsapi/aosp-portal-web/product/getProductStatusByProductId';
+  return get(url, params || {}, { isHideLoading: true });
+}
+
+export function getUnreadMsgCount(params) {
+  // 获取未读消息type
+// user用户类型： user/expert  userId 1用户id 专家id
+
+  const url = `/fatsapi/fats-expert/login-expert/getUnreadMsgCount/${params.type}/${params.userId}`;
+  console.log(url);
+  return get(url, {}, { isHideLoading: true });
 }

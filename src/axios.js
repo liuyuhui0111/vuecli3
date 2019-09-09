@@ -64,6 +64,7 @@ axios.interceptors.request.use(
 */
 axios.interceptors.response.use(
     (response) => {
+
             if(COMMON_LOADING){
               
               requestList.forEach((item,index)=>{
@@ -90,7 +91,6 @@ axios.interceptors.response.use(
             return response;
     },
     (error) => {
-      console.log(error)
           if(COMMON_LOADING){
               requestList.forEach((item,index)=>{
                 if(item === error.config.url){

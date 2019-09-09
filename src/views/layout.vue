@@ -9,10 +9,14 @@
           <div class="header">
             <div class="common-container-width">
               <div class="logo-box">
-                <router-link to="/index" tag="a">
-                  <!-- <span class="logo">LOGO</span> -->
+                <div :style="'background-image:url('+COMMON_COMP_DATA.logoUrl+')'" class="logo">
+                <!-- <router-link to="/index" tag="a">
                   <img :src="COMMON_COMP_DATA.logo">
-                </router-link>
+                </router-link> -->
+                </div>
+                <div class="logoname">
+                  {{COMMON_COMP_DATA.productName}}
+                </div>
                 <!-- <h1>法规资讯</h1> -->
               </div>
               <!-- 导航 -->
@@ -113,7 +117,8 @@
                     <span class="name ellipsis"
                     :title="commonUserData.userName">Hi,{{commonUserData.userName}}</span>
                     <span class="level pointer"
-                    @click="routerGo('/interests')">{{commonUserData.leaguerLevelName}}</span>
+                    @click="routerGo('/interests')">
+                    {{subString(commonUserData.leaguerLevelName) || "用户"}}</span>
                     <ul class="user-nav">
                       <li
                       v-for="(item,index) in userNav"
@@ -129,7 +134,7 @@
                 <!-- 用户等级 -->
                 <span
                 @click="routerGo('/interests')"
-                class="level pointer">{{commonUserData.leaguerLevelName}}</span>
+                class="level pointer">{{subString(commonUserData.leaguerLevelName) || "用户"}}</span>
               </div>
 
 
@@ -180,7 +185,7 @@
                     </div>
                     <ul v-if="getSearchListData[searchResultType].total>0" class="result-list">
                       <li class="pointer"
-                      @click="goDetail(item)"
+                      @click="goDetail(item,'ysxy_searchResultClick')"
                       v-for="(item,index) in getSearchListData[searchResultType].list.slice(0,3)"
                       :key="index">
                         <img :src="item.bannerUrl?item.bannerUrl:item.pic" :alt="item.title">
@@ -244,13 +249,27 @@
 
         <!-- 返回顶部 QQ -->
        <div class="aside-qq-backtop">
-        <span @click="isShowEvaluation = !isShowEvaluation" class="icon-ev"></span>
-        <a v-if="COMMON_COMP_DATA.qq" :href="COMMON_COMP_DATA.qq" target="_blank">
+        <span v-show="sourceData.isOpen"
+        :class="{on:sourceData.mesnum}"
+        @click="expectFn()" class="icon-expect">
+          咨询专家
+        </span>
+        <span @click="isShowEvaluation = !isShowEvaluation" class="icon-ev">
+          能力测评
+        </span>
+        <!-- <a v-if="COMMON_COMP_DATA.qq" :href="COMMON_COMP_DATA.qq" target="_blank">
          <span class="icon-qq"></span>
+        </a> -->
+        <a v-if="isqimoChatClickFlag" href="javascript:"
+        @click="qimoChatClickFn">
+         <span class="icon-qq">
+           在线客服
+         </span>
         </a>
          <span v-if="aside.scrollTop>=aside.scrollY"
           @click="backTop"
-          class="icon-backtop"></span>
+          class="icon-backtop">
+          返回顶部</span>
        </div>
      </div>
       <!-- 首次进入页面提示测评弹框 -->
@@ -282,6 +301,8 @@ import {
   getCategoryList,
   getReviewUrl,
   noPassLogin,
+  getProductStatusByProductId,
+  getUnreadMsgCount,
 } from '@/api/apis';
 
 import compFooter from '@/views/web/layout/footer.vue';
@@ -392,6 +413,12 @@ export default {
         },
       },
       searchResultType: 'online',
+      sourceData: { // 是否开通专家权限
+        isOpen: false,
+        mesnum: false,
+      },
+      getProductTimer: null,
+
     };
   },
   created() {
@@ -415,6 +442,7 @@ export default {
             this.getTokenByCode();
           }
           this.getUserInfoFn();
+          this.getProductStatusByProductIdFn();
         },
         'token':function(newval,oldval){
           if(oldval && !newval){
@@ -424,7 +452,12 @@ export default {
           }
           if(this.token){
             this.initReview();
+            this.getProductStatusByProductIdFn();
           }
+        },
+        'COMMON_COMP_DATA':function(){
+          this.getProductStatusByProductIdFn();
+          
         },
         /* eslint-enable */
   },
@@ -449,6 +482,79 @@ export default {
       }
       // 获取用户信息
       this.getUserInfoFn();
+      // 定时器一分钟获取一次  获取是否有新消息
+      clearInterval(this.getProductTimer);
+      this.getProductTimer = setInterval(() => {
+        this.getUnreadMsgCountFn();
+      }, 30 * 1000);
+    },
+    async getUnreadMsgCountFn() {
+      if (this.token && this.commonUserData.userId) {
+        let res = await getUnreadMsgCount({ type: 'user', userId: this.commonUserData.userId });
+        if (res.data.code === '0000') {
+          this.sourceData.mesnum = res.data.data;
+        }
+      }
+    },
+    async getProductStatusByProductIdFn() {
+      // 获取是否开通专家
+      console.log(this.token && this.commonUserData.userId);
+      if (this.sourceData.isOpen) {
+        // 如果已经有开通权限 但是没有token  或者 有开通权限且有新消息提示  直接返回
+        return;
+      }
+      this.getUnreadMsgCountFn();
+
+      if (this.COMMON_COMP_DATA
+        && this.COMMON_COMP_DATA.source) {
+        let res = await getProductStatusByProductId({
+          distributorId: this.COMMON_COMP_DATA.source,
+          type: 6,
+          productId: 'a2cc30f6552542ad8d22155f96adba30',
+        });
+        if (res.data.code === '0000' && res.data.data.status === '2') {
+          this.sourceData.isOpen = res.data.data.openExpert === '1';
+        }
+      }
+    },
+
+    expectFn() {
+      // 唤起专家
+
+      // status string
+      // 非必须
+      // 0 默认 1 下架 2 已上架 3 删除
+      if (!this.token) {
+        this.confirm();
+
+        return;
+      }
+      console.log(this.commonUserData, this.COMMON_COMP_DATA);
+      /*eslint-disable*/ 
+      const reg = /code\=\w*(&|$)/;
+      const reg1 = /token\=[\w|\.|\-|\_]*(&|$)/;
+      let href = window.location.href.replace(reg, '').replace(reg1, '');
+      /* eslint-enable */
+      let otitle = document.getElementById('detailTitle');
+
+      let params = {
+        id: this.commonUserData.userName,
+        name: this.commonUserData.userName,
+        icon: 'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=1372494972,1692060958&fm=26&gp=0.jpg',
+        account: this.commonUserData.userName,
+        channelFrom: 1624,
+        fromAddress: href,
+        fromName: '优税学院',
+        fromContent: otitle ? otitle.innerHTML : document.title,
+        companyLocation: href,
+        accnout: this.commonUserData.userName,
+        accnoutId: this.commonUserData.userName,
+        distributorId: this.COMMON_COMP_DATA.source, // 渠道id
+        token: this.token,
+        ...window.COMMON_ENV.rongCloudConfig,
+      };
+      this.sourceData.mesnum = false; // 唤起后隐藏红点
+      window.initRongCloud(params);
     },
     initSearchVal() {
       this.search.value = '';
@@ -465,6 +571,10 @@ export default {
           list: [],
         },
       }));
+    },
+    qimoChatClickFn() {
+      // 唤起客服
+      window.qimoChatClick();
     },
     noPassLoginFn() {
       // 免密登录
@@ -485,7 +595,15 @@ export default {
       this.isShowTips = false;
       localStorage.setItem('isShowTips', 'hide');
     },
-    goDetail(item) {
+    goDetail(item, evtype) {
+      // 搜索结果点击埋点
+      if (evtype === 'ysxy_searchResultClick') {
+        this.ysxy_searchResultClick({
+          keyWord: this.search.value,
+          contentId: item.id,
+          contentTitle: item.title,
+        });
+      }
       this.showSearchBox = false;
       if (this.searchResultType === 'online') {
         this.$router.push({ path: '/online-detail', query: { cid: item.id } });
@@ -535,6 +653,7 @@ export default {
         this.confirm();
         return;
       }
+      this.ysxy_EvaluationClick();
       if (this.token && this.evurl) {
         // 如果token存在且跳转地址存在 去测评
         this.closeTips();
@@ -650,6 +769,8 @@ export default {
       });
     },
     getSearchListFn() {
+      // 搜索埋点
+      this.ysxy_searchButtonClick();
       // 搜索联动
       this.isShowSearchLoading = true;
       const title = this.search.value;
@@ -657,13 +778,27 @@ export default {
         clearTimeout(this.searchTimer);
         this.searchTimer = setTimeout(() => {
           getSearchList({ title }).then((res) => {
+            let hasResult = false;
             this.isShowSearchLoading = false;
             if (res.data.code === '0000') {
               // this.getSearchListData = res.data
               this.$set(this.getSearchListData, 'online', res.data.online);
               this.$set(this.getSearchListData, 'offline', res.data.offLine);
+              if (res.data.online.list.length > 0 || res.data.offLine.list.length > 0) {
+                hasResult = true;
+              }
             }
+
+            // 搜索结果埋点
+            this.ysxy_sendSearchRequest({
+              keyWord: this.search.value,
+              hasResult,
+            });
           }).catch((err) => {
+            this.ysxy_sendSearchRequest({
+              keyWord: this.search.value,
+              hasResult: false,
+            });
             this.isShowSearchLoading = false;
             console.log(err);
           });
@@ -858,27 +993,45 @@ border-radius: 8px;
   /*开始迁移*/
   .logo-box{
     float: left;
+    /* display: flex; */
     margin-top: 7px;
+    /* width: 140px; */
     height: 46px;
     line-height: 46px;
     font-size: 0;
+    overflow: hidden;
   }
   .logo-box h1{
     display: inline;
     font-size: 19px;
     color: #444444;
   }
-  .logo{
-    display: inline-block;
+  .logo-box .logo{
+    background-size: 100% 100%;
+    display: block;
     height: 46px;
-    line-height: 46px;
     width: 46px;
-    color: #fff;
-    text-align: center;
-    border-radius: 3.54px;
     margin-right: 10px;
     cursor: pointer;
     font-size: 0;
+    overflow: hidden;
+    float: left;
+    position: relative;
+  }
+  .logo-box .logoname{
+    white-space: nowrap;
+        float: left;
+    /* width: 80px; */
+    color: #000;
+    font-weight: bold;
+    font-size: 16px;
+  }
+  .logo-box .logo img{
+    height: 46px;
+    width: inherit;
+    position: absolute;
+    left: 0;
+    top: 0;
   }
   .nav{
     float: left;
@@ -1273,20 +1426,61 @@ border-radius: 8px;
     bottom:60px;
     z-index: 99;
   }
+  .icon-expect,
   .icon-ev,
   .icon-backtop,
   .icon-qq{
-    width: 88px;
-    height: 88px;
+    width: 68px;
+    height: 76px;
     display: block;
-    background: url('./imgs/icon-qq.png') no-repeat left top;
+    text-align: center;
+    color: #fff;
+    font-size: 12px;
     cursor: pointer;
+    border-radius: 4px;
+    border-radius: 4px;
+    padding-top: 50px;
+    box-sizing:border-box;
+    margin-bottom: 2px;
+    background: url('./imgs/icon-qq.png') no-repeat center 16px;
+    background-size: 26px 26px;
+    background-color: rgba(75,75,75,0.85);
+  }
+  .aside-qq-backtop span:hover{
+    color: #FF7318;
   }
   .icon-backtop{
-    background-image: url('./imgs/icon-backtop.png');
+    background-image: url('./imgs/icon-back.png');
+  }
+  .icon-backtop:hover{
+    background-image: url('./imgs/icon-back-on.png');
   }
   .icon-ev{
     background-image: url('./imgs/icon-ev.png');
+  }
+  .icon-ev:hover{
+    background-image: url('./imgs/icon-ev-on.png');
+  }
+  .icon-expect{
+    background-image: url('./imgs/icon-expect.png');
+    position: relative;
+  }
+  .icon-expect:hover{
+    background-image: url('./imgs/icon-expect-on.png');
+  }
+  .icon-qq:hover{
+    background-image: url('./imgs/icon-qq-on.png');
+  }
+  .icon-expect.on:after{
+    content: "";
+    display: block;
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #f00;
+    border-radius: 100%;
+    right: 10px;
+    top: 10px;
   }
 
   /*评测分环状*/

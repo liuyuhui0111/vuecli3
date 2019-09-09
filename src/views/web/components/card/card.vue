@@ -2,7 +2,7 @@
     <div class="card">
 
       <!-- 线下课程模块 -->
-      <div v-if="type === 'offline'" class="offline">
+      <div v-if="type == 'offline'" class="offline">
         <div class="item"
           :class="{pointer:classData.id}"
           @click="classClick(classData)"
@@ -12,7 +12,7 @@
             <baseImg
             :width="219"
             :height="130"
-            :src="classData.pic"
+            :src="getSmallUrl(classData.pic)"
             :alt="classData.title">
             </baseImg>
 
@@ -33,7 +33,7 @@
           @click="teacherClick(classData)">{{classData.teacherName}}</span>
           {{classData.address + classData.city}}</p>
           <p class="time">上课时间：{{getClassTime(classData)}}</p>
-          <div v-if="type != 'offline-index'" class="free-box">
+          <div v-if="type != '1'" class="free-box">
             <span class="freeType1 fl">￥{{classData.price}}</span>
             <span class="person fr">
               {{classData.signUpManNum}}人已报名
@@ -44,7 +44,7 @@
       </div>
 
        <!-- 首页线下课程模块 -->
-      <div v-if="type === 'offline-index'" class="offline">
+      <div v-if="type === '1'" class="offline">
         <div class="item"
           :class="{pointer:classData.id}"
           @click="classClick(classData)"
@@ -54,7 +54,7 @@
             <baseImg
             :width="219"
             :height="130"
-            :src="classData.courseOfflineEntity.pic"
+            :src="getSmallUrl(classData.courseOfflineEntity.pic)"
             :alt="classData.title">
             </baseImg>
 
@@ -74,7 +74,7 @@
           @click="teacherClick(classData)">{{classData.teacherName}}</span>
           {{classData.courseOfflineEntity.address + classData.courseOfflineEntity.city}}</p>
           <p class="time">上课时间：{{getClassTime(classData.courseOfflineEntity)}}</p>
-          <div v-if="type != 'offline-index'" class="free-box">
+          <div v-if="type != '1'" class="free-box">
             <span class="freeType1 fl">￥{{classData.price}}</span>
             <span class="person fr">
               {{classData.signUpManNum}}人已学习
@@ -83,7 +83,16 @@
       </div>
 
       <!-- 在线课程模块 -->
-      <div v-if="type === 'online' || type === 'online-list'" class="online">
+      <div
+        v-if="
+          type === '2'
+          ||
+          type === '3'
+          ||
+          type === '4'
+          ||
+          type === 'online-list'"
+          class="online">
         <div class="item"
           :class="{pointer:classData.id}"
           @click="classClick(classData)"
@@ -126,7 +135,7 @@
             <baseImg
             :width="219"
             :height="130"
-            :src="classData.bannerUrl || classData.pic"
+            :src="getSmallUrl(classData.bannerUrl || classData.pic)"
             :alt="classData.title">
             </baseImg>
 
@@ -264,6 +273,9 @@ export default {
   },
   methods: {
     init() {
+    },
+    getSmallUrl(str) {
+      return `${str.substr(0, str.lastIndexOf('.'))}_0.5${str.substr(str.lastIndexOf('.'), str.length)}`;
     },
     getTime() {
       let list = this.classData.courseVideoEntity;

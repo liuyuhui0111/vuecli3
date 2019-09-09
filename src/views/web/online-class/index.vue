@@ -4,7 +4,7 @@
     <div class="contain">
     <!-- 顶部导航 -->
       <OnlineNav @changeNav="changeNav"
-      v-if="onlineNavListData.length>0"
+      v-if="onlineNavListData.length>0 && showNav"
       :id="navCurId"
       :list="onlineNavListData"></OnlineNav>
 
@@ -55,7 +55,7 @@
 
       </div>
       <div v-if="list.length<1 && isShowPage" class="empty">
-      <template v-if="!allCount">
+      <template v-if="allCount<=0">
          暂时还没有线上课程哦~去看看
         <span
         class="pointer"
@@ -109,7 +109,7 @@ export default {
     return {
       name: 'online-class',
       cardType: 'online-list',
-      navCurId: '', // 当前选中的id
+      navCurId: -1, // 当前选中的id
       isShowPage: false,
       isShowPagation: false,
       titleStyle: {
@@ -176,7 +176,7 @@ export default {
       },
       list: [],
       allCount: 0,
-
+      showNav: false,
     };
   },
   mounted() {
@@ -197,12 +197,11 @@ export default {
     init() {
       // this.list = initList(this.list, 4);
       this.navCurId = parseInt(this.$route.query.nid, 10) || -1;
+      this.showNav = true;
 
       this.navlist.boolean = this.$route.query.boolean || 0;
       // 获取线上课程列表
       this.getCourseListFn('init');
-      // 获取线上课程分类
-      this.getCategoryListFn();
     },
     changeNav(nav) {
       console.log(nav);
@@ -257,7 +256,9 @@ export default {
             this.list = [];
           }
           this.total = res.data.total;
-          this.allCount = res.data.allCount;
+          if (this.allCount <= 0) {
+            this.allCount = this.total;
+          }
         }
       }).catch((err) => {
         console.log(err);

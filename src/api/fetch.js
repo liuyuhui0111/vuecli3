@@ -8,7 +8,7 @@ import axios from '@/axios';
 const environment = process.env.NODE_ENV;
 
 const get = (url, params, config) => {
-    return axios.get(url, { params }, config);
+    return axios.get(url, { params, ...config});
 };
 const post = (url, params, config) => {
     return axios.post(url, params, config);

@@ -1,6 +1,7 @@
 <template>
   <div class="online-class-detail common-container-width">
     <div v-if="detail != null && !isShowErrorTips">
+    <div style="display:none;" id="detailTitle">{{detail.title}}</div>
       <div class="play-box">
         <div v-if="typelist.length>0" class="typelist">
           <span v-for="(item,index) in typelist"
@@ -242,7 +243,7 @@
         </template>
         <!-- 资料下载 -->
         <template v-if="curTabIndex == 1">
-            <div v-if="detail.coursePreviewEntity.length>0"
+            <div v-if="detail.coursePreviewEntity && detail.coursePreviewEntity.length>0"
             class="previewIframe-box">
               <div class="previewIframe">
                 <iframe
@@ -252,7 +253,9 @@
             </div>
 
             <!-- <Preview :list="detail.coursePreviewEntity"></Preview> -->
-            <div v-if="detail.courseFileEntity.length>0" class="download-box">
+            <div v-if="detail.courseFileEntity
+            && detail.courseFileEntity.length>0"
+            class="download-box">
               <div v-for="(item,index) in detail.courseFileEntity"
               :key="index"
               :class="{'is-pdf':item.fileType === '.pdf'}"
@@ -608,6 +611,16 @@ export default {
         if (res.data.code === '0000') {
           // res.data.type 0 取消收藏 1收藏
           this.detail.isColl = res.data.type === '1';
+          if (this.detail.isColl) {
+            // 收藏埋点
+            this.ysxy_collect({
+              contentTitle: this.detail.title,
+              contentId: this.detail.id,
+              contentKind: '线上',
+              contentType: this.detail.price === '0' ? '免费' : '收费',
+              contentPrice: this.detail.price,
+            });
+          }
         }
       }).catch((err) => {
         this.isCanRequest = true;
@@ -640,10 +653,10 @@ export default {
       if (this.courseId) {
         getGoodEvaluateCount({ courseId: this.courseId }).then((res) => {
           if (res.data.code === '0000' && res.data.evaluate) {
-            this.goodNum = res.data.evaluate.goodNum;
-            this.medNum = res.data.evaluate.medNum;
-            this.badNum = res.data.evaluate.badNum;
-            this.allNum = res.data.evaluate.allNum;
+            this.goodNum = parseInt(res.data.evaluate.goodNum, 10);
+            this.medNum = parseInt(res.data.evaluate.medNum, 10);
+            this.badNum = parseInt(res.data.evaluate.badNum, 10);
+            this.allNum = parseInt(res.data.evaluate.allNum, 10);
           }
         }).catch((err) => {
           console.log(err);
@@ -677,6 +690,14 @@ export default {
       }
     },
     startPlay() {
+      // 播放埋点
+      this.ysxy_videoPlay({
+        contentTitle: this.detail.title,
+        contentId: this.detail.id,
+        contentTime: this.getTime(this.detail.courseVideoEntity),
+        mainTeacher: this.detail.teacherName,
+        contentPrice: this.detail.price,
+      });
       // 开始播放
       this.isShowIframeImg = false;
       this.courseId = this.curPlayItem.courseId;
@@ -834,6 +855,8 @@ export default {
     },
     insertEvaluateFn() {
       // 提交课程评价
+      console.log(this.detail);
+
       if (!this.rate.otherTips) {
         this.$message({
           message: '请填写评价内容',
@@ -861,6 +884,14 @@ export default {
         insertEvaluate(params).then((res) => {
           this.isCanRequest = true;
           if (res.data.code === '0000') {
+            // 评价埋点
+            this.ysxy_comment({
+              contentTitle: this.detail.title,
+              contentId: this.detail.id,
+              contentKind: '线上',
+              contentType: this.detail.price === '0' ? '免费' : '收费',
+              contentPrice: this.detail.price,
+            });
             // console.log(res);
             this.isShowIframe = true;
             this.$message({
@@ -927,7 +958,15 @@ export default {
             res.data.course.isColl = res.data.favorite;
             this.detail = res.data.course;
             this.teacherCourse = res.data.teacherCourse;
-            console.log(res.data.course.coursePreviewEntity)
+            // 详情页展示埋点
+            this.ysxy_detailView({
+              contentTitle: this.detail.title,
+              contentId: this.detail.id,
+              mainTeacher:this.detail.teacherName,
+              contentKind: '线上',
+              contentType: this.detail.price === '0' ? '免费' : '收费',
+              contentPrice: this.detail.price,
+            });
                        /* eslint-enable */
             if (this.detail) {
               this.getList();

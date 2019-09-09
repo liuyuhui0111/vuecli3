@@ -250,7 +250,7 @@ export default {
       this.payFn();
     },
     payFn() {
-      // 生成支付二维码
+      // 生成支付二维码  H5+'WAP'
       this.payParam.orderId = this.orderId;
       this.payParam.payChannelType = this.payParamList[this.payChannelType] || '';
       pay(this.payParam).then((res) => {

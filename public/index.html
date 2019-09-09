@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
   <head>
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <meta charset="utf-8">
@@ -11,6 +11,23 @@
 　　<meta http-equiv="cache-control" content="no-cache">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title id="<%= BASE_URL %>">优税学院</title>
+    <script>
+      // 动态插入专家js
+    (function(window){
+      window.rongCloudConfig = function(config){
+        if(window.rongCloudConfigData && window.initRongCloud){
+          window.initRongCloud(config)
+          return;
+        }else{
+          window.rongCloudConfigData = config;
+          var script = document.createElement('script');
+          script.src = config.host + '/expertclient/rongCloudInit.js'
+          script.type = 'text/javascript';
+          document.getElementsByTagName('head')[0].appendChild(script);
+        }
+      }
+    })(window)
+    </script>
   </head>
   <body>
     <noscript>
@@ -24,7 +41,5 @@
         window.location.href = '..'+path+'update.html';
     }
     </script>
-   <!-- <script type='text/javascript' src='https://webchat.7moor.com/javascripts/7moorInit.js?accessId=60b5ca80-a22f-11e9-8ca3-3f368529f02c&autoShow=true&language=ZHCN' async='async'>
-</script> -->
   </body>
 </html>

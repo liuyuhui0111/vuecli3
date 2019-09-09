@@ -185,14 +185,31 @@ export default {
         this.$router.push({ path: '/search', query: { val: item } });
       } else if (item.type === 1) {
         // 线上课程
-        this.$router.push({ path: '/online-detail', query: { cid: item.id } });
+        this.$router.push({
+          path: '/online-detail',
+          query: {
+            cid: item.id,
+            fromRoute: 'search0',
+          },
+        });
       } else {
         // 线下课程
-        this.$router.push({ path: '/detail', query: { cid: item.id } });
+        this.$router.push({
+          path: '/detail',
+          query: {
+            cid: item.id,
+            fromRoute: 'search0',
+          },
+        });
       }
     },
     classClick(item) {
       console.log(item);
+      this.ysxy_searchResultClick({
+        keyWord: this.searchVal,
+        contentId: item.id,
+        contentTitle: item.title,
+      });
       if (this.tabindex === 1) {
         // 公开课
         this.$router.push({ path: '/detail', query: { cid: item.id } });
@@ -202,7 +219,14 @@ export default {
       }
     },
     routerGoOnline(item) {
-      this.$router.push({ path: '/online-detail', query: { cid: item.id } });
+      // 在线课程推荐
+      this.$router.push({
+        path: '/online-detail',
+        query: {
+          cid: item.id,
+          fromRoute: 'search1',
+        },
+      });
     },
     getCourseListFn() {
       // 查询最新课程列表
@@ -258,13 +282,27 @@ export default {
         return;
       }
       getSearchList({ title, pageNum, pageSize }).then((res) => {
+        let hasResult = false;
         if (res.data.code === '0000') {
           this.$set(this.getSearchListData, 'online', res.data.online);
           this.$set(this.getSearchListData, 'offline', res.data.offLine);
           this.isShowPage = true;
-          console.log(this.getSearchListData);
+          if (res.data.online.list.length > 0 || res.data.offLine.list.length > 0) {
+            hasResult = true;
+          }
         }
+
+        // 搜索结果埋点
+        this.ysxy_sendSearchRequest({
+          keyWord: this.searchVal,
+          hasResult,
+        });
       }).catch((err) => {
+        // 搜索结果埋点
+        this.ysxy_sendSearchRequest({
+          keyWord: this.searchVal,
+          hasResult: false,
+        });
         console.log(err);
       });
     },

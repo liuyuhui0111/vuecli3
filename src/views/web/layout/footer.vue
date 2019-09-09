@@ -1,11 +1,12 @@
 <template>
   <div class="footer">
     <div class="common-container-width">
-      <div class="item logo">
-        <span class="product">
-          <img :src="COMMON_COMP_DATA.logo">
-          <!-- <i>{{footer.productIntro}}</i> -->
-        </span>
+      <div class="logo-box">
+        <div :style="'background-image:url('+COMMON_COMP_DATA.logoUrl+')'" class="logo">
+        </div>
+        <div class="logoname">
+          {{COMMON_COMP_DATA.productName}}
+        </div>
       </div>
       <div class="item">
         客服电话：{{COMMON_COMP_DATA.tel}}  <br>
@@ -20,10 +21,13 @@
   </div>
 </template>
 <script>
+/* eslint-disable prefer-destructuring */
+
 import {
   getSourceData,
 } from '@/api/apis';
 import { transferString } from '@/assets/utils/util';
+import COMMON_ENV from '@/config/env';
 
 export default {
   name: 'compFooter',
@@ -72,8 +76,32 @@ export default {
           this.COMMON_COMP_DATA1.address = res.data.sourceData.sourceName;
           this.COMMON_COMP_DATA1.logo = res.data.sourceData.logoUrl;
           this.COMMON_COMP_DATA1.ewm = res.data.sourceData.ewmUrl;
+          // 动态插入客服数据
+          window.rongCloudConfig(COMMON_ENV.rongCloudConfig);
+          if (document.getElementById('qimoChatScript')) {
+            this.setIsqimoChatClickFlag(true);
+            return;
+          }
+          let url = '';
+          let standbyField = res.data.sourceData.standbyFieldOne;
+          if (standbyField.indexOf('|') !== -1) {
+            let urlArr = standbyField.split('|');
+            url = urlArr[1];
+          } else {
+            url = standbyField;
+          }
+          console.log('客服src', url);
+          let src = url;
+          let script = document.createElement('script');
+          script.type = 'text/javascript';
+          script.id = 'qimoChatScript';
+          script.src = src;
+          document.getElementsByTagName('head')[0].appendChild(script);
+          script.onload = () => {
+            this.setIsqimoChatClickFlag(true);
+          };
 
-          this.setCopData(this.COMMON_COMP_DATA1);
+          this.setCopData({ ...this.COMMON_COMP_DATA1, ...res.data.sourceData });
         }
       }).catch((err) => {
         this.isCanRequest = true;
@@ -147,5 +175,40 @@ export default {
     font-style: normal;
     font-size: 14px;
     font-weight: normal;
+  }
+  /*开始迁移*/
+  .logo-box{
+    float: left;
+    margin-top: 7px;
+    /*width: 140px;*/
+    height: 46px;
+    line-height: 46px;
+    font-size: 0;
+    overflow: hidden;
+  }
+  .logo-box h1{
+    display: inline;
+    font-size: 19px;
+    color: #444444;
+  }
+  .logo-box .logo{
+    display: block;
+    height: 46px;
+    width: 46px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-size: 0;
+    overflow: hidden;
+    float: left;
+    position: relative;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+  }
+  .logo-box .logoname{
+        float: left;
+    /*width: 80px;*/
+    color: #000;
+    font-weight: bold;
+    font-size: 16px;
   }
 </style>

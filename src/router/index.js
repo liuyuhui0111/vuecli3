@@ -82,27 +82,30 @@ router.beforeEach(async (to, from, next) => {
     replaceFn();
     return;
   }
-  document.title = to.meta.title || '加载中...'
-  NProgress.start();
+  store.commit('setFromRoute',from.meta.fromRoute || from.meta.title);
   if (getUrlParam('token')) {
     // 免密登录
-    if(!store.getters.token){
-      // 如果本地token 设置token
-      store.commit('setToken',getUrlParam('token'));
-      let res = await getUserInfo();  //获取用户信息
-      if (res.data.code === '0000') {
-        setUserFn(res);
-      }
+    
+    // 如果本地token 设置token
+    store.commit('setToken',getUrlParam('token'));
+    let res = await getUserInfo();  //获取用户信息
+    if (res.data.code === '0000') {
+      setUserFn(res);
     }
+    
     next();
     return;
   }
+  NProgress.start();
   if (to.meta.isNeedLogin && !store.getters.token) {
     // 是否需要登录 登录拦截
     if (!store.getters.token && !getUrlParam('code')) {
       // 如果需要登录 且没有code
       if (to.meta.loginBackPath) {
         // 如果配置了登录回退页，跳转到该页面 否则去登录页
+        if(from.path === to.meta.loginBackPath){
+          NProgress.done();
+        }
         next({ path: to.meta.loginBackPath });
       } else {
         goLogin('login',to.fullPath);
@@ -119,17 +122,38 @@ router.beforeEach(async (to, from, next) => {
           next();
         }
       }else{
-        // 获取token失败直接去登录
-        goLogin('login',to.fullPath);
+        loginout();
       }
     }
     return;
+  }
+  if (!store.getters.token && getUrlParam('code')) {
+    // 获取token  下一周期 执行init
+    let res = await getToken({code:getUrlParam('code')});
+    if(res.data.code === 0){
+      let token = res.data.data['access_token'];
+      store.commit('setToken',token);
+      let userRes = await getUserInfo();  //获取用户信息
+      if (userRes.data.code === '0000') {
+        setUserFn(userRes);
+      }
+    }
   }
   next();
 })
 
 router.afterEach((to, from) => {
   NProgress.done();
+  document.title = to.meta.title || '加载中...';
+  vue.$nextTick(()=>{
+    // if(store.getters.token){
+    //   window.sensors.login(store.getters.token);
+    // }
+    // window.sensors.track('frompath',{"frompath":from.fullPath,"topath":to.fullPath});
+    window.sensors.quick('autoTrackSinglePage',{
+      platForm:'web'
+    });
+  });
   // ...
 })
 
